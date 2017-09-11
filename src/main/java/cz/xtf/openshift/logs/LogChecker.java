@@ -1,7 +1,5 @@
 package cz.xtf.openshift.logs;
 
-import static cz.xtf.openshift.logs.LogCleaner.cleanLine;
-
 import org.assertj.core.api.AbstractStandardSoftAssertions;
 import org.assertj.core.api.Assertions;
 import org.slf4j.Logger;
@@ -107,16 +105,16 @@ public class LogChecker {
 
 		logLines.filter(line -> logErrors.matcher(line).find()).forEach(line -> {
 			if (logWhitelist.matcher(line).find()) {
-				LOGGER.info("log line whitelisted: " + cleanLine(line));
+				LOGGER.info("log line whitelisted: " + LogCleaner.cleanLine(line));
 			} else {
 				boolean reported = false;
 				for (Map.Entry<Pattern, String> entry : logReportedIssues.entrySet()) {
 					if (entry.getKey().matcher(line).find()) {
-						failSoftly("Unexpected error in log: " + cleanLine(line) + ".\n" + entry.getValue());
+						failSoftly("Unexpected error in log: " + LogCleaner.cleanLine(line) + ".\n" + entry.getValue());
 						reported = true;
 					}
 				}
-				if (!reported) failSoftly("Suspicious error in log '" + cleanLine(line) + "'");
+				if (!reported) failSoftly("Suspicious error in log '" + LogCleaner.cleanLine(line) + "'");
 			}
 		});
 	}
@@ -129,18 +127,18 @@ public class LogChecker {
 				try (BufferedReader br = new BufferedReader(stringReader)) {
 					br.lines().filter(line -> logErrors.matcher(line).find()).forEach(line -> {
 						if (logWhitelist.matcher(line).find()) {
-							LOGGER.info("log line whitelisted: " + cleanLine(line));
+							LOGGER.info("log line whitelisted: " + LogCleaner.cleanLine(line));
 						} else {
 							boolean reported = false;
 							for (Map.Entry<Pattern, String> entry : logReportedIssues.entrySet()) {
 								if (entry.getKey().matcher(line).find()) {
 									failSoftly("Unexpected error in pod " + pod.getMetadata().getName() +
-											" log '" + cleanLine(line) + ".\n"+ entry.getValue() + "'");
+											" log '" + LogCleaner.cleanLine(line) + ".\n"+ entry.getValue() + "'");
 									reported = true;
 								}
 							}
 							if (!reported) failSoftly("Suspicious error in pod " + pod.getMetadata().getName() +
-									" log '" + cleanLine(line) + "'");
+									" log '" + LogCleaner.cleanLine(line) + "'");
 						}
 					});
 				}

@@ -1,15 +1,13 @@
 package cz.xtf.openshift.builder;
 
-import org.apache.commons.lang3.StringUtils;
-
 import cz.xtf.TestConfiguration;
 import cz.xtf.keystore.XTFKeyStore;
 import cz.xtf.openshift.OpenshiftUtil;
 import cz.xtf.util.RandomUtil;
-
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteSpecBuilder;
 import io.fabric8.openshift.api.model.TLSConfigBuilder;
+import org.apache.commons.lang3.StringUtils;
 
 public class RouteBuilder extends AbstractBuilder<Route, RouteBuilder> {
 	private String hostName;

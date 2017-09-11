@@ -1,5 +1,6 @@
 package cz.xtf.openshift.builder;
 
+import cz.xtf.openshift.builder.limits.ResourceLimitBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 import cz.xtf.openshift.builder.buildconfig.BuildStrategy;
@@ -9,7 +10,6 @@ import cz.xtf.openshift.builder.buildconfig.SourceBuildStrategy;
 import cz.xtf.openshift.builder.limits.CPUResource;
 import cz.xtf.openshift.builder.limits.ComputingResource;
 import cz.xtf.openshift.builder.limits.MemoryResource;
-import cz.xtf.openshift.builder.limits.ResourceLimitBuilder;
 
 import java.util.HashMap;
 import java.util.LinkedList;

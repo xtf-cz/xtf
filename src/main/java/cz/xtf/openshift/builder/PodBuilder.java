@@ -9,15 +9,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import cz.xtf.openshift.builder.pod.ConfigMapVolume;
+import cz.xtf.openshift.builder.pod.PersistentVolumeClaim;
+import cz.xtf.openshift.builder.pod.SecretVolume;
 import org.apache.commons.lang3.StringUtils;
 
-import cz.xtf.openshift.builder.pod.ConfigMapVolume;
 import cz.xtf.openshift.builder.pod.ContainerBuilder;
 import cz.xtf.openshift.builder.pod.EmptyDirVolume;
 import cz.xtf.openshift.builder.pod.HostPathVolume;
 import cz.xtf.openshift.builder.pod.NFSVolume;
-import cz.xtf.openshift.builder.pod.PersistentVolumeClaim;
-import cz.xtf.openshift.builder.pod.SecretVolume;
 import cz.xtf.openshift.builder.pod.Volume;
 
 import io.fabric8.kubernetes.api.model.Pod;

@@ -6,6 +6,7 @@ import org.junit.runner.RunWith;
 import org.junit.runner.Runner;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.RunnerBuilder;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -24,7 +25,7 @@ public class XTFTestSuiteTest {
 
 	@Before
 	public void setUp() throws Exception {
-		spy(XTFTestSuite.class);
+		PowerMockito.spy(XTFTestSuite.class);
 		doReturn(asList(SimpleTest.class)).when(XTFTestSuite.class, "resolveTestClasses", TestSuite.class);
 		createSuite(TestSuite.class);
 	}

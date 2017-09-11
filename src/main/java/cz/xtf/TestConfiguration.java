@@ -19,65 +19,65 @@ import java.util.stream.Collectors;
 
 public final class TestConfiguration {
 
-	private static final String DOMAIN = "cz.xtf.config.domain";
-	private static final String MASTER_URL = "cz.xtf.config.master.url";
-	private static final String MASTER_USERNAME = "cz.xtf.config.master.username";
-	private static final String MASTER_PASSWORD = "cz.xtf.config.master.password";
-	private static final String MASTER_TOKEN = "cz.xtf.config.master.token";
-	private static final String MASTER_NAMESPACE = "cz.xtf.config.master.namespace";
-	private static final String MASTER_SSH_USERNAME = "cz.xtf.config.master.ssh_username";
-	private static final String ADMIN_USERNAME = "cz.xtf.config.master.admin.username";
-	private static final String ADMIN_PASSWORD = "cz.xtf.config.master.admin.password";
-	private static final String CLEAN_NAMESPACE = "cz.xtf.cleannamespace";
-	private static final String JACOCO_ENABLED = "cz.xtf.jacoco";
-	private static final String JACOCO_PATH = "cz.xtf.jacoco.path";
-	private static final String NFS_SERVER = "cz.xtf.config.nfs.addr";
-	private static final String NFS_SSH_USERNAME = "cz.xtf.config.nfs.ssh_username";
-
-	private static final String PROXY_HOST = "cz.xtf.config.proxy.host";
-	private static final String PROXY_HOST_USERNAME = "cz.xtf.config.proxy.host.username";
-
-	private static final String PROXY_HOSTS = "cz.xtf.config.proxy.hosts";
-	private static final String PROXY_SQUID_PORT = "cz.xtf.config.proxy.squid.port";
-	private static final String PROXY_VERTX_PORT = "cz.xtf.config.proxy.vertx.port";
-	private static final String ROUTE_DOMAIN = "cz.xtf.config.route_domain";
-	private static final String PROXY_DOMAIN = "cz.xtfqe.config.domain.proxy";
-	private static final String SOAK_TEST_ITERATIONS = "cz.xtf.config.soak_test_iterations";
-	private static final String IMAGE_REPO_BASE = "cz.xtf.config.image.repo";
-	private static final String MAVEN_BASE_URL = "cz.xtf.config.maven.web.url";
-	private static final String MAVEN_PROXY_URL = "cz.xtf.config.maven.proxy.url";
-	private static final String MAVEN_PROXY_GROUP = "cz.xtf.config.maven.proxy.group";
-	private static final String MAVEN_PROXY_ENABLED = "cz.xtf.config.maven.proxy.enabled";
-	private static final String MAVEN_DEPLOY_SNAPSHOT_URL = "cz.xtf.config.maven.deploy.snapshot.url";
-	private static final String MAVEN_DEPLOY_RELEASE_URL = "cz.xtf.config.maven.deploy.release.url";
-	private static final String GITLAB_URL = "cz.xtf.config.gitlab.url";
-	private static final String GITLAB_TOKEN = "cz.xtf.config.gitlab.token";
-	private static final String GITLAB_USERNAME = "cz.xtf.config.gitlab.username";
-	private static final String GITLAB_PASSWORD = "cz.xtf.config.gitlab.password";
-	private static final String GITLAB_GROUP = "cz.xtf.config.gitlab.group";
-	private static final String PING_PROTOCOL = "cz.xtf.config.ping.protocol";
-	private static final String FABRIC8_VERSION = "cz.xtf.config.fabric8.version";
-	private static final String FUSE_CACHED_IMAGES = "cz.xtf.config.fuse.cached.images";
-	private static final String FUSE_DISABLE_JOLOKIA = "cz.xtf.config.fuse.disable.jolokia";
-	private static final String BUILD_NAMESPACE = "cz.xtf.config.build.namespace";
-	private static final String FORCE_REBUILD = "cz.xtf.config.build.force.rebuild";
-	private static final String BINARY_BUILD = "cz.xtf.config.build.binary";
+	private static final String DOMAIN = "xtf.config.domain";
+	private static final String MASTER_URL = "xtf.config.master.url";
+	private static final String MASTER_USERNAME = "xtf.config.master.username";
+	private static final String MASTER_PASSWORD = "xtf.config.master.password";
+	private static final String MASTER_TOKEN = "xtf.config.master.token";
+	private static final String MASTER_NAMESPACE = "xtf.config.master.namespace";
+	private static final String MASTER_SSH_USERNAME = "xtf.config.master.ssh_username";
+	private static final String MASTER_SSH_KEY_PATH = "xtf.config.master.ssh_key_path";
+	private static final String ADMIN_USERNAME = "xtf.config.master.admin.username";
+	private static final String ADMIN_PASSWORD = "xtf.config.master.admin.password";
+	private static final String CLEAN_NAMESPACE = "xtf.cleannamespace";
+	private static final String JACOCO_ENABLED = "xtf.jacoco";
+	private static final String JACOCO_PATH = "xtf.jacoco.path";
+	private static final String NFS_SERVER = "xtf.config.nfs.addr";
+	private static final String NFS_SSH_USERNAME = "xtf.config.nfs.ssh_username";
+	private static final String PROXY_HOST = "xtf.config.proxy.host";
+	private static final String PROXY_HOST_USERNAME = "xtf.config.proxy.host.username";
+	private static final String PROXY_HOSTS = "xtf.config.proxy.hosts";
+	private static final String PROXY_SQUID_PORT = "xtf.config.proxy.squid.port";
+	private static final String PROXY_VERTX_PORT = "xtf.config.proxy.vertx.port";
+	private static final String ROUTE_DOMAIN = "xtf.config.route_domain";
+	private static final String PROXY_DOMAIN = "xtf.config.domain.proxy";
+	private static final String SOAK_TEST_ITERATIONS = "xtf.config.soak_test_iterations";
+	private static final String IMAGE_REPO_BASE = "xtf.config.image.repo";
+	private static final String MAVEN_BASE_URL = "xtf.config.maven.web.url";
+	private static final String MAVEN_PROXY_URL = "xtf.config.maven.proxy.url";
+	private static final String MAVEN_PROXY_GROUP = "xtf.config.maven.proxy.group";
+	private static final String MAVEN_PROXY_ENABLED = "xtf.config.maven.proxy.enabled";
+	private static final String MAVEN_DEPLOY_SNAPSHOT_URL = "xtf.config.maven.deploy.snapshot.url";
+	private static final String MAVEN_DEPLOY_RELEASE_URL = "xtf.config.maven.deploy.release.url";
+	private static final String GITLAB_URL = "xtf.config.gitlab.url";
+	private static final String GITLAB_TOKEN = "xtf.config.gitlab.token";
+	private static final String GITLAB_USERNAME = "xtf.config.gitlab.username";
+	private static final String GITLAB_PASSWORD = "xtf.config.gitlab.password";
+	private static final String GITLAB_GROUP = "xtf.config.gitlab.group";
+	private static final String PING_PROTOCOL = "xtf.config.ping.protocol";
+	private static final String FABRIC8_VERSION = "xtf.config.fabric8.version";
+	private static final String FABRIC8_SERVICE_NAME_LIMIT = "xtf.config.fabric8.service_name_limit";
+	private static final String FUSE_CACHED_IMAGES = "xtf.config.fuse.cached.images";
+	private static final String FUSE_DISABLE_JOLOKIA = "xtf.config.fuse.disable.jolokia";
+	private static final String BUILD_NAMESPACE = "xtf.config.build.namespace";
+	private static final String FORCE_REBUILD = "xtf.config.build.force.rebuild";
+	private static final String BINARY_BUILD = "xtf.config.build.binary";
 	private static final String MAX_HTTP_TRIES = "util.http.maxtries";
-	private static final String DEFAULT_WAIT_TIMEOUT = "cz.xtf.config.wait.timeout.default";
-	private static final String EXTERNAL_SERVICES_HOST = "cz.xtf.config.services.external";
-	private static final String OPENSHIFT_ONLINE = "cz.xtf.config.openshift.online";
+	private static final String DEFAULT_WAIT_TIMEOUT = "xtf.config.wait.timeout.default";
+	private static final String EXTERNAL_SERVICES_HOST = "xtf.config.services.external";
+	private static final String OPENSHIFT_ONLINE = "xtf.config.openshift.online";
 	private static final String TEST_ALERT = "test.alert";
 	private static final String TEST_JENKINS_RERUN = "test.jenkins.rerun";
-	private static final String TEMPLATE_REPO = "cz.xtf.config.template.repo";
-	private static final String TEMPLATE_BRANCH = "cz.xtf.config.template.branch";
+	private static final String TEMPLATE_REPO = "xtf.config.template.repo";
+	private static final String TEMPLATE_BRANCH = "xtf.config.template.branch";
 
-	private static final String OPENSTACK_URL = "cz.xtf.config.openstack.url";
-	private static final String OPENSTACK_TENANT = "cz.xtf.config.openstack.tenant";
-	private static final String OPENSTACK_OPEN_SECURITY_GROUP = "cz.xtf.config.openstack.security.group.open";
-	private static final String OPENSTACK_USERNAME = "cz.xtf.config.openstack.username";
-	private static final String OPENSTACK_PASSWORD = "cz.xtf.config.openstack.password";
+	private static final String OPENSTACK_URL = "xtf.config.openstack.url";
+	private static final String OPENSTACK_TENANT = "xtf.config.openstack.tenant";
+	private static final String OPENSTACK_OPEN_SECURITY_GROUP = "xtf.config.openstack.security.group.open";
+	private static final String OPENSTACK_USERNAME = "xtf.config.openstack.username";
+	private static final String OPENSTACK_PASSWORD = "xtf.config.openstack.password";
 
-	public static final String EAP_LOCATION = "cz.xtf.config.eap.location";
+	public static final String EAP_LOCATION = "xtf.config.eap.location";
 	public static final String IMAGE_EAP_PREFIX = "xtf.eap.";
 	public static final String IMAGE_PREVIOUS_SUFFIX = ".previous";
 	public static final String IMAGE_EAP_6 = IMAGE_EAP_PREFIX + "6";
@@ -86,7 +86,8 @@ public final class TestConfiguration {
 	public static final String IMAGE_JDG_CLIENT = "xtf.jdg.client";
 	public static final String IMAGE_JDV = "xtf.jdv";
 	public static final String IMAGE_JDV_CLIENT = "xtf.jdv.client";
-	public static final String IMAGE_EWS_PREFIX = "xtf.ews";
+	public static final String IMAGE_JDV_ODBC_TEST_IMAGE = "xtf.jdv.odbc.test";
+	public static final String IMAGE_EWS_PREFIX = "org.apache.tomcat";
 	public static final String IMAGE_TOMCAT7 = IMAGE_EWS_PREFIX + "7";
 	public static final String IMAGE_TOMCAT8 = IMAGE_EWS_PREFIX + "8";
 	public static final String IMAGE_AMQ = "xtf.amq";
@@ -95,14 +96,13 @@ public final class TestConfiguration {
 	public static final String IMAGE_MYSQL = "com.mysql";
 	public static final String IMAGE_MONGO = "com.mongodb";
 	public static final String IMAGE_NFS = "org.nfs";
-	public static final String IMAGE_FUSE_JAVA_MAIN = "xtf.fuse.java_main";
-	public static final String IMAGE_FUSE_KARAF = "xtf.fuse.karaf";
+	public static final String IMAGE_FUSE_JAVA_MAIN = "org.fuse.java_main";
+	public static final String IMAGE_FUSE_KARAF = "org.fuse.karaf";
 	public static final String IMAGE_BRMS = "xtf.brms";
 	public static final String IMAGE_BPMS = "xtf.bpms";
 	public static final String IMAGE_BPMS_LDAP_TEST_IMAGE = "xtf.bpms.ldap.test";
 	public static final String IMAGE_SSO = "xtf.sso";
 	public static final String IMAGE_PHANTOMJS = "xtf.phantomjs";
-	public static final String IMAGE_APIMAN = "xtf.apiman";
 	public static final String IMAGE_H2 = "xtf.h2";
 	public static final String IMAGE_MSA = "xtf.msa";
 	public static final String IMAGE_ZIPKIN = "io.zipkin.java";
@@ -126,7 +126,7 @@ public final class TestConfiguration {
 	public static final String VERSION_KIE = "xtf.version.kie";
 	public static final String VERSION_MSA = "xtf.version.msa";
 
-	public static final String CDK_DOMAIN = "cdk.xtf.cx";
+	public static final String CDK_DOMAIN = "cd.xtf.cz";
 	public static final String CDK_IP = "10.1.2.2";
 	public static final String CDK_INTERNAL_HOSTNAME = "localhost.localdomain";
 
@@ -208,6 +208,10 @@ public final class TestConfiguration {
 		return get().readValue(MASTER_SSH_USERNAME);
 	}
 
+	public static String masterSshKeyPath() {
+		return get().readValue(MASTER_SSH_KEY_PATH);
+	}
+
 	public static String domain() {
 		return get().readValue(DOMAIN);
 	}
@@ -283,6 +287,10 @@ public final class TestConfiguration {
 	}
 
 	public static String fabric8Version() { return get().readValue(FABRIC8_VERSION);	}
+
+	public static int fabric8ServiceNameLimit() {
+		return Integer.parseInt(get().readValue(FABRIC8_SERVICE_NAME_LIMIT));
+	}
 
 	public static String kieVersion() {
 		return get().readValue(VERSION_KIE);
@@ -573,6 +581,9 @@ public final class TestConfiguration {
 				case "MASTER_SSH_USERNAME":
 					props.setProperty(MASTER_SSH_USERNAME, entry.getValue());
 					break;
+				case "MASTER_SSH_KEY_PATH":
+					props.setProperty(MASTER_SSH_KEY_PATH, entry.getValue());
+					break;
 				case "ROUTE_DOMAIN":
 					props.setProperty(ROUTE_DOMAIN, entry.getValue());
 					break;
@@ -762,6 +773,9 @@ public final class TestConfiguration {
 				case "FABRIC8_VERSION":
 					props.setProperty(FABRIC8_VERSION, entry.getValue());
 					break;
+				case "FABRIC8_SERVICE_NAME_LIMIT":
+					props.setProperty(FABRIC8_SERVICE_NAME_LIMIT, entry.getValue());
+					break;
 				case "FUSE_CACHED_IMAGES":
 					props.setProperty(FUSE_CACHED_IMAGES, entry.getValue());
 					break;
@@ -849,39 +863,21 @@ public final class TestConfiguration {
 	private Properties defaultValues() {
 		final Properties props = new Properties();
 
-		//props.setProperty(DOMAIN, "");
-		props.setProperty(MASTER_URL, "");
-		props.setProperty(MASTER_USERNAME, "xtf");
-		props.setProperty(MASTER_PASSWORD, "xtf");
-		props.setProperty(MASTER_SSH_USERNAME, "xtf");
 		props.setProperty(ROUTE_DOMAIN, "cloudapps.example.com");
 		props.setProperty(PROXY_DOMAIN, "proxy.xtf");
-		props.setProperty(ADMIN_USERNAME, "admin");
-		props.setProperty(ADMIN_PASSWORD, "");
 		props.setProperty(CLEAN_NAMESPACE, "false");
 		props.setProperty(JACOCO_ENABLED, "false");
-		props.setProperty(JACOCO_PATH, "");
 		props.setProperty(MAVEN_PROXY_GROUP, "public");
-		props.setProperty(NFS_SERVER, "");
-		props.setProperty(NFS_SSH_USERNAME, "xtf");
-		props.setProperty(PROXY_HOSTS, "");
 		props.setProperty(PROXY_SQUID_PORT, "3128");
 		props.setProperty(PROXY_VERTX_PORT, "8080");
 		props.setProperty(SOAK_TEST_ITERATIONS, "42");
-		props.setProperty(IMAGE_REPO_BASE, "");
 		props.setProperty(MAVEN_PROXY_ENABLED, "false");
-		props.setProperty(GITLAB_URL, "http://gitlab.xtf");
-		props.setProperty(GITLAB_TOKEN, "");
-		props.setProperty(GITLAB_USERNAME, "xtf");
-		props.setProperty(GITLAB_PASSWORD, "");
 		props.setProperty(GITLAB_GROUP, "ose3");
 		props.setProperty(PING_PROTOCOL, "kubeping");
 		props.setProperty(FABRIC8_VERSION, "2.2.0.redhat-079");
+		props.setProperty(FABRIC8_SERVICE_NAME_LIMIT, "2147483647");
 		props.setProperty(FUSE_CACHED_IMAGES, "true");
 		props.setProperty(FUSE_DISABLE_JOLOKIA, "false");
-		props.setProperty(OPENSTACK_URL, "");
-		props.setProperty(OPENSTACK_TENANT, "");
-		props.setProperty(OPENSTACK_OPEN_SECURITY_GROUP, "");
 		props.setProperty(VERSION_FUSE, "6.2.1");
 		props.setProperty(BUILD_NAMESPACE, "xtf-builds");
 		props.setProperty(FORCE_REBUILD, "false");

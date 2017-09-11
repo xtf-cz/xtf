@@ -9,6 +9,8 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -49,6 +51,18 @@ public class IOUtils {
 		}
 
 		return builder.toString();
+	}
+
+	public static Collection<String> readInputStreamAsCollection(InputStream input) throws IOException {
+		Collection<String> result = new ArrayList<>();
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(input))) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				result.add(line);
+			}
+		}
+
+		return result;
 	}
 
 	public static Path findProjectRoot() {

@@ -1,12 +1,12 @@
 package cz.xtf.openshift.messaging;
 
+import cz.xtf.openshift.builder.pod.PersistentVolumeClaim;
 import org.apache.commons.lang3.StringUtils;
 
 import cz.xtf.docker.DockerContainer;
 import cz.xtf.openshift.OpenshiftUtil;
 import cz.xtf.openshift.builder.ApplicationBuilder;
 import cz.xtf.openshift.builder.DeploymentConfigBuilder;
-import cz.xtf.openshift.builder.pod.PersistentVolumeClaim;
 import cz.xtf.openshift.imagestream.ImageRegistry;
 import cz.xtf.openshift.storage.DefaultStatefulAuxiliary;
 
@@ -61,10 +61,10 @@ public class JBossAMQ extends DefaultStatefulAuxiliary implements MessageBroker 
 				.envVars(getImageVariables())
 				.port(OPENWIRE_PORT, "tcp")
 				.port(8778, "jolokia");
-//		if (synchronous) {
-//			builder.onConfigurationChange();
-//			builder.synchronousDeployment();
-//		}
+		if (synchronous) {
+			builder.onConfigurationChange();
+			builder.synchronousDeployment();
+		}
 		if (isStateful) {
 			storagePartition.configureApplicationDeployment(builder);
 		}

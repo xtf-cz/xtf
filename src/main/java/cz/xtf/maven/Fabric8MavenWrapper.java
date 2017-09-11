@@ -350,7 +350,7 @@ public class Fabric8MavenWrapper {
 	}
 
 	public static String createFabric8Url(String appName, String namespace, String domain) {
-		int limit = KubernetesVersion.get().serviceNameLimit();
+		int limit = Integer.min(KubernetesVersion.get().serviceNameLimit(), TestConfiguration.fabric8ServiceNameLimit());
 		String urlName = appName.length() > limit ? appName.substring(0, limit) : appName;
 		return String.format("http://%s-%s.%s", urlName, namespace, domain);
 	}

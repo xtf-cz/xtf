@@ -57,6 +57,28 @@ public class ProxiedConnectionManager implements Closeable {
 
 	private void createTCPProxy() {
 		try {
+			final String cleanCommand = String.format("sudo docker ps -a | grep 'hours ago' | awk '{print $1}' | xargs --no-run-if-empty sudo docker rm",
+					containerName,
+					this.targetHost,
+					this.targetPort,
+					sourceIPs,
+					ImageRegistry.get().tcpProxy());
+			LOGGER.info("Establishing SSH shell");
+			ssh = SshUtil.getInstance()
+					.createSshSession(TestConfiguration.proxyHostUsername(), getProxyHost());
+			ssh.connect();
+			LOGGER.debug("Connected to ssh console");
+
+			final ChannelExec cleanChannel = (ChannelExec) ssh.openChannel("exec");
+			cleanChannel.setPty(true);
+			cleanChannel.setCommand(cleanCommand);
+			cleanChannel.setInputStream(null);
+			cleanChannel.setOutputStream(System.err);
+
+			LOGGER.debug("Executing command: '{}'", cleanCommand);
+			cleanChannel.connect();
+			cleanChannel.disconnect();
+
 			final String command = String.format("sudo docker run -it --name %s --net=host --rm -e AB_OFF=true -e TARGET_HOST=%s -e TARGET_PORT=%s -e TARGET_VIA=%s %s",
 					containerName,
 					this.targetHost,

@@ -61,6 +61,10 @@ public class ImageRegistry {
 		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_JDG));
 	}
 
+	public String jdgPrevious() {
+		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_JDG + TestConfiguration.IMAGE_PREVIOUS_SUFFIX));
+	}
+
 	public String jdgClient() {
 		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_JDG_CLIENT));
 	}
@@ -71,6 +75,10 @@ public class ImageRegistry {
 
 	public String jdvClient() {
 		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_JDV_CLIENT));
+	}
+
+	public String jdvOdbcTest() {
+		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_JDV_ODBC_TEST_IMAGE));
 	}
 
 	public String tomcat7() {
@@ -139,10 +147,6 @@ public class ImageRegistry {
 
 	public String phantomJs() {
 		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_PHANTOMJS));
-	}
-
-	public String apiman() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_APIMAN));
 	}
 
 	public String h2() {

@@ -1,10 +1,10 @@
 package cz.xtf.junit.annotation;
 
+import cz.xtf.junit.filter.BypassAuthUserFilter;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import cz.xtf.junit.filter.BypassAuthUserFilter;
 
 /**
  * Marker annotation for the {@link BypassAuthUserFilter}.

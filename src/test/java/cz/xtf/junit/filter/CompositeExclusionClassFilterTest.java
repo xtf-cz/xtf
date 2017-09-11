@@ -6,8 +6,6 @@ import java.util.Arrays;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.assertj.core.api.Assertions;
-
 public class CompositeExclusionClassFilterTest {
 
 	private static CompositeExclusionTestClassFilter create(ExclusionTestClassFilter... filters) {
@@ -18,30 +16,30 @@ public class CompositeExclusionClassFilterTest {
 
 	@Test
 	public void collectionShouldBeEmptyIfNoFilterAdded() {
-		Assertions.assertThat(new CompositeExclusionTestNameFilter().getFilters()).isEmpty();
+		assertThat(new CompositeExclusionTestNameFilter().getFilters()).isEmpty();
 	}
 
 	@Test
 	public void collectionShouldContainsSingleFilter() {
 		final ExclusionTestClassFilter filter = testClass -> true;
-		Assertions.assertThat(create(filter).getFilters()).contains(filter);
+		assertThat(create(filter).getFilters()).contains(filter);
 	}
 
 	@Test
 	public void collectionShouldContainsAllProvidedFilters() {
 		final ExclusionTestClassFilter fa = testClass -> true;
 		final ExclusionTestClassFilter fb = testClass -> true;
-		Assertions.assertThat(create(fa, fb).getFilters()).contains(fa, fb);
+		assertThat(create(fa, fb).getFilters()).contains(fa, fb);
 	}
 
 	@Test
 	public void onlyUniqueFiltersShouldBeContained() {
 		final ExclusionTestClassFilter filter = testClass -> true;
-		Assertions.assertThat(create(filter, filter).getFilters()).containsExactly(filter);
-		Assertions.assertThat(create(filter, create(filter)).getFilters()).containsExactly(filter);
+		assertThat(create(filter, filter).getFilters()).containsExactly(filter);
+		assertThat(create(filter, create(filter)).getFilters()).containsExactly(filter);
 
 		final ExclusionTestClassFilter specific = new AnnotationNameFilter("Test");
-		Assertions.assertThat(create(specific, specific).getFilters()).containsExactly(specific);
+		assertThat(create(specific, specific).getFilters()).containsExactly(specific);
 	}
 
 	@Test

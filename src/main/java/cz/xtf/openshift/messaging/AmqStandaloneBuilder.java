@@ -1,17 +1,17 @@
 package cz.xtf.openshift.messaging;
 
+import cz.xtf.openshift.builder.PVCBuilder;
+import cz.xtf.openshift.builder.PortBuilder;
+import cz.xtf.openshift.builder.RouteBuilder;
+import cz.xtf.openshift.imagestream.ImageRegistry;
 import org.apache.commons.lang3.StringUtils;
 
 import org.assertj.core.api.Assertions;
 
 import cz.xtf.TestConfiguration;
 import cz.xtf.openshift.ActiveMQTransport;
-import cz.xtf.openshift.imagestream.ImageRegistry;
 import cz.xtf.openshift.OpenshiftUtil;
 import cz.xtf.openshift.builder.ApplicationBuilder;
-import cz.xtf.openshift.builder.PVCBuilder;
-import cz.xtf.openshift.builder.PortBuilder;
-import cz.xtf.openshift.builder.RouteBuilder;
 import cz.xtf.openshift.builder.ServiceBuilder;
 import cz.xtf.openshift.builder.pod.ContainerBuilder;
 import cz.xtf.wait.WaitUtil;
@@ -38,6 +38,8 @@ public class AmqStandaloneBuilder {
 	private int replicas = 1;
 	private String suffix = "";
 	private boolean enableNodePort = false;
+	private boolean enableDrainer = false;
+	private String claimName;
 
 	public AmqStandaloneBuilder(String appName) {
 		this(appName, null);
@@ -88,6 +90,7 @@ public class AmqStandaloneBuilder {
 
 	public AmqStandaloneBuilder withDefaultPVC() {
 		String claimName = "amq-claim-" + Integer.toString(Math.abs(new Random().nextInt()), 36);
+		this.claimName = claimName;
 		OpenshiftUtil.getInstance().createPersistentVolumeClaim(new PVCBuilder(claimName).accessRWX().storageSize("1Gi").build());
 		pvc("store", claimName, "/opt/amq/data", false);
 		return this;
@@ -116,6 +119,11 @@ public class AmqStandaloneBuilder {
 
 	public AmqStandaloneBuilder withNodePort() {
 		this.enableNodePort = true;
+		return this;
+	}
+
+	public AmqStandaloneBuilder withDrainerPod() {
+		this.enableDrainer = true;
 		return this;
 	}
 
@@ -158,6 +166,29 @@ public class AmqStandaloneBuilder {
 		}
 
 		appBuilder.buildApplication().deployWithoutBuild();
+
+		if (enableDrainer) {
+			String drainerName = this.appName + "-drainer";
+			ApplicationBuilder drainerBuilder = new ApplicationBuilder(drainerName);
+			drainerBuilder.deploymentConfig(drainerName, drainerName, false)
+					.onConfigurationChange()
+					.podTemplate()
+					.container(drainerName)
+					.addCommand("/opt/amq/bin/drain.sh")
+					.fromImage(AMQ_IMAGE);
+
+			drainerBuilder.deploymentConfig(drainerName).podTemplate().container(drainerName)
+					.envVar("AMQ_MESH_SERVICE_NAME", "amq-mesh")
+					.envVar("AMQ_MESH_DISCOVERY_TYPE", "kube")
+					.envVar("AMQ_MESH_SERVICE_NAMESPACE", OpenshiftUtil.getInstance().getContext().getNamespace());
+					
+			drainerBuilder.deploymentConfig(drainerName).podTemplate().container(drainerName)
+					.addVolumeMount("store", "/opt/amq/data", false)
+					.pod()
+					.addPersistenVolumeClaim("store", this.claimName);
+
+			drainerBuilder.buildApplication().deployWithoutBuild();
+		}
 
 		try {
 			if (!WaitUtil.waitFor(WaitUtil.areNPodsReady(podName, replicas), WaitUtil.hasPodRestarted(podName), 1000L, 5 * 60 * 1000L)) {

@@ -19,6 +19,7 @@ import cz.xtf.junit.filter.JenkinsRerunFilter;
 import cz.xtf.junit.filter.ManualTestFilter;
 import cz.xtf.junit.filter.NoAnnotationNameFilter;
 import cz.xtf.junit.filter.SuiteClassFilter;
+import cz.xtf.junit.filter.SinceVersionFilter;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -28,9 +29,9 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static cz.xtf.junit.XTFTestSuite.DEFAULT_TEST_SUFFIX;
 
-import org.assertj.core.api.Assertions;
+import static org.assertj.core.api.Assertions.assertThat;
 
 // TODO(vchalupa): Add test for resolveTestClasses method
 public class XTFTestSuiteHelperTest {
@@ -67,7 +68,7 @@ public class XTFTestSuiteHelperTest {
 	@Test
 	public void testInclusionTestNameFilterComposingForDefaultSuite() throws Exception {
 		final CompositeInclusionTestNameFilter filters = defaultSuiteHelper().getInclusionTestNameFilter();
-		assertThat(filters.getFilters()).containsOnly(new ClassNameSuffixInclusionFilter(XTFTestSuite.DEFAULT_TEST_SUFFIX));
+		assertThat(filters.getFilters()).containsOnly(new ClassNameSuffixInclusionFilter(DEFAULT_TEST_SUFFIX));
 	}
 
 	@Test
@@ -96,7 +97,7 @@ public class XTFTestSuiteHelperTest {
 	public void testExclusionTestNameFilterComposingForDefaultSuite() throws Exception {
 		final CompositeExclusionTestNameFilter filters = defaultSuiteHelper().getExclusionTestNameFilter();
 
-		Assertions.assertThat(filters.getFilters()).containsOnly(
+		assertThat(filters.getFilters()).containsOnly(
 				new ClassNameRegExExclusionFilter(),
 				new SuiteClassFilter(DefaultSuite.class)
 		);
@@ -106,7 +107,7 @@ public class XTFTestSuiteHelperTest {
 	public void testExclusionTestNameFilterComposingForExtendedSuiteDefinition() throws Exception {
 		final CompositeExclusionTestNameFilter filters = extendedSuiteHelper().getExclusionTestNameFilter();
 
-		Assertions.assertThat(filters.getFilters()).containsOnly(
+		assertThat(filters.getFilters()).containsOnly(
 				new ClassNameRegExExclusionFilter(),
 				new SuiteClassFilter(ExtendedSuite.class),
 				DYNAMIC_EX_NAME_FILTER
@@ -122,7 +123,8 @@ public class XTFTestSuiteHelperTest {
 				ManualTestFilter.instance(),
 				new JenkinsRerunFilter(),
 				new AnnotationNameFilter(),
-				new NoAnnotationNameFilter()
+				new NoAnnotationNameFilter(),
+				SinceVersionFilter.instance()
 		);
 	}
 
@@ -136,6 +138,7 @@ public class XTFTestSuiteHelperTest {
 				new JenkinsRerunFilter(),
 				new AnnotationNameFilter(),
 				new NoAnnotationNameFilter(),
+				SinceVersionFilter.instance(),
 				DYNAMIC_EX_CLASS_FILTER
 		);
 	}

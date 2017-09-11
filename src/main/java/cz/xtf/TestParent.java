@@ -5,8 +5,11 @@ import org.apache.http.entity.ContentType;
 
 import cz.xtf.git.GitLabUtil;
 import cz.xtf.http.HttpClient;
+import cz.xtf.junit.annotation.release.SinceVersion;
+import cz.xtf.junit.annotation.release.SkipFor;
 import cz.xtf.openshift.OpenshiftUtil;
 import cz.xtf.openshift.PodService;
+import cz.xtf.openshift.imagestream.ImageRegistry;
 import cz.xtf.time.TimeUtil;
 
 import javax.swing.JOptionPane;
@@ -15,6 +18,7 @@ import org.assertj.core.api.JUnitSoftAssertions;
 
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
@@ -25,6 +29,9 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.Toolkit;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,6 +62,70 @@ public abstract class TestParent {
 
 	public static String getCurrentTestClass() {
 		return (currentTestClass == null) ? "UNSET" : currentTestClass;
+	}
+
+	/**
+	 * Method to get the current image as an image property used in @SinceVersion(image='eap'... or @SkipFor(image='$getImage')
+	 * @param image either "foo", for an ImageRegistry method name, or "$foo", for the current test class method name "foo"
+	 * @return
+	 * @throws NoSuchMethodException
+	 * @throws InvocationTargetException
+	 * @throws IllegalAccessException
+	 */
+	private String getRegistryOrInstanceImage(String image) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+		if (image.startsWith("$")) {
+			// special case, we get the image by a method call
+			return (String)this.getClass().getMethod(image.replace("$", "")).invoke(this);
+		}
+		else {
+			return (String) ImageRegistry.class.getDeclaredMethod(image).invoke(ImageRegistry.get());
+		}
+	}
+
+	@Before
+	public void skipIfSinceVersionAnnotation() {
+		for (final Method method : this.getClass().getMethods()) {
+			if (method.getName().equals(name.getMethodName())) {
+				final SinceVersion[] sinceVersions = method.getAnnotationsByType(SinceVersion.class);
+				for (final SinceVersion sinceVersion : sinceVersions) {
+					try {
+						final String image = getRegistryOrInstanceImage(sinceVersion.image());
+
+						if (image.contains(sinceVersion.name())) {
+							final String sinceVersionVersion = sinceVersion.since().split("-")[0];
+							if (!ImageRegistry.isVersionAtLeast(new BigDecimal(sinceVersionVersion), image)) {
+								if (!sinceVersion.jira().isEmpty()) {
+									Assume.assumeTrue(sinceVersion.jira() + ", Image " + image + " (" + sinceVersion.image() + ") stream containing " + sinceVersion.name() + " must be of version at least " + sinceVersionVersion, false);
+								}
+								else {
+									Assume.assumeTrue("Image " + image + " (" + sinceVersion.image() + ") stream containing " + sinceVersion.name() + " must be of version at least " + sinceVersionVersion, false);
+								}
+							}
+						}
+					} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+						log.error("Error invoking during @SinceVersion processing", e);
+					}
+				}
+
+				final SkipFor[] skipFors = method.getAnnotationsByType(SkipFor.class);
+				for (final SkipFor skipFor : skipFors) {
+					try {
+						final String image = getRegistryOrInstanceImage(skipFor.image());
+
+						if (image.contains(skipFor.name())) {
+							if (!skipFor.reason().isEmpty()) {
+								Assume.assumeTrue("Skipping: " + skipFor.reason() + " - image " + image + " (" + skipFor.image() + ") stream containing " + skipFor.name(), false);
+							}
+							else {
+								Assume.assumeTrue("Skipping - image " + image + " (" + skipFor.image() + ") stream containing " + skipFor.name(), false);
+							}
+						}
+					} catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+						log.error("Error invoking during @SkipFor processing", e);
+					}
+				}
+			}
+		}
 	}
 
 	@AfterClass

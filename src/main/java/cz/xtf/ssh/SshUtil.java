@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 
+import cz.xtf.TestConfiguration;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 import org.eclipse.jgit.transport.OpenSshConfig;
 import org.eclipse.jgit.util.FS;
@@ -31,10 +32,21 @@ public class SshUtil {
 	}
 
 	public String getPrivateKeyPath() {
-		Path p = IOUtils.findProjectRoot().resolve("infra").resolve("xtf");
+
+		Path p;
+
+		String keyPath = TestConfiguration.masterSshKeyPath();
+		if (keyPath != null) {
+			p = FileSystems.getDefault().getPath(keyPath);
+			if (p.toFile().exists()) {
+				return p.toString();
+			}
+		}
+
+		/*p = IOUtils.findProjectRoot().resolve("infra").resolve("xtf");
 		if (p.toFile().exists()) {
 			return p.toString();
-		}
+		}*/
 		p = FileSystems.getDefault().getPath("/ssh", "ssh-key");
 		if (p.toFile().exists()) {
 			return p.toString();
@@ -50,7 +62,7 @@ public class SshUtil {
 			throw new IllegalStateException("Cannot read SSH key", e);
 		}
 	}
-	
+
 	public Session createSshSession(String username, String host) {
 		return createSshSession(username, host, 22);
 	}
@@ -59,6 +71,7 @@ public class SshUtil {
 		try {
 			Session result = JSCH.getSession(username, host, port);
 			result.setConfig("StrictHostKeyChecking", "no");
+			result.setConfig("PreferredAuthentications", "publickey");
 
 			return result;
 		} catch (JSchException ex) {

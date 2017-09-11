@@ -1,5 +1,10 @@
 package cz.xtf.openshift.builder;
 
+import cz.xtf.openshift.OpenShiftAuxiliary;
+import cz.xtf.openshift.OpenshiftApplication;
+import cz.xtf.openshift.builder.buildconfig.SourceBuildStrategy;
+import cz.xtf.openshift.builder.pod.ContainerBuilder;
+import cz.xtf.openshift.external.ExternalService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -7,11 +12,6 @@ import cz.xtf.TestConfiguration;
 import cz.xtf.build.XTFBuild;
 import cz.xtf.build.BuildDefinition;
 import cz.xtf.build.BuildManagerV2;
-import cz.xtf.openshift.OpenShiftAuxiliary;
-import cz.xtf.openshift.OpenshiftApplication;
-import cz.xtf.openshift.builder.buildconfig.SourceBuildStrategy;
-import cz.xtf.openshift.builder.pod.ContainerBuilder;
-import cz.xtf.openshift.external.ExternalService;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -88,7 +88,9 @@ public class ApplicationBuilder {
 		s2iStrategy = buildConfig()
 				.gitSource(gitRepo)
 				.setOutput(applicationName + "-image")
-				.sti().fromDockerImage(baseImage);
+				.sti()
+					.forcePull(true)
+					.fromDockerImage(baseImage);
 		if (useMavenProxy) {
 			s2iStrategy.addEnvVariable("MAVEN_MIRROR_URL", TestConfiguration.mavenProxyURL());
 		}

@@ -41,6 +41,10 @@ public class ImageStreamRequest {
 	 * @return the image by the {@code imageName}
 	 */
 	public String getImage() {
+		if (imageName.contains("/")) {
+			return imageName;
+		}
+
 		try {
 			return (String) ImageRegistry.class.getDeclaredMethod(imageName).invoke(ImageRegistry.get());
 		} catch (ReflectiveOperationException e) {

@@ -53,6 +53,7 @@ public class SsoWebUIApi implements SsoApi {
 			DriverUtil.waitFor(driver, By.id("id"));
 			String id = driver.findElement(By.id("id")).getAttribute("value");
 
+			// .../auth/admin/master/console/#/realms/xtf/users/33de31cb-a5c3-486a-8556-ecbc669f2c19/user-credentials
 			driver.navigate().to(authUrl + "/admin/master/console/#/realms/" + realm + "/users/" + id + "/user-credentials");
 			DriverUtil.waitFor(driver, By.id("password"), By.id("confirmPassword"));
 
@@ -107,6 +108,7 @@ public class SsoWebUIApi implements SsoApi {
 	@Override
 	public void createRole(String rolename) {
 		try {
+			// .../auth/admin/master/console/#/create/role/xtf
 			String createRolePage = authUrl + "/admin/master/console/#/create/role/" + realm + "/";
 
 			driver.navigate().to(createRolePage);
@@ -124,7 +126,7 @@ public class SsoWebUIApi implements SsoApi {
 	@Override
 	public String createOidcBearerClient(String clientName) {
 		try {
-			// http://sso.maschmid.cloudapps.example.com/auth/admin/master/console/#/create/client/foobar
+			// .../auth/admin/master/console/#/create/client/foobar
 			driver.navigate().to(authUrl + "/admin/master/console/#/create/client/" + realm + "/");
 			DriverUtil.waitFor(driver, By.id("clientId"));
 
@@ -150,7 +152,7 @@ public class SsoWebUIApi implements SsoApi {
 	@Override
 	public String createOicdConfidentialClient(String clientName, String rootUrl, List<String> redirectUri, String baseUrl, String adminUrl) {
 		try {
-			// http://sso.maschmid.cloudapps.example.com/auth/admin/master/console/#/create/client/foobar
+			// .../auth/admin/master/console/#/create/client/foobar
 			driver.navigate().to(authUrl + "/admin/master/console/#/create/client/" + realm + "/");
 			DriverUtil.waitFor(driver, By.id("clientId"), By.id("rootUrl"));
 
@@ -220,7 +222,7 @@ public class SsoWebUIApi implements SsoApi {
 	@Override
 	public String createOidcPublicClient(String clientName, String rootUrl, List<String> redirectUris, List<String> webOrigins) {
 		try {
-			// http://sso.maschmid.cloudapps.example.com/auth/admin/master/console/#/create/client/foobar
+			// .../auth/admin/master/console/#/create/client/foobar
 			driver.navigate().to(authUrl + "/admin/master/console/#/create/client/" + realm + "/");
 			DriverUtil.waitFor(driver, By.id("clientId"), By.id("rootUrl"));
 
@@ -262,6 +264,7 @@ public class SsoWebUIApi implements SsoApi {
 	@Override
 	public void addBultinMappersToSamlClient(String clientId) {
 		try {
+			// .../auth/admin/master/console/#/realms/xtf/clients/dc568c35-8ea3-4ba7-a4d0-e3fd708d2c4d/add-mappers
 			driver.navigate().to(authUrl + "/admin/master/console/#/realms/" + realm + "/clients/" + clientId + "/add-mappers");
 
 			DriverUtil.waitFor(driver, By.id("saml-user-property-mapper"), By.xpath("//button[contains(text(),'Add selected')]"));
@@ -365,6 +368,7 @@ public class SsoWebUIApi implements SsoApi {
 	@Override
 	public void updateUserDetails(User user) {
 		try {
+			// .../auth/admin/master/console/#/realms/xtf/users/7cf90e9f-d2da-47ef-9865-38d4073221d0
 			String userDetailPage = authUrl + "/admin/master/console/#/realms/" + realm + "/users/" + user.id;
 
 			driver.navigate().to(userDetailPage);
@@ -393,6 +397,7 @@ public class SsoWebUIApi implements SsoApi {
 	@Override
 	public void forceNameIdFormat(String clientId) {
 		try {
+			// .../auth/admin/master/console/#/realms/xtf/clients/dc568c35-8ea3-4ba7-a4d0-e3fd708d2c4d
 			driver.navigate().to(authUrl + "/admin/master/console/#/realms/" + realm + "/clients/" + clientId);
 
 			final By xpath = By.xpath("//label[@for='samlForceNameIdFormat']/span/span[contains(@class, 'onoffswitch-active')]");

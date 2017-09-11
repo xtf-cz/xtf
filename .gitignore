@@ -1,0 +1,15 @@
+# Maven
+target
+
+# Eclipse
+.settings
+.classpath
+.project
+
+# vim
+.*.swp
+
+# Intellij
+.idea/
+*.iml
+*.iws
