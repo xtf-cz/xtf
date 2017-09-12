@@ -36,17 +36,20 @@ public class SshUtil {
 		Path p;
 
 		String keyPath = TestConfiguration.masterSshKeyPath();
+
 		if (keyPath != null) {
 			p = FileSystems.getDefault().getPath(keyPath);
+
+			if (p.toFile().exists()) {
+				return p.toString();
+			}
+
+			p = IOUtils.findProjectRoot().resolve(keyPath);
 			if (p.toFile().exists()) {
 				return p.toString();
 			}
 		}
-
-		/*p = IOUtils.findProjectRoot().resolve("infra").resolve("xtf");
-		if (p.toFile().exists()) {
-			return p.toString();
-		}*/
+		
 		p = FileSystems.getDefault().getPath("/ssh", "ssh-key");
 		if (p.toFile().exists()) {
 			return p.toString();
