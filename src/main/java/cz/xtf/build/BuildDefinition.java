@@ -21,7 +21,7 @@ public abstract class BuildDefinition {
 	private Map<String, String> envProperties;
 
 	@Setter
-	private boolean forcePull = false;
+	private boolean forcePull = true;
 
 	protected BuildDefinition(String appName, String builderImage) {
 		this(appName, builderImage, new HashMap<String, String>());

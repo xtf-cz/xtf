@@ -1,9 +1,8 @@
 package cz.xtf.openshift.db;
 
-import org.apache.commons.io.IOUtils;
-
 import cz.xtf.openshift.PodService;
 import cz.xtf.openshift.builder.pod.PersistentVolumeClaim;
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.sql.Connection;

@@ -1,5 +1,6 @@
 package cz.xtf.sso.api;
 
+import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -16,8 +17,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class SsoRestApi implements SsoApi {
 
 	public static SsoRestApi get(String authUrl, String realm) {
@@ -25,14 +28,32 @@ public class SsoRestApi implements SsoApi {
 	}
 
 	private final String realmName;
-	private final Keycloak client;
+	private final String authUrl;
+	private Keycloak client;
 
 	private SsoRestApi(String authUrl, String realmName) {
 		if (authUrl.contains("https://")) {
 			throw new UnsupportedOperationException("Rest api does not work through https withing openshift router, see (there is issue somewhere)");
 		}
 		this.realmName = realmName;
+		this.authUrl = authUrl;
+
+		initClient();
+	}
+
+	/**
+	 * Keycloak client is initialized by creating class instance however, if redirected to another node, it needs to be reinitialized.
+	 */
+	public void initClient() {
 		this.client = Keycloak.getInstance(authUrl, "master", "admin", "admin", "admin-cli");
+	}
+
+	public <R> R withKeycloakClient(Function<Keycloak, R> f) {
+		return f.apply(client);
+	}
+
+	public String getRealmName() {
+		return realmName;
 	}
 
 	@Override
@@ -58,7 +79,7 @@ public class SsoRestApi implements SsoApi {
 		response.close();
 
 		String userId = getUserId(username);
-		client.realm(realmName).users().get(getUserId(username)).resetPassword(cr);
+		client.realm(realmName).users().get(userId).resetPassword(cr);
 
 		if (rolenames != null && rolenames.size() > 0) {
 			addRealmRolesToUser(userId, rolenames);

@@ -5,22 +5,14 @@ import cz.xtf.build.BuildManagerV2;
 import cz.xtf.build.XTFBuild;
 import cz.xtf.junit.annotation.UsesBuild;
 import cz.xtf.junit.annotation.PrepareProject;
-import cz.xtf.junit.annotation.RecordImageUsage;
-import cz.xtf.junit.filter.AbstractClassFilter;
-import cz.xtf.junit.filter.AnnotationNameFilter;
-import cz.xtf.junit.filter.ClassNameSuffixInclusionFilter;
-import cz.xtf.junit.filter.ManualTestFilter;
-import cz.xtf.junit.filter.SuiteClassFilter;
+import cz.xtf.junit.annotation.*;
 import cz.xtf.manipulation.ImageStreamProcessor;
 import cz.xtf.manipulation.LogCleaner;
 import cz.xtf.manipulation.ProjectHandler;
 import cz.xtf.manipulation.Recorder;
-import cz.xtf.junit.annotation.TestFilterMethod;
-import cz.xtf.junit.annotation.TestSuffix;
 import cz.xtf.openshift.imagestream.ImageStreamRequest;
 
-import cz.xtf.junit.filter.ClassNameRegExExclusionFilter;
-import cz.xtf.util.WaitingUtils;
+import cz.xtf.junit.filter.*;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
@@ -206,7 +198,7 @@ public class XTFTestSuite extends ParentRunner<Runner> {
 		final Set<ImageStreamRequest> requests = SuiteUtils.getImageStreamRequests(suiteClass, tcs);
 		if (requests.size() > 0) {
 			requests.forEach(r -> ImageStreamProcessor.createImageStream(r));
-			WaitingUtils.waitSilently("wait-for-ImageStreams");
+			waitSilently("wait-for-ImageStreams");
 		}
 	}
 

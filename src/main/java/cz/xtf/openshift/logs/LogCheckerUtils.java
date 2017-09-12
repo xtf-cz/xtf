@@ -17,8 +17,6 @@ import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
-import static cz.xtf.openshift.logs.LogCleaner.cleanLine;
-
 public class LogCheckerUtils {
 	private static final Logger LOGGER = LoggerFactory.getLogger(LogCheckerUtils.class);
 
@@ -33,7 +31,7 @@ public class LogCheckerUtils {
 				for (int i = 0; i < patterns.length; ++i) {
 					Pattern pattern = patterns[i];
 					if (pattern.matcher(line).find()) {
-						LOGGER.info("Found pattern {} on line '{}'", pattern, cleanLine(line));
+						LOGGER.info("Found pattern {} on line '{}'", pattern, LogCleaner.cleanLine(line));
 						found[i] = true;
 					}
 				}
@@ -51,7 +49,7 @@ public class LogCheckerUtils {
 					for (int i = 0; i < patterns.length; ++i) {
 						Pattern pattern = patterns[i];
 						if (pattern.matcher(line).find()) {
-							LOGGER.info("Found pattern {} on line '{}'", pattern, cleanLine(line));
+							LOGGER.info("Found pattern {} on line '{}'", pattern, LogCleaner.cleanLine(line));
 							found[i] = true;
 						}
 					}
@@ -72,7 +70,7 @@ public class LogCheckerUtils {
 				for (int i = 0; i < patterns.length; ++i) {
 					Pattern pattern = patterns[i];
 					if (pattern.matcher(line).find()) {
-						LOGGER.info("Found pattern {} on line '{}'", pattern, cleanLine(line));
+						LOGGER.info("Found pattern {} on line '{}'", pattern, LogCleaner.cleanLine(line));
 						found[i] = line;
 					}
 				}

@@ -12,6 +12,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import cz.xtf.junit.annotation.KnownIssue;
+import cz.xtf.junit.annotation.release.SinceVersion;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -26,6 +27,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.annotation.Annotation;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -153,6 +155,23 @@ public class IntermediateReporter extends RunListener {
 		return false;
 	}
 
+	private boolean isSinceVersion(final Failure failure) {
+		return failure.getDescription().getAnnotation(SinceVersion.class) != null;
+	}
+
+	private String prependSinceVersionJira(final Failure failure, final String message) {
+		for (Annotation ann : failure.getDescription().getAnnotations()) {
+			if (ann.annotationType() == SinceVersion.class) {
+				SinceVersion sv = (SinceVersion)ann;
+				if (!sv.jira().isEmpty()) {
+					return "@SinceVersion " + sv.jira() + "\n" + message;
+				}
+			}
+		}
+
+		return message;
+	}
+
 	@Override
 	public void testFailure(Failure failure) throws Exception {
 		if (working) {
@@ -184,8 +203,16 @@ public class IntermediateReporter extends RunListener {
 
 				testcase.appendChild(element);
 
+				final String message;
+				if (isSinceVersion(failure)) {
+					message = prependSinceVersionJira(failure, failure.getMessage());
+				}
+				else {
+					message = failure.getMessage();
+				}
+
 				element.setAttribute("type", safeString(failure.getException().getClass().getName()));
-				element.setAttribute("message", safeString(failure.getMessage()));
+				element.setAttribute("message", safeString(message));
 				element.appendChild(xml.createCDATASection(safeString(failure.getTrace())));
 
 				testsuite.get().appendChild(testcase);

@@ -1,18 +1,18 @@
 package cz.xtf.openshift.builder.pod;
 
-import org.apache.commons.lang3.StringUtils;
-
-import cz.xtf.model.TransportProtocol;
 import cz.xtf.openshift.builder.EnvironmentConfiguration;
 import cz.xtf.openshift.builder.PodBuilder;
 import cz.xtf.openshift.builder.deployment.AbstractProbe;
 import cz.xtf.openshift.builder.deployment.Handler;
+import cz.xtf.openshift.builder.limits.MemoryResource;
+import cz.xtf.openshift.builder.limits.ResourceLimitBuilder;
+import org.apache.commons.lang3.StringUtils;
+
+import cz.xtf.model.TransportProtocol;
 import cz.xtf.openshift.builder.deployment.LivenessProbe;
 import cz.xtf.openshift.builder.deployment.ReadinessProbe;
 import cz.xtf.openshift.builder.limits.CPUResource;
 import cz.xtf.openshift.builder.limits.ComputingResource;
-import cz.xtf.openshift.builder.limits.MemoryResource;
-import cz.xtf.openshift.builder.limits.ResourceLimitBuilder;
 import cz.xtf.tuple.Tuple;
 
 import java.util.Arrays;

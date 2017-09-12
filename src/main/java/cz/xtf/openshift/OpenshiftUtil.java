@@ -1,5 +1,6 @@
 package cz.xtf.openshift;
 
+import cz.xtf.openshift.builder.DeploymentConfigBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.entity.ContentType;
@@ -13,7 +14,6 @@ import cz.xtf.TestParent;
 import cz.xtf.docker.OpenShiftNode;
 import cz.xtf.http.HttpClient;
 import cz.xtf.http.HttpUtil;
-import cz.xtf.openshift.builder.DeploymentConfigBuilder;
 import cz.xtf.time.TimeUtil;
 import cz.xtf.tuple.Tuple;
 import cz.xtf.wait.WaitUtil;
@@ -454,6 +454,10 @@ public class OpenshiftUtil implements AutoCloseable {
 
 	public void deleteService(Service service) {
 		withDefaultUser(client -> client.services().delete(service));
+	}
+
+	public void deleteService(String name) {
+		withDefaultUser(client -> client.services().withName(name).delete());
 	}
 
 	// endpoints

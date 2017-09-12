@@ -12,11 +12,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static cz.xtf.openshift.imagestream.ImageStreamAnnotationConverter.convert;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.reflections.ReflectionUtils.getAllAnnotations;
 
-import cz.xtf.openshift.imagestream.ImageStreamAnnotationConverter;
 
 /**
  * Utils for the {@link XTFTestSuite}.
@@ -56,7 +56,7 @@ final class SuiteUtils {
 	}
 
 	private static void addIfApplicable(Class<?> c, Stream<ImageStream> stream, List<ImageStreamRequest> requests) {
-		stream.flatMap(is -> isApplicable(c, is) ? Stream.of(is) : Stream.of()).map(is -> ImageStreamAnnotationConverter.convert(is)).forEach(r -> requests.add(r));
+		stream.flatMap(is -> isApplicable(c, is) ? Stream.of(is) : Stream.of()).map(is -> convert(is)).forEach(r -> requests.add(r));
 	}
 
 	private static boolean isApplicable(Class<?> c, ImageStream is) {

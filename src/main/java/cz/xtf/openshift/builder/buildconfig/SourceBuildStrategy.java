@@ -4,9 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
-
 import cz.xtf.openshift.builder.BuildConfigBuilder;
+import org.apache.commons.lang3.StringUtils;
 
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;

@@ -19,6 +19,7 @@ import cz.xtf.junit.filter.JenkinsRerunFilter;
 import cz.xtf.junit.filter.ManualTestFilter;
 import cz.xtf.junit.filter.NoAnnotationNameFilter;
 import cz.xtf.junit.filter.SuiteClassFilter;
+import cz.xtf.junit.filter.SinceVersionFilter;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -176,6 +177,7 @@ class XTFTestSuiteHelper {
 		filters.addFilter(new AnnotationNameFilter());
 		filters.addFilter(new NoAnnotationNameFilter());
 		filters.addFilter(new JenkinsRerunFilter());
+		filters.addFilter(SinceVersionFilter.instance());
 		filters.addFilters(getDeclaredFilters(suiteClass, ExclusionTestClassFilter.class));
 		return filters;
 	}

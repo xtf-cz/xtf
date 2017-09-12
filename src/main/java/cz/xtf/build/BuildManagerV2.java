@@ -1,6 +1,7 @@
 package cz.xtf.build;
 
 import cz.xtf.TestConfiguration;
+import cz.xtf.build.BuildProcess.BuildStatus;
 import cz.xtf.openshift.OpenshiftUtil;
 
 import java.util.Collection;
@@ -32,7 +33,6 @@ public class BuildManagerV2 {
 		OpenshiftUtil openshift = OpenshiftUtil.getInstance();
 		openshift.createProject(TestConfiguration.buildNamespace(), false);
 		openshift.addRoleToGroup(TestConfiguration.buildNamespace(), "system:image-puller", "system:authenticated");
-
 		openshift.createHardResourceQuota(TestConfiguration.buildNamespace(), "max-running-builds", "pods", "5");
 	}
 
@@ -55,17 +55,17 @@ public class BuildManagerV2 {
 		BuildProcess process = builds.getOrDefault(definition, BuildProcessFactory.getProcess(definition));
 		builds.putIfAbsent(definition, process);
 
-		BuildProcess.BuildStatus status = process.getBuildStatus();
+		BuildStatus status = process.getBuildStatus();
 		if (TestConfiguration.forceRebuild()
-				|| status == BuildProcess.BuildStatus.NOT_DEPLOYED
-				|| status == BuildProcess.BuildStatus.OLD_IMAGE
-				|| status == BuildProcess.BuildStatus.GIT_REPO_GONE
-				|| status == BuildProcess.BuildStatus.ERROR
-				|| status == BuildProcess.BuildStatus.FAILED) {
+				|| status == BuildStatus.NOT_DEPLOYED
+				|| status == BuildStatus.OLD_IMAGE
+				|| status == BuildStatus.GIT_REPO_GONE
+				|| status == BuildStatus.ERROR
+				|| status == BuildStatus.FAILED) {
 			process.deleteBuild();
 			process.deployBuild();
 			log.info("Building {}, reason: {}, force rebuild: {}", process.getBuildName(), status, TestConfiguration.forceRebuild());
-		} else if (status == BuildProcess.BuildStatus.SOURCE_CHANGE) {
+		} else if (status == BuildStatus.SOURCE_CHANGE) {
 			process.updateBuild();
 			log.info("Building {}, reason: {}", process.getBuildName(), status, TestConfiguration.forceRebuild());
 		} else {
@@ -118,7 +118,7 @@ public class BuildManagerV2 {
 	 * @param definition	definition of build
 	 * @return			status of build
 	 */
-	public BuildProcess.BuildStatus getBuildStatus(BuildDefinition definition) {
+	public BuildStatus getBuildStatus(BuildDefinition definition) {
 		return builds.get(definition).getBuildStatus();
 	}
 

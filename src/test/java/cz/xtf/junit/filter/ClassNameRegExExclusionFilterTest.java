@@ -1,5 +1,6 @@
 package cz.xtf.junit.filter;
 
+import org.junit.After;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,6 +63,12 @@ public class ClassNameRegExExclusionFilterTest {
 			System.setProperty(ClassNameRegExExclusionFilter.SYSTEM_PROPERTY_EXCLUDE, excludeRegex);
 		}
 		filter = new ClassNameRegExExclusionFilter();
+	}
+
+	@After
+	public void removeProperties(){
+		System.getProperties().remove(ClassNameRegExExclusionFilter.SYSTEM_PROPERTY_INCLUDE);
+		System.getProperties().remove(ClassNameRegExExclusionFilter.SYSTEM_PROPERTY_EXCLUDE);
 	}
 
 	private static class TestClass {}

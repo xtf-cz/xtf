@@ -2,6 +2,7 @@ package cz.xtf.build;
 
 import cz.xtf.TestConfiguration;
 import cz.xtf.TestParent;
+import cz.xtf.build.SourceCodeUpdater.OnDiff;
 import cz.xtf.git.GitProject;
 import cz.xtf.git.GitUtil;
 import cz.xtf.git.PomModifier;
@@ -112,11 +113,11 @@ public class PathGitBuildProcess extends PathBuildProcess {
 	private BuildStatus areProjectsDifferent(Path expected, Path present) {
 		try {
 			log.info("Checking diff between source codes: expected -> present");
-			SourceCodeUpdater expectedPresentComparator = new SourceCodeUpdater(expected, present, SourceCodeUpdater.OnDiff.COPY);
+			SourceCodeUpdater expectedPresentComparator = new SourceCodeUpdater(expected, present, OnDiff.COPY);
 			Files.walkFileTree(expected, expectedPresentComparator);
 
 			log.info("Checking diff between source codes: present -> expected");
-			SourceCodeUpdater presentExpectedComparator = new SourceCodeUpdater(present, expected, SourceCodeUpdater.OnDiff.DELETE);
+			SourceCodeUpdater presentExpectedComparator = new SourceCodeUpdater(present, expected, OnDiff.DELETE);
 			Files.walkFileTree(present, presentExpectedComparator);
 
 			if (expectedPresentComparator.isError() || presentExpectedComparator.isError()) {
