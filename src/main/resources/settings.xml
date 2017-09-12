@@ -89,72 +89,6 @@
 				</pluginRepository>
 			</pluginRepositories>
 		</profile>
-		<profile>
-			<id>brewroot-jboss-fuse-63</id>
-			<repositories>
-				<repository>
-					<id>brewroot-jboss-fuse-63</id>
-					<name>brewroot-jboss-fuse-63</name>
-					<url>http://download.eng.bos.redhat.com/brewroot/repos/jb-fuse-6.2-build/latest/maven/</url>
-					<releases>
-						<enabled>true</enabled>
-						<updatePolicy>never</updatePolicy>
-					</releases>
-					<snapshots>
-						<enabled>true</enabled>
-						<updatePolicy>never</updatePolicy>
-					</snapshots>
-				</repository>
-			</repositories>
-			<pluginRepositories>
-				<pluginRepository>
-					<id>brewroot-jboss-fuse-63</id>
-					<name>brewroot-jboss-fuse-63</name>
-					<url>http://download.eng.bos.redhat.com/brewroot/repos/jb-fuse-6.2-build/latest/maven/</url>
-					<releases>
-						<enabled>true</enabled>
-						<updatePolicy>never</updatePolicy>
-					</releases>
-					<snapshots>
-						<enabled>true</enabled>
-						<updatePolicy>never</updatePolicy>
-					</snapshots>
-				</pluginRepository>
-			</pluginRepositories>
-		</profile>
-		<profile>
-			<id>brewroot-jboss-fis-20</id>
-			<repositories>
-				<repository>
-					<id>brewroot-jboss-fis-20</id>
-					<name>brewroot-jboss-fis-20</name>
-					<url>http://download.eng.bos.redhat.com/brewroot/repos/jb-fis-2.0-maven-build/latest/maven/</url>
-					<releases>
-						<enabled>true</enabled>
-						<updatePolicy>never</updatePolicy>
-					</releases>
-					<snapshots>
-						<enabled>true</enabled>
-						<updatePolicy>never</updatePolicy>
-					</snapshots>
-				</repository>
-			</repositories>
-			<pluginRepositories>
-				<pluginRepository>
-					<id>brewroot-jboss-fis-20</id>
-					<name>brewroot-jboss-fis-20</name>
-					<url>http://download.eng.bos.redhat.com/brewroot/repos/jb-fis-2.0-maven-build/latest/maven/</url>
-					<releases>
-						<enabled>true</enabled>
-						<updatePolicy>never</updatePolicy>
-					</releases>
-					<snapshots>
-						<enabled>true</enabled>
-						<updatePolicy>never</updatePolicy>
-					</snapshots>
-				</pluginRepository>
-			</pluginRepositories>
-		</profile>
 
 		<profile>
 			<id>fuse-origin-ea</id>
@@ -190,8 +124,6 @@
 		<activeProfile>redhat-ga-repository</activeProfile>
 		<activeProfile>redhat-ea-repository</activeProfile>
 		<activeProfile>jboss-ea-repository</activeProfile>
-		<activeProfile>brewroot-jboss-fuse-63</activeProfile>
-		<activeProfile>brewroot-jboss-fis-20</activeProfile>
 		<activeProfile>fuse-origin-ea</activeProfile>
 	</activeProfiles>
 
