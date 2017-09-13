@@ -15,9 +15,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>
  * At initialization creates specified namespace if not present and configures necessary rolebinding.
  * <p>
- * Set cz.xtf.config.build.namespace=buildNamespace for used namespace</br>
- * Set cz.xtf.config.build.force.rebuild=true for forced rebuild once per jvm run.</br>
- * Set cz.xtf.config.build.binary=true for running binary build
+ * Set xtf.config.build.namespace=buildNamespace for used namespace</br>
+ * Set xtf.config.build.force.rebuild=true for forced rebuild once per jvm run.</br>
+ * Set xtf.config.build.binary=true for running binary build
  */
 @Slf4j
 public class BuildManagerV2 {
