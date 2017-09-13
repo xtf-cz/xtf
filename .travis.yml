@@ -16,3 +16,7 @@ deploy:
     on:
       branch: master
       tags: true
+
+cache:
+  directories:
+  - $HOME/.m2
