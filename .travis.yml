@@ -5,7 +5,7 @@ after_success:
 - cp ./target/classes/bintray.json bintray.json
 
 before_deploy:
-- mvn clean deploy -B -DcreateChecksum=true -DgeneratePom=true -DaltDeploymentRepository="local::default::file://repository"
+- mvn clean deploy -B -DskipTests=true -Dmaven.javadoc.skip=true -DcreateChecksum=true -DgeneratePom=true -DaltDeploymentRepository="local::default::file://repository"
 
 deploy:
   - provider: bintray
