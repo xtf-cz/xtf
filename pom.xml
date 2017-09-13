@@ -3,7 +3,7 @@
 
 	<groupId>cz.xtf</groupId>
 	<artifactId>utilities</artifactId>
-	<version>0.2-SNAPSHOT</version>
+	<version>0.1-SNAPSHOT</version>
 
 	<name>XTF</name>
 
@@ -217,6 +217,12 @@
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>${basedir}/src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
 		<pluginManagement>
 			<plugins>
 				<plugin>

@@ -1,3 +1,18 @@
 language: java
 install: mvn -s src/main/resources/settings.xml install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 script: mvn -s src/main/resources/settings.xml clean verify
+after_success:
+- cp ./target/classes/bintray.json bintray.json
+
+before_deploy:
+- mvn clean deploy -B -DcreateChecksum=true -DgeneratePom=true -DaltDeploymentRepository="local::default::file://repository"
+
+deploy:
+  - provider: bintray
+    file: bintray.json
+    user: xtf-cz
+    key:
+      secure: "PZYm9yI8l9xe6wG/rQdax+n5v3/3mVi+AsJAZK7bIFQgpGvVnlOVGfpWEm6+y5tCZCnzz37Cm55wEjj2oUBTP6w7cMrT0aIVNPtn8NTSGt8R1pHGT1MSdGnQqb1O9vzbZ077m3VVvMcZH7ahVi1cwdTKEf+0grWp1CVb0F9Ddz+3tuS6hr8TVUX3VzttKG6rPOSG8tmGSn3mwuwk2qrvShy7wdO1MB+0YIMjImN2t2jQ+WIdCwZrjU/8XXY1NpssVmZEhXA1WnnOvZoHSqMzvt86blNDopH2FQHpnGN9dSp0yDlBHdw3a123faw6ZaCbeX313PCJ9duKHhw8JD5oZvttNQPm4OOOcVyS0c6wsHp8DqXUNf8AdBXsOKP8t9OpQDjRCqhuBLVjY7JHsyN7hzcy7dk4cnX1fBjv+C9zsolgIRNFHURwKUKEUzd1r5Jxn9PwA8VlwkMNT334AghbhtgSPOuPjK3tpcqRG57aVvhdw17TNsZ9wBiCV8BCWEby/kLmbAQvIMpxh/PeUpoZfkS9GljOh1wMvUmFWTayVXQtA7PnMnUVVWvGZZArHE0HSQXCtupzpi2gGo0r0qM0kybyayNlJb98Jvzji6P2inNGWEthMRP4H8/Yh2OWicY9MiL/T2UsuT9VUwE83Cr7x4O0vy9aj7Jk5Y41J5PIykw="
+    on:
+      branch: master
+      tags: true
