@@ -18,12 +18,12 @@ public class ClassNameRegExExclusionFilter implements ExclusionTestNameFilter {
 	/**
 	 * System property name with the regular expression for class inclusion.
 	 */
-	public static final String SYSTEM_PROPERTY_INCLUDE = "cz.xtf.test.regex";
+	public static final String SYSTEM_PROPERTY_INCLUDE = "xtf.test.regex";
 
 	/**
 	 * System property name with the regular expression for class exclusion.
 	 */
-	public static final String SYSTEM_PROPERTY_EXCLUDE = "cz.xtf.test.regex.exclude";
+	public static final String SYSTEM_PROPERTY_EXCLUDE = "xtf.test.regex.exclude";
 
 	@Getter private final Pattern includePattern;
 	@Getter private final Pattern excludePattern;
