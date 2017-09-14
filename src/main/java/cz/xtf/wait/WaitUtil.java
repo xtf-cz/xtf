@@ -17,6 +17,7 @@ import cz.xtf.openshift.OpenshiftUtil;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.openshift.api.model.Build;
+
 import org.apache.commons.lang3.ArrayUtils;
 
 public class WaitUtil {
@@ -71,6 +72,10 @@ public class WaitUtil {
 		return false;
 	}
 
+	private static boolean _areExactlyNPodsRunning(Predicate<Pod> podFilter, int n) {
+		return openshift.getPods().stream().filter(podFilter).filter(WaitUtil::isPodRunning).count() == n;
+	}
+
 	private static boolean _areNPodsReady(Predicate<Pod> podFilter, int n) {
 		return openshift.getPods().stream().filter(podFilter).filter(WaitUtil::isPodReady).count() >= n;
 	}
@@ -85,6 +90,14 @@ public class WaitUtil {
 
 	public static boolean isAPodReady(Predicate<Pod> podFilter) {
 		return _areNPodsReady(podFilter, 1);
+	}
+
+	public static BooleanSupplier areExactlyNPodsRunning(final String labelName, final String labelValue, int n) {
+		return () -> _areExactlyNPodsRunning(pod -> labelValue.equals(pod.getMetadata().getLabels().get(labelName)), n);
+	}
+
+	public static BooleanSupplier areExactlyNPodsRunning(String appName, int n) {
+		return () -> _areExactlyNPodsRunning(pod -> appName.equals(pod.getMetadata().getLabels().get("name")), n);
 	}
 
 	public static BooleanSupplier isAPodReady(String appName) {
@@ -126,7 +139,7 @@ public class WaitUtil {
 	public static BooleanSupplier hasPodRestarted(String appName) {
 		return () -> hasAnyPodRestarted(pod -> appName.equals(pod.getMetadata().getLabels().get("name")));
 	}
-	
+
 	public static BooleanSupplier hasPodRestarted(final String labelName, final String labelValue) {
 		return () -> hasAnyPodRestarted(pod -> labelValue.equals(pod.getMetadata().getLabels().get(labelName)));
 	}
@@ -139,7 +152,9 @@ public class WaitUtil {
 		return () -> openshift.getPods().stream().filter(podFilter).filter(p -> WaitUtil.hasPodRestartedAtLeastNTimes(p, n)).count() > 0;
 	}
 
-	public static BooleanSupplier isAPvcBound(String pvcName) { return () -> openshift.getPersistentVolumeClaim(pvcName).getStatus().getPhase().equals("Bound"); }
+	public static BooleanSupplier isAPvcBound(String pvcName) {
+		return () -> openshift.getPersistentVolumeClaim(pvcName).getStatus().getPhase().equals("Bound");
+	}
 
 	public static BooleanSupplier urlReturnsCode(String url, int... codes) {
 		return () -> {
