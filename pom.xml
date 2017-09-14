@@ -14,6 +14,14 @@
 		<tag>${project.version}</tag>
 	</scm>
 
+	<distributionManagement>
+		<repository>
+			<id>bintray-xtf-cz-xtf</id>
+			<name>xtf-cz-xtf</name>
+			<url>https://api.bintray.com/maven/xtf-cz/xtf/cz.xtf.utilities/;publish=1</url>
+		</repository>
+	</distributionManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>io.fabric8</groupId>
