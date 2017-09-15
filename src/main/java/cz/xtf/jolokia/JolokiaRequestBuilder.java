@@ -50,13 +50,18 @@ public class JolokiaRequestBuilder {
 				.append("/api/v1/namespaces/").append(namespace).append("/pods")
 				.append("/https:").append(pod.getMetadata().getName()).append(":8778/proxy")
 				.append("/jolokia")
-				.append("/exec/")
+				.append(this.amqReq.execMethod != null ? "/exec/" : "/read/")
 				.append(beanName);
 		if (amqReq != null) {
 			sb.append(",brokerName=").append(pod.getMetadata().getName())
 					.append(",destinationType=").append(this.amqReq.destinationType)
 					.append(",destinationName=").append(this.amqReq.destinationName)
-					.append("/").append(this.amqReq.execMethod).append("%28%29");
+					.append("/");
+					if (this.amqReq.execMethod != null) {
+						sb.append(this.amqReq.execMethod).append("%28%29");
+					} else {
+						sb.append(this.amqReq.attribute);
+					}
 		}
 		return sb.toString();
 	}
@@ -65,6 +70,7 @@ public class JolokiaRequestBuilder {
 		String destinationName;
 		String destinationType;
 		String execMethod;
+		String attribute;
 
 		JolokiaRequestBuilder parent;
 
@@ -80,6 +86,11 @@ public class JolokiaRequestBuilder {
 
 		public AmqJolokiaRequest withExecMethod(String execMethod) {
 			this.execMethod = execMethod;
+			return this;
+		}
+
+		public AmqJolokiaRequest withAttribute(String attribute){
+			this.attribute = attribute;
 			return this;
 		}
 
