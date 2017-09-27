@@ -174,6 +174,10 @@ public abstract class TestParent {
 		}
 	}
 
+	/**
+	 * This method is deprecated and will be removed, please switch to {@link cz.xtf.build.Project#findApplicationDirectory(String, String, String)}
+	 */
+	@Deprecated
 	public static Path findApplicationDirectory(String moduleName, String appName, String subModuleName) {
 		// Tests are started either from the parent directory or model directory
 		Path path;
@@ -219,10 +223,10 @@ public abstract class TestParent {
 		throw new IllegalArgumentException("Cannot find directory with STI app sources");
 	}
 
+	@Deprecated
 	public static Path findApplicationDirectory(String moduleName, String appName) {
 		return findApplicationDirectory(moduleName, appName, null);
 	}
-
 
 	public static Path findModuleDirectory(String moduleName) {
 		Path path;

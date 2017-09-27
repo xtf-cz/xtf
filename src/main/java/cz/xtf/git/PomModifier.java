@@ -217,6 +217,7 @@ public class PomModifier {
 								|| x.getFileName().endsWith("test-msa")
 								|| x.getFileName().endsWith("test-jdg")
 								|| x.getFileName().endsWith("test-sso")
+								|| x.getFileName().endsWith("test-common")
 				);
 
 	}
@@ -231,6 +232,7 @@ public class PomModifier {
 								|| x.getFileName().endsWith("test-msa")
 								|| x.getFileName().endsWith("test-jdg")
 								|| x.getFileName().endsWith("test-sso")
+								|| x.getFileName().endsWith("test-common")
 				);
 	}
 	

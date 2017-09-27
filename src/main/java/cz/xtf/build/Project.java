@@ -2,6 +2,7 @@ package cz.xtf.build;
 
 import cz.xtf.io.IOUtils;
 import cz.xtf.maven.MavenUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.maven.it.VerificationException;
 
 import java.io.File;
@@ -9,10 +10,12 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Class for dynamic manipulation with applications.
  */
+@Slf4j
 public class Project {
 
 	@FunctionalInterface
@@ -27,6 +30,54 @@ public class Project {
 		}
 	}
 
+	/**
+	 * @see #findApplicationDirectory(String, String, String)
+	 */
+	public static Path findApplicationDirectory(String appName) {
+		return findApplicationDirectory(null, appName, null);
+	}
+
+	/**
+	 * @see #findApplicationDirectory(String, String, String)
+	 */
+	public static Path findApplicationDirectory(String moduleName, String appName) {
+		return findApplicationDirectory(moduleName, appName, null);
+	}
+
+	/**
+	 * Looks up for directory with requested application and returns its path.<br/>
+	 * Application is considered to be under:
+	 * <ul>
+	 *     <li>rootDir/moduleName/src/main/resources/apps/appModuleName/appName</li>
+	 *     <li>rootDir/moduleName/src/test/resources/apps/appModuleName/appName</li>
+	 * </ul>
+	 * <br/>
+	 * findApplicationDirectory(null, appName, null) -> activePomRootDir/src/test/resources/apps/appName
+	 *
+	 * @param moduleName module name in root project (left out if null)
+	 * @param appName name of application
+	 * @param appModuleName module in apps dir (left out if null)
+	 * @return absolute path to app root directory
+	 * @throws IllegalStateException if directory doesn't exist
+	 */
+	public static Path findApplicationDirectory(String moduleName, String appName, String appModuleName) {
+		Path basePath = moduleName == null ? Paths.get("") : IOUtils.findProjectRoot().resolve(moduleName);
+		Path relativePath = appModuleName == null ? Paths.get(appName) : Paths.get(appModuleName, appName);
+
+		Path testApp = basePath.resolve("src/test/resources/apps").resolve(relativePath);
+		Path mainApp = basePath.resolve("src/main/resources/apps").resolve(relativePath);
+
+		if(testApp.toFile().exists()) {
+			log.info("Found project {} at path: {}", appName, testApp.toAbsolutePath().toString());
+			return testApp;
+		} else if (mainApp.toFile().exists()) {
+			log.info("Found project {} at path: {}", appName, mainApp.toAbsolutePath().toString());
+			return mainApp;
+		}
+
+		throw new IllegalStateException("Project app not found");
+	}
+
 	private static final Path PROJECTS_TMP_DIR;
 
 	static {
@@ -34,6 +85,14 @@ public class Project {
 		PROJECTS_TMP_DIR.toFile().mkdirs();
 	}
 
+	/**
+	 * Will create tmp folder with project from origin source.
+	 *
+	 * @param projectOrigin path to origin source
+	 * @param projectName name of the project
+	 * @return new instance pointing to tmp folder with project that can be dynamically modified
+	 * @throws IOException in case that project fails to be copied
+	 */
 	public static Project from(Path projectOrigin, String projectName) throws IOException {
 		Path project = Files.createTempDirectory(PROJECTS_TMP_DIR, projectName);
 		Path pointer = project.resolve(projectName);
