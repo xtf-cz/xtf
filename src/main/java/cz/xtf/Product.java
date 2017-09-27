@@ -2,8 +2,7 @@ package cz.xtf;
 
 public enum Product {
 	EAP("eap"),
-	JWS_TOMCAT7("webserver"),
-	JWS_TOMCAT8("webserver"),
+	JWS("webserver"),
 	AMQ("amq"),
 	JDG("datagrid"),
 	JDV("datavirt"),
@@ -11,7 +10,7 @@ public enum Product {
 	BPMS("processserver"),
 	SSO("sso"),
 	SECRETS("secrets"),
-	DEMOS("demos");
+	JAVA("openjdk");
 	
 	private final String templatePath;
 
