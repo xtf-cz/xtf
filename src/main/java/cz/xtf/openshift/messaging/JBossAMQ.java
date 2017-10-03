@@ -140,7 +140,7 @@ public class JBossAMQ extends DefaultStatefulAuxiliary implements MessageBroker 
 		return this;
 	}
 
-	private String getEnvVarName(final String name) {
+	public String getEnvVarName(final String name) {
 		return String.format("%S_%S", SYMBOLIC_NAME, name);
 	}
 
