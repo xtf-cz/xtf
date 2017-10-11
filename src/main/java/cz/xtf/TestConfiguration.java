@@ -124,6 +124,9 @@ public final class TestConfiguration {
 	public static final String VERSION_EWS = "xtf.version.ews";
 	public static final String VERSION_FUSE = "xtf.version.fuse";
 	public static final String VERSION_KIE = "xtf.version.kie";
+	public static final String VERSION_JDK = "xtf.version.jdk";
+	public static final String VERSION_SSO = "xtf.version.sso";
+	public static final String VERSION_AMQ = "xtf.version.amq";
 	public static final String VERSION_MSA = "xtf.version.msa";
 
 	public static final String CDK_DOMAIN = "cd.xtf.cz";
@@ -814,6 +817,15 @@ public final class TestConfiguration {
 					break;
 				case "VERSION_KIE":
 					props.setProperty(VERSION_KIE, entry.getValue());
+					break;
+				case "VERSION_JDK":
+					props.setProperty(VERSION_JDK, entry.getValue());
+					break;
+				case "VERSION_SSO":
+					props.setProperty(VERSION_SSO, entry.getValue());
+					break;
+				case "VERSION_AMQ":
+					props.setProperty(VERSION_AMQ, entry.getValue());
 					break;
 				case "BUILD_NAMESPACE":
 					props.setProperty(BUILD_NAMESPACE, entry.getValue());

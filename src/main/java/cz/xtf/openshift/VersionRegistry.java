@@ -6,6 +6,11 @@ public class VersionRegistry {
 	private static final String DEFAULT_VERSION_EAP = "6";
 	private static final String DEFAULT_VERSION_EWS = "8";
 	private static final String DEFAULT_VERSION_JDG = "6";
+	private static final String DEFAULT_VERSION_JDV = "6";
+	private static final String DEFAULT_VERSION_KIE = "6";
+	private static final String DEFAULT_VERSION_JDK = "1.8";
+	private static final String DEFAULT_VERSION_SSO = "7";
+	private static final String DEFAULT_VERSION_AMQ = "6";
 	private static VersionRegistry instance;
 
 	private VersionRegistry() {
@@ -48,4 +53,25 @@ public class VersionRegistry {
 		return new ProductVersion(major, TestConfiguration.get().readValue(
 				TestConfiguration.VERSION_JDG));
 	}
+
+	public ProductVersion jdv() {
+		return new ProductVersion(DEFAULT_VERSION_JDV , TestConfiguration.get().readValue(TestConfiguration.VERSION_JDV));
+	}
+
+	public ProductVersion kie() {
+		return new ProductVersion(DEFAULT_VERSION_KIE , TestConfiguration.get().readValue(TestConfiguration.VERSION_KIE));
+	}
+
+	public ProductVersion jdk() {
+		return new ProductVersion(DEFAULT_VERSION_JDK , TestConfiguration.get().readValue(TestConfiguration.VERSION_JDK));
+	}
+
+	public ProductVersion sso() {
+		return new ProductVersion(DEFAULT_VERSION_SSO , TestConfiguration.get().readValue(TestConfiguration.VERSION_SSO));
+	}
+
+	public ProductVersion amq() {
+		return new ProductVersion(DEFAULT_VERSION_AMQ , TestConfiguration.get().readValue(TestConfiguration.VERSION_AMQ));
+	}
+
 }
