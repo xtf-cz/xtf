@@ -45,14 +45,14 @@ public class ProcessKeystoreGenerator {
 	}
 
 	public static Path generateKeystore(String hostname) {
-		return generateKeystore(hostname, hostname, true);
+		return generateKeystore(hostname, hostname, false);
 	}
 	
 	public static Path generateKeystore(String hostname, String keyAlias) {
-		return generateKeystore(hostname, keyAlias, true); 
+		return generateKeystore(hostname, keyAlias, false); 
 	}
 
-	public static Path generateKeystore(String hostname, String keyAlias, boolean importCa) {
+	public static Path generateKeystore(String hostname, String keyAlias, boolean deleteCaFromKeyStore) {
 		String keystore = hostname + ".keystore";
 
 		if (caDir.resolve(keystore).toFile().exists()) {
@@ -66,11 +66,13 @@ public class ProcessKeystoreGenerator {
 
 		processCall(caDir, "openssl", "x509", "-req", "-CA", "ca-certificate.pem", "-CAkey", "ca-key.pem", "-in", hostname + ".csr", "-out", hostname + ".cer", "-days", "365", "-CAcreateserial", "-passin", "pass:password");
 
-		if (importCa) {
-			processCall(caDir, "keytool", "-import", "-noprompt", "-keystore", keystore, "-file", "ca-certificate.pem", "-alias", "xtf.ca", "-storepass", "password");
-		}
+		processCall(caDir, "keytool", "-import", "-noprompt", "-keystore", keystore, "-file", "ca-certificate.pem", "-alias", "xtf.ca", "-storepass", "password");
 
 		processCall(caDir, "keytool", "-import", "-keystore", keystore, "-file", hostname + ".cer", "-alias", keyAlias, "-storepass", "password");
+		
+		if (deleteCaFromKeyStore) {
+			processCall(caDir, "keytool", "-delete", "-noprompt", "-alias", "xtf.ca", "-keystore", keystore, "-storepass", "password");
+		}
 
 		return caDir.resolve(keystore);
 	}
