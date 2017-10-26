@@ -831,7 +831,7 @@ public class OpenshiftUtil implements AutoCloseable {
 
 	public RoleBinding updateRoleBinding(RoleBinding roleBinding) {
 		return withAdminUser(client -> client.inNamespace(roleBinding.getMetadata().getNamespace())
-				.roleBindings()
+				.roleBindings().withName(roleBinding.getMetadata().getName())
 				.replace(roleBinding));
 	}
 
