@@ -31,8 +31,8 @@ import io.fabric8.kubernetes.api.model.Endpoints;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.extensions.HorizontalPodAutoscaler;
-import io.fabric8.kubernetes.api.model.extensions.HorizontalPodAutoscalerBuilder;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerBuilder;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
@@ -477,13 +477,12 @@ public class ApplicationBuilder {
 			return new HorizontalPodAutoscalerBuilder()
 					.withNewMetadata().withName(applicationName).endMetadata()
 					.withNewSpec()
-						.withNewScaleRef()
+						.withNewScaleTargetRef()
 							.withKind("DeploymentConfig")
 							.withName(deploymentConfig().getName())
-							.withSubresource("scale")
-						.endScaleRef()
-						.withNewCpuUtilization(targetCPUUtilization).
-						withMinReplicas(minReplicas).
+						.endScaleTargetRef()
+						.withTargetCPUUtilizationPercentage(targetCPUUtilization)
+						.withMinReplicas(minReplicas).
 						withMaxReplicas(maxReplicas)
 					.endSpec()
 				.build();

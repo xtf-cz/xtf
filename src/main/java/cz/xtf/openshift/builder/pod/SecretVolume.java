@@ -32,7 +32,7 @@ public class SecretVolume extends Volume {
 				.withSecretName(getSecretName());
 
 		if (items != null) {
-			items.forEach(volumeBuilderSecretNested::addNewItem);
+			items.forEach((key, value ) -> volumeBuilderSecretNested.addNewItem().withKey(key).withPath(value).endItem());
 		}
 
 		volumeBuilderSecretNested.endSecret();

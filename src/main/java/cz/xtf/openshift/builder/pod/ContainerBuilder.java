@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.fabric8.kubernetes.api.model.ConfigMapKeySelector;
+import io.fabric8.kubernetes.api.model.ConfigMapKeySelectorBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerFluent.ResourcesNested;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
@@ -156,7 +157,7 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
 		io.fabric8.kubernetes.api.model.ContainerBuilder builder = new io.fabric8.kubernetes.api.model.ContainerBuilder();
 
 		Stream<EnvVar> definedVars = envVars.entrySet().stream().map(entry -> new EnvVar(entry.getKey(), entry.getValue(), null));
-		Stream<EnvVar> referredVars = referredEnvVars.entrySet().stream().map(entry -> new EnvVar(entry.getKey(), null, new EnvVarSource(new ConfigMapKeySelector(entry.getValue().getSecond(), entry.getValue().getFirst()), null, null, null)));
+		Stream<EnvVar> referredVars = referredEnvVars.entrySet().stream().map(entry -> new EnvVar(entry.getKey(), null, new EnvVarSource(new ConfigMapKeySelectorBuilder().withKey(entry.getValue().getSecond()).withName(entry.getValue().getFirst()).build(), null, null, null)));
 		builder.withEnv(Stream.concat(definedVars, referredVars).collect(Collectors.toList()));
 		builder.withImage(imageName);
 		builder.withImagePullPolicy("Always");

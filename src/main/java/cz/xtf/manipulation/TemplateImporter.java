@@ -5,7 +5,7 @@ import cz.xtf.openshift.OpenshiftUtil;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.openshift.api.model.DoneableTemplate;
 import io.fabric8.openshift.api.model.Template;
-import io.fabric8.openshift.client.dsl.ClientTemplateResource;
+import io.fabric8.openshift.client.dsl.TemplateResource;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -38,7 +38,7 @@ public final class TemplateImporter {
 		return OpenshiftUtil.getInstance().withDefaultUser(client -> {
 			try (InputStream is = new ByteArrayInputStream(HttpClient.get(source).response().getBytes(UTF_8))) {
 				// load the template
-				final ClientTemplateResource<Template, KubernetesList, DoneableTemplate> template
+				final TemplateResource<Template, KubernetesList, DoneableTemplate> template
 						= client.templates().load(is);
 				// remove old instance
 				client.templates().withName(template.get().getMetadata().getName()).delete();
