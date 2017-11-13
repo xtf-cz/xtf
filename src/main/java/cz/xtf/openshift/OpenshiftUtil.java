@@ -650,12 +650,14 @@ public class OpenshiftUtil implements AutoCloseable {
 				.inNamespace(namespace).buildConfigs()
 				.withName(buildConfig.getMetadata().getName()).get());
 
+		final long buildVersion = refreshed.getStatus().getLastVersion();
+
 		BuildRequest request = new BuildRequestBuilder().withNewMetadata()
 				.withName(buildConfig.getMetadata().getName()).endMetadata()
 				.build();
 
 		return withDefaultUser(client -> {
-			BuildWatcher buildWatcher = new BuildWatcher(buildConfig.getMetadata().getName());
+			BuildWatcher buildWatcher = new BuildWatcher(buildConfig.getMetadata().getName(), buildVersion);
 
 			Watch watch = client.inNamespace(namespace).builds()
 					.watch(buildWatcher);
@@ -1423,12 +1425,18 @@ public class OpenshiftUtil implements AutoCloseable {
 	private static class BuildWatcher implements Watcher<Build> {
 		private Build build;
 		private String buildConfigName;
+		private long sinceBuildNumber = -1;
 
 		BuildWatcher() {
 		}
 
 		BuildWatcher(String buildConfigName) {
 			this.buildConfigName = buildConfigName;
+		}
+
+		BuildWatcher(String buildConfigName, long sinceBuildNumber) {
+			this.buildConfigName = buildConfigName;
+			this.sinceBuildNumber = sinceBuildNumber;
 		}
 
 		public Build getBuild() {
@@ -1438,6 +1446,17 @@ public class OpenshiftUtil implements AutoCloseable {
 		@Override
 		public void eventReceived(Action action, Build resource) {
 			if (build == null && (buildConfigName == null || buildConfigName.equals(resource.getMetadata().getLabels().get("buildconfig")))) {
+
+				String buildNumberAnnotation = resource.getMetadata().getAnnotations().get("openshift.io/build.number");
+				if (buildNumberAnnotation != null) {
+					long currentBuildNumber = Integer.parseInt(buildNumberAnnotation);
+					
+					if (currentBuildNumber <= sinceBuildNumber) {
+						LOGGER.trace("ignoring build {} <= {}", currentBuildNumber, sinceBuildNumber);
+						return;
+					}
+				}
+
 				build = resource;
 			}
 		}
