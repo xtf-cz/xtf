@@ -873,11 +873,13 @@ public class OpenshiftUtil implements AutoCloseable {
 
 	private void removeRoleFromEntity(String namespace, String role, String entityKind, String entityName, String userName) {
 		withAdminUser(client -> {
-			if (client.inNamespace(namespace).roleBindings().withName(role).get() != null) {
-				client.inNamespace(namespace).roleBindings().withName(role).edit()
-								.removeFromSubjects(new ObjectReferenceBuilder().withKind(entityKind).withName(entityName).build())
-								.removeFromUserNames(userName)
-								.done();
+			RoleBinding roleBinding = client.inNamespace(namespace).roleBindings().withName(role).get();
+
+			if (roleBinding != null) {
+				roleBinding.getSubjects().remove(new ObjectReferenceBuilder().withKind(entityKind).withName(entityName).withNamespace(namespace).build());
+				roleBinding.getUserNames().remove(userName);
+
+				updateRoleBinding(roleBinding);
 			} else {
 				// prevent fails.. just log error
 				LOGGER.warn("No role '{}' in namespace '{}'.", role, namespace);
