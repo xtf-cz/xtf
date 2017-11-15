@@ -26,6 +26,7 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
 	private boolean configureEnvironment = true;
 	private String jndiName = null;
 	private boolean external = false;
+	private boolean nonXaDatasource = false;
 
 	protected boolean withLivenessProbe;
 	protected boolean withReadinessProbe;
@@ -208,6 +209,9 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
 		if (jndiName != null) {
 			envConfig.configEntry(getEnvVarName("JNDI"), jndiName);
 		}
+		if (nonXaDatasource) {
+			envConfig.configEntry(getEnvVarPrefix() + "_NONXA", "true");
+		}
 	}
 
 	public AbstractDatabase jndiName(final String jndiName) {
@@ -233,6 +237,11 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
 	public AbstractDatabase withProbes() {
 		withLivenessProbe = true;
 		withReadinessProbe = true;
+		return this;
+	}
+
+	public AbstractDatabase nonXaDatasource() {
+		nonXaDatasource = true;
 		return this;
 	}
 
