@@ -1,5 +1,6 @@
 package cz.xtf.keystore;
 
+import cz.xtf.TestConfiguration;
 import org.apache.commons.io.FileUtils;
 
 import cz.xtf.docker.OpenShiftNode;
@@ -34,9 +35,11 @@ public class ProcessKeystoreGenerator {
 			processCall(caDir, "keytool", "-import", "-noprompt", "-keystore", "truststore", "-file", "ca-certificate.pem", "-alias", "xtf.ca", "-storepass", "password");
 
 			// Import openshift router cert to truststore
-			String routerCrt = OpenShiftNode.master().executeCommand("sudo cat /etc/origin/master/ca.crt");
-			FileUtils.writeStringToFile(caDir.resolve("openshift-router.pem").toFile(), routerCrt);
-			processCall(caDir, "keytool", "-import", "-noprompt", "-keystore", "truststore", "-file", "openshift-router.pem", "-alias", "openshift-router", "-storepass", "password");
+			if(!TestConfiguration.openshiftOnline()) {
+				String routerCrt = OpenShiftNode.master().executeCommand("sudo cat /etc/origin/master/ca.crt");
+				FileUtils.writeStringToFile(caDir.resolve("openshift-router.pem").toFile(), routerCrt);
+				processCall(caDir, "keytool", "-import", "-noprompt", "-keystore", "truststore", "-file", "openshift-router.pem", "-alias", "openshift-router", "-storepass", "password");
+			}
 
 			truststore = caDir.resolve("truststore");
 		} catch (IOException e) {
