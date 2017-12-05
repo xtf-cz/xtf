@@ -1,5 +1,6 @@
 package cz.xtf.openshift;
 
+import cz.xtf.docker.OpenShiftNode;
 import cz.xtf.http.HttpClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -8,11 +9,14 @@ import org.apache.commons.lang3.SystemUtils;
 
 import cz.xtf.TestConfiguration;
 import cz.xtf.io.IOUtils;
+import org.eclipse.jgit.util.StringUtils;
 
 import java.io.*;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 @Slf4j
 public class OpenShiftBinaryClient {
@@ -193,11 +197,15 @@ public class OpenShiftBinaryClient {
 	 */
 	private String getBinary() throws IOException, InterruptedException {
 		String systemType = SystemUtils.IS_OS_MAC ? "macosx" : "linux";
-		String openShiftVersion = OpenshiftUtil.getInstance().getOpenShiftVersion();
+		String openShiftVersion = getOpenshiftVersion();
 		String clientLocation = String.format(CLIENTS_URL + "%s/%s/", openShiftVersion, systemType);
 
+		// Fall back to default oc if version is not found
 		if(HttpClient.get(clientLocation).code() != 200) {
-			return "oc";
+			String binaryLocation = TestConfiguration.ocBinaryLocation();
+			if(!Files.exists(Paths.get(binaryLocation))) throw new IllegalStateException("Unable to find executable oc binary!");
+
+			return TestConfiguration.ocBinaryLocation();
 		}
 
 		if (WORKDIR.exists()) {
@@ -218,6 +226,17 @@ public class OpenShiftBinaryClient {
 		FileUtils.deleteQuietly(ocTarFile);
 
 		return ocFile.getPath();
+	}
+
+	private String getOpenshiftVersion() {
+		String version = TestConfiguration.openshiftVersion();
+		if(StringUtils.isEmptyOrNull(version)) {
+			if (TestConfiguration.openshiftOnline()) return "N/A";
+
+			String result = OpenShiftNode.master().executeCommand("oc version");
+			version = result.replaceAll("(\n|.)*oc v(.*)\n(\n|.)*", "$2");
+		}
+		return version;
 	}
 
 	@FunctionalInterface

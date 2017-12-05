@@ -1450,8 +1450,4 @@ public class OpenshiftUtil implements AutoCloseable {
 	public List<Event> getEvents(String namespace) {
 		return withDefaultUser(client -> client.events().inNamespace(namespace).list()).getItems();
 	}
-
-	public String getOpenShiftVersion() {
-		return withDefaultUser(NamespacedOpenShiftClient::getApiVersion);
-	}
 }
