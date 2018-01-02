@@ -8,6 +8,10 @@ import cz.xtf.TestConfiguration;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This util is deprecated and will be deleted in one of future releases.
+ */
+@Deprecated
 public class OpenShiftContext {
 	private static final Logger LOGGER = LoggerFactory.getLogger(OpenShiftContext.class);
 	public static final String DEFAULT_CONTEXT_NAME = "default";
