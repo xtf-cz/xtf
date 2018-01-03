@@ -30,11 +30,19 @@ public class OpenShiftUtil  implements AutoCloseable {
 	private final NamespacedOpenShiftClient client;
 	private final String namespace;
 
+	public OpenShiftUtil(OpenShiftConfig openShiftConfig) {
+		if(openShiftConfig.getNamespace() == null) {
+			throw new IllegalArgumentException("Namespace in OpenShiftConfig must not be null!");
+		}
+
+		this.namespace = openShiftConfig.getNamespace();
+		this.client = new DefaultOpenShiftClient(openShiftConfig);
+	}
+
 	public OpenShiftUtil(String masterUrl, String namespace, String username, String password) throws MalformedURLException {
 		new URL(masterUrl);	// masterUrl validation
 
-		this.namespace = namespace;
-		final OpenShiftConfig openShiftConfig = new OpenShiftConfigBuilder()
+		OpenShiftConfig openShiftConfig = new OpenShiftConfigBuilder()
 				.withMasterUrl(masterUrl)
 				.withTrustCerts(true)
 				.withRequestTimeout(120_000)
@@ -43,14 +51,14 @@ public class OpenShiftUtil  implements AutoCloseable {
 				.withPassword(password)
 				.build();
 
+		this.namespace = namespace;
 		this.client = new DefaultOpenShiftClient(openShiftConfig);
 	}
 
 	public OpenShiftUtil(String masterUrl, String namespace, String token) throws MalformedURLException {
 		new URL(masterUrl); // masterUrl validation
 
-		this.namespace = namespace;
-		final OpenShiftConfig openShiftConfig = new OpenShiftConfigBuilder()
+		OpenShiftConfig openShiftConfig = new OpenShiftConfigBuilder()
 				.withMasterUrl(masterUrl)
 				.withTrustCerts(true)
 				.withRequestTimeout(120_000)
@@ -58,6 +66,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 				.withOauthToken(token)
 				.build();
 
+		this.namespace = namespace;
 		this.client = new DefaultOpenShiftClient(openShiftConfig);
 	}
 
