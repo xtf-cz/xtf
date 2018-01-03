@@ -1,6 +1,8 @@
 package cz.xtf.openshift;
 
 import cz.xtf.openshift.builder.DeploymentConfigBuilder;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.Service;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.entity.ContentType;
@@ -43,25 +45,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.DoneablePod;
-import io.fabric8.kubernetes.api.model.Endpoints;
-import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.EnvVarBuilder;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.ObjectReference;
-import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.api.model.ReplicationController;
-import io.fabric8.kubernetes.api.model.ResourceQuota;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceAccount;
-import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -88,8 +71,7 @@ import rx.Observable;
 import rx.observables.StringObservable;
 
 public class OpenshiftUtil implements AutoCloseable {
-	private static final Logger LOGGER = LoggerFactory
-			.getLogger(OpenshiftUtil.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(OpenshiftUtil.class);
 	private static final String ANNOTATION_BUILD_POD = "openshift.io/build.pod-name";
 
 	private static OpenshiftUtil INSTANCE;
@@ -98,8 +80,7 @@ public class OpenshiftUtil implements AutoCloseable {
 	private NamespacedOpenShiftClient adminClient;
 	private OpenShiftContext context;
 
-	private OpenshiftUtil(String server, OpenShiftContext context)
-			throws MalformedURLException {
+	public OpenshiftUtil(String server, OpenShiftContext context) throws MalformedURLException {
 		// validate the server URL
 		new URL(server);
 
@@ -110,11 +91,9 @@ public class OpenshiftUtil implements AutoCloseable {
 	public static OpenshiftUtil getInstance() {
 		if (INSTANCE == null) {
 			try {
-				INSTANCE = new OpenshiftUtil(TestConfiguration.masterUrl(),
-						OpenShiftContext.getContext());
+				INSTANCE = new OpenshiftUtil(TestConfiguration.masterUrl(), OpenShiftContext.getContext());
 			} catch (MalformedURLException ex) {
-				throw new IllegalArgumentException(
-						"OpenShift Master URL is malformed", ex);
+				throw new IllegalArgumentException("OpenShift Master URL is malformed", ex);
 			}
 		}
 
@@ -1468,12 +1447,7 @@ public class OpenshiftUtil implements AutoCloseable {
 		}
 	}
 
-	public String getEvents(final String projectName) {
-		return OpenShiftNode
-				.master()
-				.executeCommand(
-						String.format(
-								"sudo oc -n %s get events",
-								projectName));
+	public List<Event> getEvents(String namespace) {
+		return withDefaultUser(client -> client.events().inNamespace(namespace).list()).getItems();
 	}
 }

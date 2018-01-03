@@ -1,43 +1,41 @@
 package cz.xtf.openshift;
 
+import cz.xtf.docker.OpenShiftNode;
+import cz.xtf.http.HttpClient;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.SystemUtils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import cz.xtf.TestConfiguration;
-import cz.xtf.docker.OpenShiftNode;
 import cz.xtf.io.IOUtils;
+import org.eclipse.jgit.util.StringUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
+@Slf4j
 public class OpenShiftBinaryClient {
-	private static final Logger LOGGER = LoggerFactory.getLogger(OpenShiftBinaryClient.class);
+	private static final String CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v3/clients/";
 
 	private static OpenShiftBinaryClient INSTANCE;
-	private final OpenShiftContext context;
 	private static String ocBinaryPath;
 
 	private static final File WORKDIR = IOUtils.TMP_DIRECTORY.resolve("oc").toFile();
 	private static final File CONFIG_FILE = new File(WORKDIR, "oc.config");
 
-	private OpenShiftBinaryClient(OpenShiftContext context) throws IOException, InterruptedException {
-		this.context = context;
+	private OpenShiftBinaryClient() throws IOException, InterruptedException {
 		ocBinaryPath = getBinary();
 	}
 
 	public static OpenShiftBinaryClient getInstance() {
 		if (INSTANCE == null) {
 			try {
-				INSTANCE = new OpenShiftBinaryClient(OpenShiftContext.getContext());
+				INSTANCE = new OpenShiftBinaryClient();
 				//call oc login to create ~/.kube/config
 				login();
 			} catch (MalformedURLException ex) {
@@ -58,11 +56,11 @@ public class OpenShiftBinaryClient {
 	/**
 	 * Expose executeCommand with oc binary preset
 	 *
-	 * @param error
-	 * @param args
+	 * @param error error message on failure
+	 * @param args command arguments
 	 */
 	public void executeCommand(String error, String... args) {
-		String[] ocArgs = (String[]) ArrayUtils.addAll(new String[] {ocBinaryPath, "--config=" + CONFIG_FILE.getAbsolutePath()}, args);
+		String[] ocArgs = ArrayUtils.addAll(new String[] {ocBinaryPath, "--config=" + CONFIG_FILE.getAbsolutePath()}, args);
 		try {
 			executeLocalCommand(error, ocArgs);
 		} catch (IOException | InterruptedException ex) {
@@ -73,11 +71,11 @@ public class OpenShiftBinaryClient {
 	/**
 	 * Executes oc command and returns Process
 	 *
-	 * @param args
+	 * @param args command arguments
 	 * @return Process encapsulating started oc
 	 */
 	public Process executeCommandNoWait(final String error, String... args) {
-		String[] ocArgs = (String[]) ArrayUtils.addAll(new String[] {ocBinaryPath, "--config=" + CONFIG_FILE.getAbsolutePath()}, args);
+		String[] ocArgs = ArrayUtils.addAll(new String[] {ocBinaryPath, "--config=" + CONFIG_FILE.getAbsolutePath()}, args);
 		try {
 			return executeLocalCommand(error, false, false, false, ocArgs);
 		} catch (IOException | InterruptedException ex) {
@@ -86,7 +84,7 @@ public class OpenShiftBinaryClient {
 	}
 
 	public Process executeCommandNoWaitWithOutputAndError(final String error, String... args) {
-		String[] ocArgs = (String[]) ArrayUtils.addAll(new String[] {ocBinaryPath, "--config=" + CONFIG_FILE.getAbsolutePath()}, args);
+		String[] ocArgs = ArrayUtils.addAll(new String[] {ocBinaryPath, "--config=" + CONFIG_FILE.getAbsolutePath()}, args);
 		try {
 			return executeLocalCommand(error, false, true, true, ocArgs);
 		} catch (IOException | InterruptedException ex) {
@@ -97,7 +95,7 @@ public class OpenShiftBinaryClient {
 	/**
 	 * Executes oc command and returns a String
 	 *
-	 * @param args
+	 * @param args command arguments
 	 * @return Process encapsulating started oc
 	 */
 	public String executeCommandWithReturn(final String error, String... args) {
@@ -119,7 +117,7 @@ public class OpenShiftBinaryClient {
 	 * Executes oc command and consume output
 	 */
 	public void executeCommandAndConsumeOutput(final String error, CommandResultConsumer consumer, String... args) {
-		String[] ocArgs = (String[]) ArrayUtils.addAll(new String[] {ocBinaryPath, "--config=" + CONFIG_FILE.getAbsolutePath()}, args);
+		String[] ocArgs = ArrayUtils.addAll(new String[] {ocBinaryPath, "--config=" + CONFIG_FILE.getAbsolutePath()}, args);
 		try {
 			final Process process = executeLocalCommand(error, false, true, false,
 					ocArgs);
@@ -137,8 +135,6 @@ public class OpenShiftBinaryClient {
 	 * @param error error message on failure
 	 * @param wait wait for process completion
 	 * @param args command arguments
-	 * @throws IOException
-	 * @throws InterruptedException
 	 */
 	private static Process executeLocalCommand(String error, boolean wait, final boolean needOutput, final boolean needError, String... args) throws IOException, InterruptedException {
 		ProcessBuilder pb = new ProcessBuilder(args);
@@ -150,7 +146,7 @@ public class OpenShiftBinaryClient {
 			pb.redirectError(ProcessBuilder.Redirect.INHERIT);
 		}
 
-		LOGGER.debug("executing local command: {}", String.join(" ", args));
+		log.debug("executing local command: {}", String.join(" ", args));
 
 		final Process process = pb.start();
 		if (wait) {
@@ -166,9 +162,8 @@ public class OpenShiftBinaryClient {
 	}
 
 	private static void login() throws IOException, InterruptedException {
-
 		String masterIp = TestConfiguration.openshiftOnline() ? TestConfiguration.masterUrl() : "https://" + InetAddress.getByName(new URL(TestConfiguration.masterUrl()).getHost()).getHostAddress() + ":8443";
-		LOGGER.debug("Master IP: {}", masterIp);
+		log.debug("Master IP: {}", masterIp);
 		loginStatic(masterIp, TestConfiguration.masterUsername(), TestConfiguration.masterPassword(), TestConfiguration.getMasterToken());
 	}
 
@@ -195,37 +190,22 @@ public class OpenShiftBinaryClient {
 		}
 	}
 
-
-
-
-
 	/**
-	 * Get oc binary from OSE master server
+	 * Get oc binary from {@link OpenShiftBinaryClient#CLIENTS_URL}
 	 *
-	 *  @return path to executable binary file
-	 * @throws IOException
-	 * @throws InterruptedException
+	 * @return path to executable binary file or default oc command if not found
 	 */
 	private String getBinary() throws IOException, InterruptedException {
-		if (SystemUtils.IS_OS_MAC || TestConfiguration.openshiftOnline()) {
+		String systemType = SystemUtils.IS_OS_MAC ? "macosx" : "linux";
+		String openShiftVersion = getOpenshiftVersion();
+		String clientLocation = String.format(CLIENTS_URL + "%s/%s/", openShiftVersion, systemType);
 
-			File defaultOcFile = new File(TestConfiguration.ocBinaryLocation());
-			if (!defaultOcFile.exists()) {
-				LOGGER.error("Hipsterish OS detected, appropriate binary should be downloaded manually and placed to "
-					+ TestConfiguration.ocBinaryLocation());
-				throw new IllegalArgumentException("OC binary not found for current OS");
-			}
-			return defaultOcFile.getAbsolutePath();
-		}
-		final File ocFile = new File(WORKDIR, "oc");
+		// Fall back to default oc if version is not found
+		if(HttpClient.get(clientLocation).code() != 200) {
+			String binaryLocation = TestConfiguration.ocBinaryLocation();
+			if(!Files.exists(Paths.get(binaryLocation))) throw new IllegalStateException("Unable to find executable oc binary!");
 
-		if (ocFile.exists()) {
-			LOGGER.debug("Client file already present");
-			final String[] parts = OpenShiftNode.master().executeCommand("wc -c /usr/bin/oc").split(" ");
-			if (parts.length == 2 && Integer.parseInt(parts[0]) == ocFile.length()) {
-				LOGGER.debug("Local and remote client have the sime size, using the local one");
-				return ocFile.getPath();
-			}
+			return TestConfiguration.ocBinaryLocation();
 		}
 
 		if (WORKDIR.exists()) {
@@ -235,11 +215,28 @@ public class OpenShiftBinaryClient {
 			throw new IOException("Cannot mkdirs " + WORKDIR);
 		}
 
-		OpenShiftNode.master().executeCommand("cat /usr/bin/oc", istream -> {
-			FileUtils.copyInputStreamToFile(istream, ocFile);
-		});
-		executeLocalCommand("Error trying to chmod local oc copy", "chmod", "+x", ocFile.getPath());
+		// Download and extract client
+		File ocTarFile = new File(WORKDIR, "oc.tar.gz");
+		File ocFile = new File(WORKDIR, "oc");
+
+		URL requestUrl = new URL(clientLocation + "oc.tar.gz");
+		FileUtils.copyURLToFile(requestUrl, ocTarFile, 20_000, 300_000);
+
+		executeLocalCommand("Error trying to extract client", "tar", "-xf", ocTarFile.getPath(), "-C", WORKDIR.getPath());
+		FileUtils.deleteQuietly(ocTarFile);
+
 		return ocFile.getPath();
+	}
+
+	private String getOpenshiftVersion() {
+		String version = TestConfiguration.openshiftVersion();
+		if(StringUtils.isEmptyOrNull(version)) {
+			if (TestConfiguration.openshiftOnline()) return "N/A";
+
+			String result = OpenShiftNode.master().executeCommand("oc version");
+			version = result.replaceAll("(\n|.)*oc v(.*)\n(\n|.)*", "$2");
+		}
+		return version;
 	}
 
 	@FunctionalInterface

@@ -66,6 +66,7 @@ public final class TestConfiguration {
 	private static final String DEFAULT_WAIT_TIMEOUT = "xtf.config.wait.timeout.default";
 	private static final String EXTERNAL_SERVICES_HOST = "xtf.config.services.external";
 	private static final String OPENSHIFT_ONLINE = "xtf.config.openshift.online";
+	private static final String OPENSHIFT_VERSION = "xtf.config.openshift.version";
 	private static final String TEST_ALERT = "test.alert";
 	private static final String TEST_JENKINS_RERUN = "test.jenkins.rerun";
 	private static final String TEMPLATE_REPO = "xtf.config.template.repo";
@@ -488,6 +489,10 @@ public final class TestConfiguration {
 		return Boolean.parseBoolean(get().readValue(OPENSHIFT_ONLINE));
 	}
 
+	public static String openshiftVersion() {
+		return get().readValue(OPENSHIFT_VERSION);
+	}
+
 	public static int maxHttpTries() {
 		return Integer.parseInt(get().readValue(MAX_HTTP_TRIES));
 	}
@@ -847,6 +852,9 @@ public final class TestConfiguration {
 					break;
 				case "OPENSHIFT_ONLINE":
 					props.setProperty(OPENSHIFT_ONLINE, entry.getValue());
+					break;
+				case "OPENSHIFT_VERSION":
+					props.setProperty(OPENSHIFT_VERSION, entry.getValue());
 					break;
 				case "TEST_ALERT":
 					props.setProperty(TEST_ALERT, entry.getValue());

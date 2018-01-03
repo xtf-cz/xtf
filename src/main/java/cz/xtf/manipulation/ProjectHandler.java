@@ -1,6 +1,7 @@
 package cz.xtf.manipulation;
 
 import cz.xtf.TestConfiguration;
+import cz.xtf.openshift.OpenShiftBinaryClient;
 import cz.xtf.openshift.OpenShiftContext;
 import cz.xtf.openshift.OpenshiftUtil;
 import lombok.Getter;
@@ -100,7 +101,7 @@ public class ProjectHandler {
 		OpenshiftUtil.getProjectLogsDir().toFile().mkdirs();
 		try (final FileWriter writer = new FileWriter(OpenshiftUtil.getProjectLogsDir().resolve("events.log").toFile())) {
 			log.info("action=record-events status=START namespace={}", namespace);
-			writer.write(OpenshiftUtil.getInstance().getEvents(namespace));
+			writer.write(OpenShiftBinaryClient.getInstance().executeCommandWithReturn("oc get events -n " + namespace));
 			log.info("action=record-events status=FINISH namespace={}", namespace);
 		} catch (IOException e) {
 			log.info("action=record-events status=ERROR namespace={}", namespace, e);
@@ -124,7 +125,7 @@ public class ProjectHandler {
 
 	private void deleteNamespace() {
 		log.info("action=remove-temp-namespace status=START namespace={}", namespace);
-		OpenshiftUtil.getInstance().deleteProject(namespace);
+		openshift.deleteProject(namespace);
 		log.info("action=remove-temp-namespace status=FINISH namespace={}", namespace);
 	}
 }
