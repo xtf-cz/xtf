@@ -70,6 +70,10 @@ import io.fabric8.openshift.client.ParameterValue;
 import rx.Observable;
 import rx.observables.StringObservable;
 
+/**
+ * This util is deprecated and will be deleted in one of future releases.
+ */
+@Deprecated
 public class OpenshiftUtil implements AutoCloseable {
 	private static final Logger LOGGER = LoggerFactory.getLogger(OpenshiftUtil.class);
 	private static final String ANNOTATION_BUILD_POD = "openshift.io/build.pod-name";
