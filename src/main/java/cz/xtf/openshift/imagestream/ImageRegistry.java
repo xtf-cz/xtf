@@ -121,6 +121,10 @@ public class ImageRegistry {
 		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_FUSE_KARAF));
 	}
 
+	public String fuseEap() {
+		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_FUSE_EAP));
+	}
+
 	public String brms() {
 		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_BRMS));
 	}
