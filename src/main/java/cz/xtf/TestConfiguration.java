@@ -99,6 +99,7 @@ public final class TestConfiguration {
 	public static final String IMAGE_NFS = "org.nfs";
 	public static final String IMAGE_FUSE_JAVA_MAIN = "org.fuse.java_main";
 	public static final String IMAGE_FUSE_KARAF = "org.fuse.karaf";
+	public static final String IMAGE_FUSE_EAP = "org.fuse.eap";
 	public static final String IMAGE_BRMS = "xtf.brms";
 	public static final String IMAGE_BPMS = "xtf.bpms";
 	public static final String IMAGE_BPMS_LDAP_TEST_IMAGE = "xtf.bpms.ldap.test";
@@ -654,6 +655,9 @@ public final class TestConfiguration {
 					break;
 				case "IMAGE_FUSE_KARAF":
 					props.setProperty(IMAGE_FUSE_KARAF, entry.getValue());
+					break;
+				case "IMAGE_FUSE_EAP":
+					props.setProperty(IMAGE_FUSE_EAP, entry.getValue());
 					break;
 				case "IMAGE_BRMS":
 					props.setProperty(IMAGE_BRMS, entry.getValue());
