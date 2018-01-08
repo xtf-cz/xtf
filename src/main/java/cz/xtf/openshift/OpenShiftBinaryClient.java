@@ -20,7 +20,7 @@ import java.nio.file.Paths;
 
 @Slf4j
 public class OpenShiftBinaryClient {
-	private static final String CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v3/clients/";
+	private static final String CLIENTS_URL = "http://mirror.openshift.com/pub/openshift-v3/clients/";
 
 	private static OpenShiftBinaryClient INSTANCE;
 	private static String ocBinaryPath;
@@ -99,7 +99,7 @@ public class OpenShiftBinaryClient {
 	 * @return Process encapsulating started oc
 	 */
 	public String executeCommandWithReturn(final String error, String... args) {
-		String[] ocArgs = (String[]) ArrayUtils.addAll(new String[] {ocBinaryPath, "--config=" + CONFIG_FILE.getAbsolutePath()}, args);
+		String[] ocArgs = ArrayUtils.addAll(new String[] {ocBinaryPath, "--config=" + CONFIG_FILE.getAbsolutePath()}, args);
 		try {
 			final Process process = executeLocalCommand(error, false, true, false,
 					ocArgs);
