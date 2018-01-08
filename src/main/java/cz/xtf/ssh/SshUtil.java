@@ -28,6 +28,8 @@ public class SshUtil {
 			JSCH.addIdentity(getPrivateKeyPath());
 		} catch (JSchException ex) {
 			LOGGER.error("Invalid private key", ex);
+		} catch (SshPrivateKeyNotFoundException ex) {
+			LOGGER.warn("SSH private key not found.");
 		}
 	}
 
@@ -54,7 +56,7 @@ public class SshUtil {
 		if (p.toFile().exists()) {
 			return p.toString();
 		}
-		throw new IllegalStateException("Cannot load SSH private key");
+		throw new SshPrivateKeyNotFoundException("Cannot load SSH private key.");
 	}
 
 	public String getPrivateKey() {
