@@ -224,6 +224,27 @@ public class OpenShiftUtil  implements AutoCloseable {
 		return client.inNamespace(namespace).pods().list().getItems();
 	}
 
+	/**
+	 * @param deploymentConfigName name of deploymentConfig
+	 * @param version deployment version to be retrieved
+	 * @return active pods created by deploymentConfig with specified version
+	 */
+	public List<Pod> getDeploymentPods(String deploymentConfigName, int version) {
+		return getLabeledPods("deployment", deploymentConfigName + "-" + version);
+	}
+
+	/**
+	 * @param deploymentConfigName name of deploymentConfig
+	 * @return all active pods created by specified deploymentConfig
+	 */
+	public List<Pod> getDeploymentConfigPods(String deploymentConfigName) {
+		return getLabeledPods("deploymentconfig", deploymentConfigName);
+	}
+
+	public List<Pod> getLabeledPods(String key, String value) {
+		return getLabeledPods(Collections.singletonMap(key, value), namespace);
+	}
+
 	public List<Pod> getLabeledPods(Map<String, String> labels) {
 		return getLabeledPods(labels, namespace);
 	}

@@ -20,6 +20,14 @@ public class OpenShiftUtils {
 		return adminUtil;
 	}
 
+	public static OpenShiftUtil adminUtil(String namespace) {
+		String masterUrl = TestConfiguration.masterUrl();
+		String username = TestConfiguration.adminUsername();
+		String password = TestConfiguration.adminPassword();
+
+		return getUtil(masterUrl, namespace, username, password);
+	}
+
 	public static OpenShiftUtil masterUtil() {
 		if(masterUtil == null) {
 			String masterUrl = TestConfiguration.masterUrl();
