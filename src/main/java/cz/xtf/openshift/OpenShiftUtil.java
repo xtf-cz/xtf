@@ -70,15 +70,15 @@ public class OpenShiftUtil  implements AutoCloseable {
 		this.client = new DefaultOpenShiftClient(openShiftConfig);
 	}
 
-	public String getNamespace() {
+	public String namespace() {
 		return namespace;
 	}
 
-	// General functions
-	public <R> R withClient(Function<NamespacedOpenShiftClient, R> f) {
-		return f.apply(client);
+	public NamespacedOpenShiftClient client() {
+		return client;
 	}
 
+	// General functionsf
 	public KubernetesList createResources(HasMetadata... resources) {
 		return createResources(Arrays.asList(resources));
 	}
