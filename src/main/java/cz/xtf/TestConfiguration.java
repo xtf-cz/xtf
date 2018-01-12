@@ -54,6 +54,7 @@ public final class TestConfiguration {
 	private static final String GITLAB_USERNAME = "xtf.config.gitlab.username";
 	private static final String GITLAB_PASSWORD = "xtf.config.gitlab.password";
 	private static final String GITLAB_GROUP = "xtf.config.gitlab.group";
+	private static final String GITLAB_GROUP_ENABLED = "xtf.config.gitlab.group.enabled";
 	private static final String PING_PROTOCOL = "xtf.config.ping.protocol";
 	private static final String FABRIC8_VERSION = "xtf.config.fabric8.version";
 	private static final String FABRIC8_SERVICE_NAME_LIMIT = "xtf.config.fabric8.service_name_limit";
@@ -466,6 +467,10 @@ public final class TestConfiguration {
 		return get().readValue(GITLAB_GROUP);
 	}
 
+	public static boolean gitLabGroupEnabled() {
+		return Boolean.parseBoolean(get().readValue(GITLAB_GROUP_ENABLED));
+	}
+
 	public static String getFuseVersion() {
 		return get().readValue(VERSION_FUSE);
 	}
@@ -779,6 +784,9 @@ public final class TestConfiguration {
 				case "GITLAB_GROUP":
 					props.setProperty(GITLAB_GROUP, entry.getValue());
 					break;
+				case "GITLAB_GROUP_ENABLED":
+					props.setProperty(GITLAB_GROUP_ENABLED, entry.getValue());
+					break;
 				case "PING_PROTOCOL":
 					props.setProperty(PING_PROTOCOL, entry.getValue());
 					break;
@@ -897,6 +905,7 @@ public final class TestConfiguration {
 		props.setProperty(SOAK_TEST_ITERATIONS, "42");
 		props.setProperty(MAVEN_PROXY_ENABLED, "false");
 		props.setProperty(GITLAB_GROUP, "ose3");
+		props.setProperty(GITLAB_GROUP_ENABLED, "true");
 		props.setProperty(PING_PROTOCOL, "kubeping");
 		props.setProperty(FABRIC8_VERSION, "2.2.0.redhat-079");
 		props.setProperty(FABRIC8_SERVICE_NAME_LIMIT, "2147483647");

@@ -63,16 +63,22 @@ public class GitLabUtil {
 	public String getProjectUrl(String projectName) {
 		Optional<GitlabProject> project;
 
-		// try the projects from assigned group (*-automated)
-		project = getProjects(getGroupId())
-				.filter(p -> p.getName().equals(projectName) | p.getName().startsWith(projectName))
-				.findFirst();
-		if (!project.isPresent() && getGroupId() != getGroupId(TestConfiguration.gitLabGroup())) {
-			LOGGER.debug("Couldn't find project {} in assigned group", projectName);
+		if (TestConfiguration.gitLabGroupEnabled()) {
+			// try the projects from assigned group (*-automated)
+			project = getProjects(getGroupId())
+					.filter(p -> p.getName().equals(projectName) | p.getName().startsWith(projectName))
+					.findFirst();
+			if (!project.isPresent() && getGroupId() != getGroupId(TestConfiguration.gitLabGroup())) {
+				LOGGER.debug("Couldn't find project {} in assigned group", projectName);
 
-			// try the default group
-			project = getProjects(getGroupId(TestConfiguration.gitLabGroup()))
-					.filter(p -> p.getName().equals(projectName))
+				// try the default group
+				project = getProjects(getGroupId(TestConfiguration.gitLabGroup()))
+						.filter(p -> p.getName().equals(projectName))
+						.findFirst();
+			}
+		} else {
+			project = getProjects()
+					.filter(p -> p.getName().equals(projectName) | p.getName().startsWith(projectName))
 					.findFirst();
 		}
 
@@ -175,7 +181,8 @@ public class GitLabUtil {
 			while(project == null && attempt < WAIT_FOR_GITLAB_CREATE_PROJECT_MAX_ATTEMPTS) {
 				++attempt;
 				try {
-					project = api.createProject(name, getGroupId(), null, null, null, null, null, null, true,
+					Integer groupId = TestConfiguration.gitLabGroupEnabled()? getGroupId() : null;
+					project = api.createProject(name, groupId, null, null, null, null, null, null, true,
 							null, url);
 				} catch (IOException x) {
 					lastExcepion = x;
@@ -221,12 +228,13 @@ public class GitLabUtil {
 
 	public boolean deleteAllProjects() {
 		LOGGER.debug("Deleting all projects in this namespace.");
-		return getProjects(getGroupId()).map(p -> deleteProject(p.getName())).reduce(true, (b1, b2) -> b1 && b2);
+		Stream<GitlabProject> projects = TestConfiguration.gitLabGroupEnabled()? getProjects(getGroupId()) : getProjects();
+		return projects.map(p -> deleteProject(p.getName())).reduce(true, (b1, b2) -> b1 && b2);
 	}
 
 	public boolean deleteProject(String name) {
-		return getProjects(getGroupId())
-				.filter(p -> p.getName().equals(name) || p.getName().startsWith(name + SEPARATOR))
+		Stream<GitlabProject> projects = TestConfiguration.gitLabGroupEnabled()? getProjects(getGroupId()) : getProjects();
+		return projects.filter(p -> p.getName().equals(name) || p.getName().startsWith(name + SEPARATOR))
 				.map(project -> {
 					try {
 						performDeleteProject(project.getId());
@@ -285,9 +293,12 @@ public class GitLabUtil {
 	}
 
 	private Stream<GitlabProject> getProjects(Integer inGroup) {
+		return getProjects().filter(p -> p.getNamespace().getId().equals(inGroup));
+	}
+
+	private Stream<GitlabProject> getProjects() {
 		try {
-			return api.getProjects().stream()
-					.filter(p -> p.getNamespace().getId().equals(inGroup));
+			return api.getProjects().stream();
 		} catch (IOException e) {
 			throw new IllegalStateException("Failed to list projects", e);
 		}
