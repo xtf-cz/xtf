@@ -57,26 +57,8 @@ public class ImageStreamsTest {
 		ImageStream is = openshift.getImageStream(streamName);
 		Assertions.assertThat(is.getMetadata().getName()).isEqualTo(streamName);
 
-		boolean deleted = openshift.deleteImageStream(streamName);
+		boolean deleted = openshift.deleteImageStream(is);
 		Assertions.assertThat(deleted).isTrue();
 		Assertions.assertThat(openshift.getImageStream(streamName)).isNull();
-	}
-
-	@Test
-	public void crdInCustomNamespaceTest() {
-		OpenShiftUtil openshift = getInstance();
-
-		String streamName = "is-1";
-
-		ImageStream created = openshift.createImageStream(new ImageStreamBuilder().withNewMetadata().withName(streamName).endMetadata().build(), customTestNamespace);
-		Assertions.assertThat(created.getMetadata().getName()).isEqualTo(streamName);
-		Assertions.assertThat(created.getMetadata().getCreationTimestamp()).isNotNull();
-
-		ImageStream is = openshift.getImageStream(streamName, customTestNamespace);
-		Assertions.assertThat(is.getMetadata().getName()).isEqualTo(streamName);
-
-		boolean deleted = openshift.deleteImageStream(streamName, customTestNamespace);
-		Assertions.assertThat(deleted).isTrue();
-		Assertions.assertThat(openshift.getImageStream(streamName, customTestNamespace)).isNull();
 	}
 }
