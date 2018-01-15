@@ -8,7 +8,7 @@ public class OpenShiftUtils {
 	private static OpenShiftUtil adminUtil;
 	private static OpenShiftUtil masterUtil;
 
-	public static OpenShiftUtil adminUtil() {
+	public static OpenShiftUtil admin() {
 		if(adminUtil == null) {
 			String masterUrl = TestConfiguration.masterUrl();
 			String namespace = TestConfiguration.masterNamespace();
@@ -20,7 +20,7 @@ public class OpenShiftUtils {
 		return adminUtil;
 	}
 
-	public static OpenShiftUtil adminUtil(String namespace) {
+	public static OpenShiftUtil admin(String namespace) {
 		String masterUrl = TestConfiguration.masterUrl();
 		String username = TestConfiguration.adminUsername();
 		String password = TestConfiguration.adminPassword();
@@ -28,7 +28,7 @@ public class OpenShiftUtils {
 		return getUtil(masterUrl, namespace, username, password);
 	}
 
-	public static OpenShiftUtil masterUtil() {
+	public static OpenShiftUtil master() {
 		if(masterUtil == null) {
 			String masterUrl = TestConfiguration.masterUrl();
 			String namespace = TestConfiguration.masterNamespace();
@@ -40,7 +40,7 @@ public class OpenShiftUtils {
 		return masterUtil;
 	}
 
-	public static OpenShiftUtil masterUtil(String namespace) {
+	public static OpenShiftUtil master(String namespace) {
 		String masterUrl = TestConfiguration.masterUrl();
 		String username = TestConfiguration.masterUsername();
 		String password = TestConfiguration.masterPassword();

@@ -206,20 +206,21 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 	/**
 	 * @param deploymentConfigName name of deploymentConfig
-	 * @param version deployment version to be retrieved
-	 * @return active pods created by deploymentConfig with specified version
+	 * @return all active pods created by specified deploymentConfig
 	 */
-	public List<Pod> getDeploymentPods(String deploymentConfigName, int version) {
-		return getLabeledPods("deployment", deploymentConfigName + "-" + version);
+	public List<Pod> getPods(String deploymentConfigName) {
+		return getLabeledPods("deploymentconfig", deploymentConfigName);
 	}
 
 	/**
 	 * @param deploymentConfigName name of deploymentConfig
-	 * @return all active pods created by specified deploymentConfig
+	 * @param version deployment version to be retrieved
+	 * @return active pods created by deploymentConfig with specified version
 	 */
-	public List<Pod> getDeploymentConfigPods(String deploymentConfigName) {
-		return getLabeledPods("deploymentconfig", deploymentConfigName);
+	public List<Pod> getPods(String deploymentConfigName, int version) {
+		return getLabeledPods("deployment", deploymentConfigName + "-" + version);
 	}
+
 
 	public List<Pod> getLabeledPods(String key, String value) {
 		return getLabeledPods(Collections.singletonMap(key, value));
@@ -227,6 +228,14 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 	public List<Pod> getLabeledPods(Map<String, String> labels) {
 		return client.pods().withLabels(labels).list().getItems();
+	}
+
+	public Pod getAnyPod(String deploymentConfigName) {
+		return getAnyPod("deploymentconfig", deploymentConfigName);
+	}
+
+	public Pod getAnyPod(String key, String value) {
+		return getAnyPod(Collections.singletonMap(key, value));
 	}
 
 	public Pod getAnyPod(Map<String, String> labels) {
