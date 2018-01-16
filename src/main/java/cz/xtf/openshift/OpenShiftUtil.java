@@ -377,7 +377,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 	}
 
 	public boolean deleteDeploymentConfig(DeploymentConfig deploymentConfig) {
-		return deleteDeploymentConfig(deploymentConfig, true);
+		return deleteDeploymentConfig(deploymentConfig, false);
 	}
 
 	public boolean deleteDeploymentConfig(DeploymentConfig deploymentConfig, boolean cascading) {
@@ -782,7 +782,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 	// Clean up function
 	public void cleanProject() {
 		// keep the order for deletion to prevent K8s creating resources again
-		client.deploymentConfigs().delete();
+		getDeploymentConfigs().forEach(this::deleteDeploymentConfig);
 		client.buildConfigs().delete();
 		client.imageStreams().delete();
 		client.endpoints().delete();
@@ -793,7 +793,6 @@ public class OpenShiftUtil  implements AutoCloseable {
 		client.persistentVolumeClaims().delete();
 		client.autoscaling().horizontalPodAutoscalers().delete();
 		client.configMaps().delete();
-		client.events().delete();
 
 		// Remove only user secrets
 		getSecrets().stream().filter(s -> !s.getType().startsWith("kubernetes.io/")).forEach(this::deleteSecret);
