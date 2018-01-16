@@ -279,6 +279,10 @@ public class OpenShiftUtil  implements AutoCloseable {
 		return client.secrets().list().getItems();
 	}
 
+	public List<Secret> getUserSecrets() {
+		return getSecrets().stream().filter(s -> !s.getType().startsWith("kubernetes.io/")).collect(Collectors.toList());
+	}
+
 	public boolean deleteSecret(Secret secret) {
 		return client.secrets().delete(secret);
 	}
@@ -544,6 +548,10 @@ public class OpenShiftUtil  implements AutoCloseable {
 		return client.serviceAccounts().list().getItems();
 	}
 
+	public List<ServiceAccount> getUserServiceAccounts() {
+		return getServiceAccounts().stream().filter(sa -> !sa.getMetadata().getName().matches(".*(builder|default|deployer).*")).collect(Collectors.toList());
+	}
+
 	public boolean deleteServiceAccount(ServiceAccount serviceAccount) {
 		return client.serviceAccounts().delete(serviceAccount);
 	}
@@ -767,22 +775,14 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 	// Events
 	public List<Event> getEvents() {
-		return getEvents(namespace);
+		return client.events().list().getItems();
 	}
-
-	public List<Event> getEvents(String namespace) {
-		return client.inNamespace(namespace).events().list().getItems();
-	}
-
-	public boolean deleteEvents() {
-		return client.events().delete();
-	}
-
 
 	// Clean up function
 	public void cleanProject() {
 		// keep the order for deletion to prevent K8s creating resources again
 		getDeploymentConfigs().forEach(this::deleteDeploymentConfig);
+		client.replicationControllers().delete();
 		client.buildConfigs().delete();
 		client.imageStreams().delete();
 		client.endpoints().delete();
@@ -793,12 +793,8 @@ public class OpenShiftUtil  implements AutoCloseable {
 		client.persistentVolumeClaims().delete();
 		client.autoscaling().horizontalPodAutoscalers().delete();
 		client.configMaps().delete();
-
-		// Remove only user secrets
-		getSecrets().stream().filter(s -> !s.getType().startsWith("kubernetes.io/")).forEach(this::deleteSecret);
-
-		// Remove only users service accounts
-		getServiceAccounts().stream().filter(sa -> !sa.getMetadata().getName().matches(".*(builder|default|deployer).*")).forEach(this::deleteServiceAccount);
+		getUserSecrets().forEach(this::deleteSecret);
+		getUserServiceAccounts().forEach(this::deleteServiceAccount);
 
 		try{
 			Thread.sleep(2_000L);
