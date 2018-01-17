@@ -20,6 +20,10 @@ import io.fabric8.openshift.api.model.Build;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+/**
+ * This util class has been deprecated and will be deleted in one of future releases, please refer from now to Waiters.
+ */
+@Deprecated
 public class WaitUtil {
 
 	protected static final OpenshiftUtil openshift = OpenshiftUtil.getInstance();
