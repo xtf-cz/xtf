@@ -1,5 +1,6 @@
 package cz.xtf.openshift;
 
+import cz.xtf.wait.SimpleWaiter;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -20,14 +21,19 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 
 @Slf4j
 public class OpenShiftUtil  implements AutoCloseable {
+
+	public static boolean isPodReady(Pod pod) {
+		return pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady);
+	}
+
 	private final NamespacedOpenShiftClient client;
+	private final OpenShiftWaiters waiters;
 	private final String namespace;
 
 	public OpenShiftUtil(OpenShiftConfig openShiftConfig) {
@@ -37,6 +43,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 		this.namespace = openShiftConfig.getNamespace();
 		this.client = new DefaultOpenShiftClient(openShiftConfig);
+		this.waiters = new OpenShiftWaiters(this);
 	}
 
 	public OpenShiftUtil(String masterUrl, String namespace, String username, String password) throws MalformedURLException {
@@ -53,6 +60,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 		this.namespace = namespace;
 		this.client = new DefaultOpenShiftClient(openShiftConfig);
+		this.waiters = new OpenShiftWaiters(this);
 	}
 
 	public OpenShiftUtil(String masterUrl, String namespace, String token) throws MalformedURLException {
@@ -68,6 +76,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 		this.namespace = namespace;
 		this.client = new DefaultOpenShiftClient(openShiftConfig);
+		this.waiters = new OpenShiftWaiters(this);
 	}
 
 	public String namespace() {
@@ -115,7 +124,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 	 *
 	 * @see OpenShiftUtil#recreateProject(String)
 	 */
-	public ProjectRequest recreateProject() throws TimeoutException, InterruptedException {
+	public ProjectRequest recreateProject() throws TimeoutException {
 		return recreateProject(new ProjectRequestBuilder().withNewMetadata().withName(namespace).endMetadata().build());
 	}
 
@@ -125,7 +134,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 	 * @param name name of a project to be created
 	 * @return ProjectRequest instatnce
 	 */
-	public ProjectRequest recreateProject(String name) throws TimeoutException, InterruptedException {
+	public ProjectRequest recreateProject(String name) throws TimeoutException {
 		return recreateProject(new ProjectRequestBuilder().withNewMetadata().withName(name).endMetadata().build());
 	}
 
@@ -134,10 +143,11 @@ public class OpenShiftUtil  implements AutoCloseable {
 	 *
 	 * @return ProjectRequest instatnce
 	 */
-	public ProjectRequest recreateProject(ProjectRequest projectRequest) throws TimeoutException, InterruptedException {
+	public ProjectRequest recreateProject(ProjectRequest projectRequest) throws TimeoutException {
 		boolean deleted = deleteProject(projectRequest.getMetadata().getName());
 		if(deleted) {
-			waitFor(() -> getProject(projectRequest.getMetadata().getName()), Objects::isNull , null, 1_000L, 120_000L);
+			BooleanSupplier bs = () -> getProject(projectRequest.getMetadata().getName()) == null;
+			new SimpleWaiter(bs, TimeUnit.MINUTES,2,"Waiting for old project deletion before creating new one").execute();
 		}
 		return createProjectRequest(projectRequest);
 	}
@@ -220,7 +230,6 @@ public class OpenShiftUtil  implements AutoCloseable {
 	public List<Pod> getPods(String deploymentConfigName, int version) {
 		return getLabeledPods("deployment", deploymentConfigName + "-" + version);
 	}
-
 
 	public List<Pod> getLabeledPods(String key, String value) {
 		return getLabeledPods(Collections.singletonMap(key, value));
@@ -436,57 +445,6 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 	public Build startBinaryBuild(String buildConfigName, File file) {
 		return client.buildConfigs().withName(buildConfigName).instantiateBinary().fromFile(file);
-	}
-
-	/**
-	 * @see OpenShiftUtil#waitForBuildFinished(String, long, TimeUnit)
-	 */
-	public void waitForBuildFinished(String name, int timeoutInSeconds) throws TimeoutException, InterruptedException {
-		waitForBuildFinished(name, timeoutInSeconds, TimeUnit.SECONDS);
-	}
-
-	/**
-	 * Waits till builds finishes, no matter whether it fails or not.
-	 *
-	 * @param buildName build to be waited upon
-	 */
-	public void waitForBuildFinished(String buildName, long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException {
-		log.info("Waiting for completion of build {}", buildName);
-		waitFor(() -> getBuild(buildName).getStatus().getPhase(), phase -> phase.matches("Complete|Failed"), null,2_000L, TimeUnit.MILLISECONDS.convert(timeout, timeUnit));
-	}
-
-	public void waitForBuildCompletion(String buildName, int timeoutInSeconds) throws TimeoutException, InterruptedException {
-		waitForBuildCompletion(buildName, timeoutInSeconds, TimeUnit.SECONDS);
-	}
-
-	/**
-	 * Waits till builds successfully completes.
-	 *
-	 * @param buildName build to be waited upon
-	 * @throws IllegalStateException if build fails
-	 */
-	public void waitForBuildCompletion(String buildName, long timeout, TimeUnit timeUnit) throws TimeoutException, InterruptedException {
-		log.info("Waiting for completion of build {}", buildName);
-		boolean success = waitFor(() -> getBuild(buildName).getStatus().getPhase(), "Complete"::equals, "Failed"::equals,2_000L, TimeUnit.MILLISECONDS.convert(timeout, timeUnit));
-
-		if(!success) throw new IllegalStateException("Build " + buildName + " has failed");
-	}
-
-	// TODO use WaitUtil once it migrates away from obsolet OpenshiftUtil class
-	private static <X> boolean waitFor(Supplier<X> supplier, Function<X, Boolean> trueCondition, Function<X, Boolean> failCondition, long interval, long timeout) throws InterruptedException, TimeoutException {
-		timeout = System.currentTimeMillis() + timeout;
-
-		while (System.currentTimeMillis() < timeout) {
-			X x = supplier.get();
-			if (failCondition != null && failCondition.apply(x)) {
-				return false;
-			}
-			if (trueCondition.apply(x)) {
-				return true;
-			}
-			Thread.sleep(interval);
-		}
-		throw new TimeoutException();
 	}
 
 	// BuildConfigs
@@ -779,7 +737,31 @@ public class OpenShiftUtil  implements AutoCloseable {
 	}
 
 	// Clean up function
-	public void cleanProject() {
+	/**
+	 * Deletes all resources in namespace. Waits till all are deleted.
+	 *
+	 * @throws TimeoutException in case that some user resources will remain even after timeout.
+	 */
+	public void cleanAndWait() throws TimeoutException {
+		clean();
+		waiters.isProjectClean().execute();
+	}
+
+	/**
+	 * Deletes all resources in namespace. Waits till all are deleted.
+	 *
+	 * @throws AssertionError in case that some user resources will remain even after timeout.
+	 */
+	public void cleanAndAssert() {
+		clean();
+		waiters.isProjectClean().assertEventually();
+	}
+
+
+	/**
+	 * Deletes all resources in namespace. Doesn't wait till all are deleted.
+	 */
+	public void clean() {
 		// keep the order for deletion to prevent K8s creating resources again
 		getDeploymentConfigs().forEach(this::deleteDeploymentConfig);
 		client.replicationControllers().delete();
@@ -795,12 +777,6 @@ public class OpenShiftUtil  implements AutoCloseable {
 		client.configMaps().delete();
 		getUserSecrets().forEach(this::deleteSecret);
 		getUserServiceAccounts().forEach(this::deleteServiceAccount);
-
-		try{
-			Thread.sleep(2_000L);
-		} catch (InterruptedException e) {
-			log.warn("Interrupted while giving openshift time to delete resources");
-		}
 	}
 
 	@Override
@@ -828,4 +804,10 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 		return filePath;
 	}
+
+	// Waiting
+	public OpenShiftWaiters waiters() {
+		return waiters;
+	}
+
 }

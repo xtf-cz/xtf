@@ -3,9 +3,10 @@ package cz.xtf.util;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Util class for waiting.
+ * This util class has been deprecated and will be deleted in one of future releases, please refer from now on to Waiters.
  */
 @Slf4j
+@Deprecated
 public final class WaitingUtils {
 
 	/**

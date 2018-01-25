@@ -13,6 +13,7 @@ import cz.xtf.manipulation.Recorder;
 import cz.xtf.openshift.imagestream.ImageStreamRequest;
 
 import cz.xtf.junit.filter.*;
+import cz.xtf.wait.Waiters;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.Synchronized;
@@ -42,8 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
-
-import static cz.xtf.util.WaitingUtils.waitSilently;
 
 /**
  * A JUnit test runner which runs all test classes in the maven module.
@@ -116,8 +115,8 @@ public class XTFTestSuite extends ParentRunner<Runner> {
 		try {
 			log.info("action=resolving-test-classes status=START suite={}", suiteClass);
 			final List<Class<?>> classes = new XTFTestSuiteHelper(suiteClass).resolveTestClasses();
-			log.info("action=resolving-test-classes status=START suite={} testClasses={}", suiteClass, classes.size());
-			log.debug("Test classes:", classes.size());
+			log.info("action=resolving-test-classes status=FINISH suite={} testClasses={}", suiteClass, classes.size());
+			log.debug("Test classes: ", classes.size());
 			classes.forEach(c -> log.debug(" - {}", c.getName()));
 			return classes;
 		} catch (URISyntaxException | IOException e) {
@@ -197,8 +196,8 @@ public class XTFTestSuite extends ParentRunner<Runner> {
 		final List<Class<?>> tcs = TEST_CLASSES_CACHE.get(suiteClass);
 		final Set<ImageStreamRequest> requests = SuiteUtils.getImageStreamRequests(suiteClass, tcs);
 		if (requests.size() > 0) {
-			requests.forEach(r -> ImageStreamProcessor.createImageStream(r));
-			waitSilently("wait-for-ImageStreams");
+			requests.forEach(ImageStreamProcessor::createImageStream);
+			Waiters.sleep(1_000L,"Waiting for ImageStreams creation.");
 		}
 	}
 
