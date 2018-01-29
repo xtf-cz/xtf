@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class OpenShiftWaiters {
@@ -27,8 +28,8 @@ public class OpenShiftWaiters {
 	 * @return Waiter instance
 	 */
 	public Waiter hasBuildCompleted(String buildName) {
-		String reason = "Waiting for completion of build " + buildName;
 		Supplier<String> supplier =  () -> openShiftUtil.getBuild(buildName).getStatus().getPhase();
+		String reason = "Waiting for completion of build " + buildName;
 
 		return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES, 10, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
 	}
@@ -59,37 +60,75 @@ public class OpenShiftWaiters {
 			return !cleanedResources.contains(false);
 		};
 
-		return new SimpleWaiter(bs, TimeUnit.SECONDS,20,"Cleaning project.");
+		return new SimpleWaiter(bs, TimeUnit.SECONDS, 20, "Cleaning project.");
 	}
 
 	/**
-	 * Creates a waiter that checks whether all deployment pods are ready.
-	 * Defaults to 2 minutes timeout.
+	 * Creates a waiter object waiting till all pods created by deployment config with name {@code dcName} are ready.
+	 * Tolerates any container restarts. Defaults to 3 minutes timeout.
 	 *
 	 * @param dcName name of deploymentConfig
 	 * @return Waiter instance
 	 */
-	public Waiter isDeploymentReady(String dcName) {
-		int replicas = openShiftUtil.getDeploymentConfig(dcName).getSpec().getReplicas();
-		return areExactlyNPodsReady(replicas,() -> openShiftUtil.getPods(dcName));
+	public Waiter isDcReady(String dcName) {
+		return isDcReady(dcName, Integer.MAX_VALUE);
 	}
 
 	/**
-	 * Creates a waiter that checks whether all deployment pods are ready with specific version.
-	 * Defaults to 2 minutes timeout.
+	 * Creates a waiter object that waits till all pods created by deployment config with name {@code dcName} are ready.
+	 * Tolerates {@code restartTolerace} container restarts. Defaults to 3 minutes timeout.
 	 *
 	 * @param dcName name of deploymentConfig
-	 * @param version deployment version
+	 * @param restartTolerance number of container rest
+	 * @return Waiter instance
+	 */
+	public Waiter isDcReady(String dcName, int restartTolerance) {
+		Supplier<List<Pod>> ps = () -> openShiftUtil.getPods(dcName);
+		String reason = "Waiting till all pods created by " + dcName + "deployment config are ready";
+
+		return isDeploymentReady(dcName, ps, restartTolerance).reason(reason);
+	}
+
+	/**
+	 * Creates a waiter object that waits till all pods created by deployment config with name {@code dcName} are ready.
+	 * Tolerates any container restarts. Defaults to 3 minutes timeout.
+	 *
+	 * @param dcName name of deploymentConfig
+	 * @param version version of deploymentConfig to be waited upon
 	 * @return Waiter instance
 	 */
 	public Waiter isDeploymentReady(String dcName, int version) {
+		return isDeploymentReady(dcName, version, Integer.MAX_VALUE);
+	}
+
+	/**
+	 * Creates a waiter object that waits till all pods created by deployment config with name {@code dcName} are ready.
+	 * Tolerates any container restarts. Defaults to 3 minutes timeout.
+	 *
+	 * @param dcName name of deploymentConfig
+	 * @param version deployment version
+	 * @param restartTolerance number of container rest
+	 * @return Waiter instance
+	 */
+	public Waiter isDeploymentReady(String dcName, int version, int restartTolerance) {
+		Supplier<List<Pod>> ps = () -> openShiftUtil.getPods(dcName, version);
+		String reason = "Waiting till all pods created by " + version + ". of " + dcName + " deployment config are ready";
+
+		return isDeploymentReady(dcName, ps, restartTolerance).reason(reason);
+	}
+
+	private Waiter isDeploymentReady(String dcName, Supplier<List<Pod>> ps, int restartTolerance) {
 		int replicas = openShiftUtil.getDeploymentConfig(dcName).getSpec().getReplicas();
-		return areExactlyNPodsReady(replicas, () -> openShiftUtil.getPods(dcName, version));
+
+		Function<List<Pod>, Boolean> sc = ResourceFunctions.areExactlyNPodsReady(replicas);
+		Function<List<Pod>, Boolean> fc = ResourceFunctions.haveAnyPodRestartedAtLeastNTimes(restartTolerance);
+
+		return new SupplierWaiter<>(ps, sc, fc, TimeUnit.MINUTES, 3);
 	}
 
 	/**
 	 * Creates a waiter that checks that exactly n pods is ready in project.
-	 * Defaults to 2 minutes timeout.
+	 * Defaults to 3 minutes timeout. Tolerates any container restarts.
 	 *
 	 * @param n number of expected pods to wait upon
 	 * @return Waiter instance
@@ -100,7 +139,7 @@ public class OpenShiftWaiters {
 
 	/**
 	 * Creates a waiter that checks that exactly n pods is ready in project.
-	 * Defaults to 2 minutes timeout.
+	 * Defaults to 3 minutes timeout. Tolerates any container restarts.
 	 *
 	 * @param n number of expected pods to wait upon
 	 * @param key label key for pod filtering
@@ -108,22 +147,44 @@ public class OpenShiftWaiters {
 	 * @return Waiter instance
 	 */
 	public Waiter areExactlyNPodsReady(int n, String key, String value) {
-		return areExactlyNPodsReady(n, () -> openShiftUtil.getLabeledPods(key, value)).reason("Waiting for exactly " + n + " pods with label " + key + "=" + value + " to be ready.");
+		Supplier<List<Pod>> ps = () -> openShiftUtil.getLabeledPods(key, value);
+		String reason = "Waiting for exactly " + n + " pods with label " + key + "=" + value + " to be ready.";
+
+		return areExactlyNPodsReady(n, ps).reason(reason);
+	}
+
+	private Waiter areExactlyNPodsReady(int n, Supplier<List<Pod>> podSupplier) {
+		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsReady(n), TimeUnit.MINUTES, 3);
 	}
 
 	/**
-	 * Creates a waiter that checks that exactly n pods is ready in project
-	 * specified by pod supplier. Defaults to 2 minutes timeout.
+	 * Creates a waiter that checks that exactly n pods is running in project.
+	 * Defaults to 3 minutes timeout. Tolerates any container restarts.
 	 *
 	 * @param n number of expected pods to wait upon
-	 * @param podSupplier pod list generator to be checked
 	 * @return Waiter instance
 	 */
-	public Waiter areExactlyNPodsReady(int n, Supplier<List<Pod>> podSupplier) {
-		BooleanSupplier bs = () -> {
-			List<Pod> pods = podSupplier.get();
-			return pods.size() == n && pods.stream().allMatch(OpenShiftUtil::isPodReady);
-		};
-		return new SimpleWaiter(bs, TimeUnit.MINUTES, 2);
+	public Waiter areExactlyNPodsRunning(int n) {
+		return areExactlyNPodsRunning(n, openShiftUtil::getPods).reason("Waiting for exactly " + n + " pods to be running.");
+	}
+
+	/**
+	 * Creates a waiter that checks that exactly n pods is running in project.
+	 * Defaults to 3 minutes timeout. Tolerates any container restarts.
+	 *
+	 * @param n number of expected pods to wait upon
+	 * @param key label key for pod filtering
+	 * @param value label value for pod filtering
+	 * @return Waiter instance
+	 */
+	public Waiter areExactlyNPodsRunning(int n, String key, String value) {
+		Supplier<List<Pod>> ps = () -> openShiftUtil.getLabeledPods(key, value);
+		String reason = "Waiting for exactly " + n + " pods with label " + key + "=" + value + " to be running.";
+
+		return areExactlyNPodsRunning(n, ps).reason(reason);
+	}
+
+	private Waiter areExactlyNPodsRunning(int n, Supplier<List<Pod>> podSupplier) {
+		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsRunning(n), TimeUnit.MINUTES, 3);
 	}
 }

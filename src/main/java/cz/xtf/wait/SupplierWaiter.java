@@ -16,12 +16,24 @@ public class SupplierWaiter<X> implements Waiter {
 	private String reason = null;
 	private LogPoint logPoint = LogPoint.NONE;
 
+	public SupplierWaiter(Supplier<X> supplier, Function<X, Boolean> successCondition) {
+		this(supplier, successCondition, x -> false);
+	}
+
 	public SupplierWaiter(Supplier<X> supplier, Function<X, Boolean> successCondition, Function<X, Boolean> failureCondition) {
 		this(supplier, successCondition, failureCondition, TimeUnit.MILLISECONDS, DEFAULT_TIMEOUT);
 	}
 
+	public SupplierWaiter(Supplier<X> supplier, Function<X, Boolean> successCondition, String reason) {
+		this(supplier, successCondition, x -> false, reason);
+	}
+
 	public SupplierWaiter(Supplier<X> supplier, Function<X, Boolean> successCondition, Function<X, Boolean> failureCondition, String reason) {
 		this(supplier, successCondition, failureCondition, TimeUnit.MILLISECONDS, DEFAULT_TIMEOUT, reason);
+	}
+
+	public SupplierWaiter(Supplier<X> supplier, Function<X, Boolean> successCondition, TimeUnit timeoutUnit, long timeout) {
+		this(supplier, successCondition, x -> false, timeoutUnit, timeout);
 	}
 
 	public SupplierWaiter(Supplier<X> supplier, Function<X, Boolean> successCondition, Function<X, Boolean> failureCondition, TimeUnit timeoutUnit, long timeout) {
