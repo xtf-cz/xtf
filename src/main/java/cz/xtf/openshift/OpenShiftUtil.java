@@ -28,10 +28,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class OpenShiftUtil  implements AutoCloseable {
 
-	public static boolean isPodReady(Pod pod) {
-		return pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady);
-	}
-
 	private final NamespacedOpenShiftClient client;
 	private final OpenShiftWaiters waiters;
 	private final String namespace;
@@ -201,12 +197,12 @@ public class OpenShiftUtil  implements AutoCloseable {
 		return client.pods().withName(name).get();
 	}
 
-	public String getPodLog(String name) {
-		return client.pods().withName(name).getLog();
+	public String getPodLog(Pod pod) {
+		return client.pods().withName(pod.getMetadata().getName()).getLog();
 	}
 
-	public Observable<String> observePodLog(String name) {
-		LogWatch watcher = client.pods().withName(name).watchLog();
+	public Observable<String> observePodLog(Pod pod) {
+		LogWatch watcher = client.pods().withName(pod.getMetadata().getName()).watchLog();
 		return StringObservable.byLine(StringObservable.from(new InputStreamReader(watcher.getOutput())));
 	}
 
@@ -786,7 +782,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 	// Logs storing
 	public Path storePodLog(Pod pod, Path dirPath, String fileName) throws IOException {
-		String log = getPodLog(pod.getMetadata().getName());
+		String log = getPodLog(pod);
 		return storeLog(log, dirPath, fileName);
 	}
 
