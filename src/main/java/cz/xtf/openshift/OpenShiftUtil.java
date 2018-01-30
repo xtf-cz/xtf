@@ -829,7 +829,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 		client.services().delete();
 		client.builds().delete();
 		client.routes().delete();
-		client.pods().delete();
+		client.pods().withGracePeriod(0).delete();
 		client.persistentVolumeClaims().delete();
 		client.autoscaling().horizontalPodAutoscalers().delete();
 		client.configMaps().delete();
