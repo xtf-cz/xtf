@@ -1,7 +1,9 @@
 package cz.xtf.wait;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -115,7 +117,7 @@ public interface Waiter {
 		 * @param millis waiting timeout on condition
 		 */
 		public void logStart(String reason, long millis) {
-			if(this.equals(START) || this.equals(BOTH)) log.info("Waiting up to {}ms. Reason: {}", millis, reason);
+			if(this.equals(START) || this.equals(BOTH)) log.info("Waiting up to {}. Reason: {}", DurationFormatUtils.formatDurationWords(millis, true, true), reason);
 		}
 
 		/**

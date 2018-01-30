@@ -284,6 +284,11 @@ public class OpenShiftUtil  implements AutoCloseable {
 		return client.secrets().list().getItems();
 	}
 
+	/**
+	 * Retrieves secrets that aren't considered default. Secrets that are left out contain type starting with 'kubernetes.io/'.
+	 *
+	 * @return List of secrets that aren't considered default.
+	 */
 	public List<Secret> getUserSecrets() {
 		return getSecrets().stream().filter(s -> !s.getType().startsWith("kubernetes.io/")).collect(Collectors.toList());
 	}
@@ -341,6 +346,15 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 	public boolean deleteRoute(Route route) {
 		return client.routes().delete(route);
+	}
+
+	// ReplicationControllers - Only for internal usage with clean
+	private List<ReplicationController> getReplicationControllers() {
+		return client.replicationControllers().list().getItems();
+	}
+
+	private boolean deleteReplicationController(ReplicationController replicationController) {
+		return client.replicationControllers().withName(replicationController.getMetadata().getName()).cascading(false).delete();
 	}
 
 	// DeploymentConfigs
@@ -502,8 +516,19 @@ public class OpenShiftUtil  implements AutoCloseable {
 		return client.serviceAccounts().list().getItems();
 	}
 
+	/**
+	 * Retrieves service accounts that aren't considered default.
+	 * Service accounts that are left out from list:
+	 * <ul>
+	 *     <li>builder</li>
+	 *     <li>default</li>
+	 *     <li>deployer</li>
+	 * </ul>
+	 *
+	 * @return List of service accounts that aren't considered default.
+	 */
 	public List<ServiceAccount> getUserServiceAccounts() {
-		return getServiceAccounts().stream().filter(sa -> !sa.getMetadata().getName().matches(".*(builder|default|deployer).*")).collect(Collectors.toList());
+		return getServiceAccounts().stream().filter(sa -> !sa.getMetadata().getName().matches("builder|default|deployer")).collect(Collectors.toList());
 	}
 
 	public boolean deleteServiceAccount(ServiceAccount serviceAccount) {
@@ -521,6 +546,22 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 	public List<RoleBinding> getRoleBindings() {
 		return client.roleBindings().list().getItems();
+	}
+
+	/**
+	 * Retrieves role bindings that aren't considered default.
+	 * Role bindings that are left out from list:
+	 * <ul>
+	 *     <li>admin</li>
+	 *     <li>system:deployers</li>
+	 *     <li>system:image-builders</li>
+	 *     <li>system:image-pullers</li>
+	 * </ul>
+	 *
+	 * @return List of role bindings that aren't considered default.
+	 */
+	public List<RoleBinding> getUserRoleBindings() {
+		return getRoleBindings().stream().filter(rb -> !rb.getMetadata().getName().matches("admin|system:deployers|system:image-builders|system:image-pullers")).collect(Collectors.toList());
 	}
 
 	public boolean deleteRoleBinding(RoleBinding roleBinding) {
@@ -734,7 +775,14 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 	// Clean up function
 	/**
-	 * Deletes all resources in namespace. Waits till all are deleted.
+	 * Deletes all* resources in namespace. Waits till all are deleted. <br/>
+	 * <br/>
+	 *
+	 * * Only user created secrets, service accounts and role bindings are deleted. Default will remain.
+	 *
+	 * @see #getUserSecrets()
+	 * @see #getUserServiceAccounts()
+	 * @see #getUserRoleBindings()
 	 *
 	 * @throws TimeoutException in case that some user resources will remain even after timeout.
 	 */
@@ -744,7 +792,14 @@ public class OpenShiftUtil  implements AutoCloseable {
 	}
 
 	/**
-	 * Deletes all resources in namespace. Waits till all are deleted.
+	 * Deletes all* resources in namespace. Waits till all are deleted. <br/>
+	 * <br/>
+	 *
+	 * * Only user created secrets, service accounts and role bindings are deleted. Default will remain.
+	 *
+	 * @see #getUserSecrets()
+	 * @see #getUserServiceAccounts()
+	 * @see #getUserRoleBindings()
 	 *
 	 * @throws AssertionError in case that some user resources will remain even after timeout.
 	 */
@@ -755,12 +810,19 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 
 	/**
-	 * Deletes all resources in namespace. Doesn't wait till all are deleted.
+	 * Deletes all* resources in namespace. Doesn't wait till all are deleted. <br/>
+	 * <br/>
+	 *
+	 * * Only user created secrets, service accounts and role bindings are deleted. Default will remain.
+	 *
+	 * @see #getUserSecrets()
+	 * @see #getUserServiceAccounts()
+	 * @see #getUserRoleBindings()
 	 */
 	public void clean() {
 		// keep the order for deletion to prevent K8s creating resources again
 		getDeploymentConfigs().forEach(this::deleteDeploymentConfig);
-		client.replicationControllers().delete();
+		getReplicationControllers().forEach(this::deleteReplicationController);
 		client.buildConfigs().delete();
 		client.imageStreams().delete();
 		client.endpoints().delete();
@@ -773,6 +835,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 		client.configMaps().delete();
 		getUserSecrets().forEach(this::deleteSecret);
 		getUserServiceAccounts().forEach(this::deleteServiceAccount);
+		getUserRoleBindings().forEach(this::deleteRoleBinding);
 	}
 
 	@Override
