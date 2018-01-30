@@ -35,7 +35,7 @@
 		<dependency>
 			<groupId>io.fabric8</groupId>
 			<artifactId>openshift-client</artifactId>
-			<version>3.0.3</version>
+			<version>3.1.8</version>
 		</dependency>
 
 		<!-- align jackson with the versions used by fabric8-client -->
