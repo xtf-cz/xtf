@@ -56,6 +56,7 @@ public class OpenShiftWaiters {
 			cleanedResources.add(openShiftUtil.getConfigMaps().isEmpty());
 			cleanedResources.add(openShiftUtil.getUserSecrets().isEmpty());
 			cleanedResources.add(openShiftUtil.getUserServiceAccounts().isEmpty());
+			cleanedResources.add(openShiftUtil.getUserRoleBindings().isEmpty());
 
 			return !cleanedResources.contains(false);
 		};
@@ -84,7 +85,7 @@ public class OpenShiftWaiters {
 	 */
 	public Waiter isDcReady(String dcName, int restartTolerance) {
 		Supplier<List<Pod>> ps = () -> openShiftUtil.getPods(dcName);
-		String reason = "Waiting till all pods created by " + dcName + "deployment config are ready";
+		String reason = "Waiting till all pods created by " + dcName + " deployment config are ready";
 
 		return isDeploymentReady(dcName, ps, restartTolerance).reason(reason);
 	}
