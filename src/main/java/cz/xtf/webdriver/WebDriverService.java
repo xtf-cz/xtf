@@ -27,7 +27,7 @@ public class WebDriverService {
 			desiredCapabilities.accept(capabilities);
 		}
 		try {
-			WebDriver driver = new RemoteWebDriver(new URL("http://localhost:" + GhostDriverService.get().getLocalPort() + "/"), capabilities);
+			WebDriver driver = new RemoteWebDriver(new URL("http://127.0.0.1:" + GhostDriverService.get().getLocalPort() + "/"), capabilities);
 			driver.manage().window().setSize(new Dimension(1920, 1080));
 			return driver;
 		} catch (MalformedURLException e) {
