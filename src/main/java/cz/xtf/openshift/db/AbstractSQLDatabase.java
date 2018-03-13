@@ -54,7 +54,7 @@ public abstract class AbstractSQLDatabase extends AbstractDatabase implements SQ
 	public void executeSQL(final Consumer<Connection> execute) {
 		try {
 			try (final PodService pod = new PodService(getPod())) {
-				getSQLExecutor("localhost", pod.portForward(getPort())).executeSQL(execute);
+				getSQLExecutor("127.0.0.1", pod.portForward(getPort())).executeSQL(execute);
 			}
 		} catch (final Exception e) {
 			throw new IllegalStateException(e);
