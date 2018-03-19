@@ -394,7 +394,8 @@ public class OpenShiftUtil  implements AutoCloseable {
 		DeploymentConfig dc = getDeploymentConfig(name);
 
 		List<EnvVar> vars = envVars.entrySet().stream().map(x -> new EnvVarBuilder().withName(x.getKey()).withValue(x.getValue()).build()).collect(Collectors.toList());
-		dc.getSpec().getTemplate().getSpec().getContainers().get(0).setEnv(vars);
+		dc.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().removeIf(x -> envVars.containsKey(x.getName()));
+		dc.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().addAll(vars);
 
 		return updateDeploymentconfig(dc);
 	}
@@ -491,10 +492,11 @@ public class OpenShiftUtil  implements AutoCloseable {
 	 * @param envVars environment variables
 	 */
 	public BuildConfig updateBuildConfigEnvVars(String name, Map<String, String> envVars) {
-		List<EnvVar> vars = envVars.entrySet().stream().map(x -> new EnvVarBuilder().withName(x.getKey()).withValue(x.getValue()).build()).collect(Collectors.toList());
-
 		BuildConfig bc = getBuildConfig(name);
-		bc.getSpec().getStrategy().getSourceStrategy().setEnv(vars);
+
+		List<EnvVar> vars = envVars.entrySet().stream().map(x -> new EnvVarBuilder().withName(x.getKey()).withValue(x.getValue()).build()).collect(Collectors.toList());
+		bc.getSpec().getStrategy().getSourceStrategy().getEnv().removeIf(x -> envVars.containsKey(x.getName()));
+		bc.getSpec().getStrategy().getSourceStrategy().getEnv().addAll(vars);
 
 		return updateBuildConfig(bc);
 	}
