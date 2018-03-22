@@ -36,6 +36,8 @@ import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerBuilder;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
+import io.fabric8.openshift.api.model.Role;
+import io.fabric8.openshift.api.model.RoleBinding;
 import io.fabric8.openshift.api.model.Route;
 
 public class ApplicationBuilder {
@@ -53,6 +55,8 @@ public class ApplicationBuilder {
 	private final Map<String, SecretBuilder> secrets = new HashMap<>();
 	private List<ExternalService> externalServices = new ArrayList<>();
 	private final Set<ConfigMapWithPropertyFilesBuilder> configMaps = new HashSet<>(); 
+	private final Set<RoleBuilder> roles = new HashSet<>(); 
+	private final Set<RoleBindingBuilder> roleBindings = new HashSet<>(); 
 
 	private SourceBuildStrategy s2iStrategy;
 	private Optional<AutoScaleConfig> autoScale = Optional.empty();
@@ -78,7 +82,7 @@ public class ApplicationBuilder {
 	 * @param baseImage
 	 * 		image to use as a base for STI
 	 * @param useMavenProxy
-	 *      an option to overwrite system-wide setting for Maven proxy usage
+	 *	  an option to overwrite system-wide setting for Maven proxy usage
 	 */
 	public ApplicationBuilder(String name, String gitRepo, String baseImage, boolean useMavenProxy) {
 		this(name);
@@ -290,7 +294,63 @@ public class ApplicationBuilder {
 		return result;
 	}
 
-	// routes
+	// roles
+
+	/**
+	 * Gets default role (i.e. named '{applicationName}-role'). If default
+	 * role does not exists, it is initiated with default values.
+	*/
+	public RoleBuilder role() {
+	   return role(applicationName + "-role");
+	}
+
+	/**
+	 * Gets the role with given name. If no such role exists, it is initiated
+	 * with default values.
+	 */
+	public RoleBuilder role(String roleName) {
+		RoleBuilder result;
+		Optional<RoleBuilder> orig = roles.stream().filter(r -> r.getName().startsWith(roleName)).findFirst();
+		if (orig.isPresent()) {
+			LOGGER.debug("Trying to create role {} that already exists.", roleName);
+			result = orig.get();
+		} else {
+			result = new RoleBuilder(this, roleName);
+			roles.add(result);
+		}
+
+		return result;
+	}
+
+	// role bindings
+
+	/**
+	 * Gets default role binding (i.e. named '{applicationName}-rolebinding'). If default
+	 * role binding does not exists, it is initiated with default values.
+	 */
+	public RoleBindingBuilder roleBinding() {
+		return roleBinding(applicationName + "-rolebinding");
+	}
+
+	/**
+	 * Gets the role binding with given name. If no such role binding exists, it is initiated
+	 * with default values.
+	 */
+	public RoleBindingBuilder roleBinding(String roleBindingName) {
+		RoleBindingBuilder result;
+		Optional<RoleBindingBuilder> orig = roleBindings.stream().filter(r -> r.getName().startsWith(roleBindingName)).findFirst();
+		if (orig.isPresent()) {
+			LOGGER.debug("Trying to create role {} that already exists.", roleBindingName);
+			result = orig.get();
+		} else {
+			result = new RoleBindingBuilder(this, roleBindingName);
+			roleBindings.add(result);
+		}
+
+		return result;
+	}
+
+	// config maps
 
 	/**
 	 * Gets default ConfigMap (i.e. named '{applicationName}-cm'). If default
@@ -346,6 +406,14 @@ public class ApplicationBuilder {
 
 	public List<Route> buildRoutes() {
 		return routes.stream().map(RouteBuilder::build).collect(Collectors.toList());
+	}
+
+	public List<Role> buildRoles() {
+		return roles.stream().map(RoleBuilder::build).collect(Collectors.toList());
+	}
+
+	public List<RoleBinding> buildRoleBindings() {
+		return roleBindings.stream().map(RoleBindingBuilder::build).collect(Collectors.toList());
 	}
 
 	public List<ConfigMap> buildConfigMaps() {
