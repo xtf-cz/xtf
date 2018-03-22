@@ -250,41 +250,74 @@ public class ImageRegistry {
 	}
 
 	public static class Image {
-		private String imageName;
+		// REGISTRY[:PORT]/USER/REPO[:TAG]
+		private String imageRegistry; // including port
+		private String imageUser;
+		private String imageRepo;
 		private String imageTag;
+		private String image;
 
 		public Image(final String image) {
-			final String[] tokens = image.split(":");
+
+			this.image = image;
+
+			final String[] slashTokens = image.split("/");
+			final String repoTag;
+
+			switch (slashTokens.length) {
+				case 1:imageRegistry = ""; imageUser = ""; repoTag = slashTokens[0];break;
+				case 2:imageRegistry = ""; imageUser = slashTokens[0]; repoTag = slashTokens[1];break;
+				case 3:imageRegistry = slashTokens[0]; imageUser = slashTokens[1]; repoTag = slashTokens[2]; break;
+				default: throw new IllegalArgumentException("image '" + image + "' should have one or two '/' characters");
+			}
+
+			final String[] tokens = repoTag.split(":");
 			switch (tokens.length) {
 				case 1:
-					this.imageName = tokens[0];
+					this.imageRepo = tokens[0];
 					this.imageTag = "";
 					break;
 				case 2:
-					this.imageName = tokens[0];
+					this.imageRepo = tokens[0];
 					this.imageTag = tokens[1];
 					break;
-				case 3:
-					this.imageName = tokens[0] + ":" + tokens[1];
-					this.imageTag = tokens[2];
-					break;
+				default: throw new IllegalArgumentException("repoTag '" + repoTag + "' should have zero or two ':' characters");
 			}
 		}
 
+		/** @returns REGISTRY[:PORT]/USER/REPO (everything except tag) */
+		@Deprecated
 		public String getImageName() {
-			return this.imageName;
+			if (imageRegistry.isEmpty()) {
+				if (imageUser.isEmpty()) {
+					return imageRepo;
+				} else {
+					return imageUser + "/" + imageRepo;
+				}
+			} else {
+				return imageRegistry + "/" + imageUser + "/" + imageRepo;
+			}
 		}
 
 		public String getImageTag() {
 			return this.imageTag;
 		}
 
+		public String getImageRegistry() {
+			return this.imageRegistry;
+		}
+
+		public String getImageUser() {
+			return this.imageUser;
+		}
+
+		public String getImageRepo() {
+			return this.imageRepo;
+		}
+
 		@Override
 		public String toString() {
-			return "Image{" +
-					"imageName='" + this.imageName + '\'' +
-					", imageTag='" + this.imageTag + '\'' +
-					'}';
+			return image;
 		}
 	}
 }
