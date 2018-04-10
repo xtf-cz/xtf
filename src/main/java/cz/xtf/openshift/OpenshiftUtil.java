@@ -59,6 +59,7 @@ import io.fabric8.openshift.api.model.BuildTriggerPolicy;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.Project;
+import io.fabric8.openshift.api.model.Role;
 import io.fabric8.openshift.api.model.RoleBinding;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.Template;
@@ -492,6 +493,50 @@ public class OpenshiftUtil implements AutoCloseable {
 
 	public void deleteRoute(Route route) {
 		withDefaultUser(client -> client.routes().delete(route));
+	}
+
+	// roles
+	public Role createRole(Role role) {
+		return withDefaultUser(client -> client.roles().create(role));
+	}
+
+	public Collection<Role> getRoles() {
+		return getRoles(context.getNamespace());
+	}
+
+	public Collection<Role> getRoles(String namespace) {
+		return withDefaultUser(client -> client.inNamespace(namespace).roles()
+				.list().getItems());
+	}
+
+	public Stream<Role> getRolesNamedWithPrefix(final String prefix) {
+		return getRoles().stream().filter(x -> x.getMetadata().getName().startsWith(prefix));
+	}
+
+	public void deleteRole(Role role) {
+		withDefaultUser(client -> client.roles().delete(role));
+	}
+
+	// role bindings
+	public RoleBinding createRoleBinding(RoleBinding roleBinding) {
+		return withDefaultUser(client -> client.roleBindings().create(roleBinding));
+	}
+
+	public Collection<RoleBinding> getRoleBindings() {
+		return getRoleBindings(context.getNamespace());
+	}
+
+	public Collection<RoleBinding> getRoleBindings(String namespace) {
+		return withDefaultUser(client -> client.inNamespace(namespace).roleBindings()
+				.list().getItems());
+	}
+
+	public Stream<RoleBinding> getRoleBindingsNamedWithPrefix(final String prefix) {
+		return getRoleBindings().stream().filter(x -> x.getMetadata().getName().startsWith(prefix));
+	}
+
+	public void deleteRoleBinding(RoleBinding roleBinding) {
+		withDefaultUser(client -> client.roleBindings().delete(roleBinding));
 	}
 
 	// replicationControllers
@@ -1240,6 +1285,13 @@ public class OpenshiftUtil implements AutoCloseable {
 		getSecrets().stream()
 				.filter(s -> !s.getType().startsWith("kubernetes.io/"))
 				.forEach(this::deleteSecret);
+
+		getRoleBindings().stream()
+			.filter(rb -> !rb.getRoleRef().getName().startsWith("admin"))
+			.filter(rb -> !rb.getRoleRef().getName().startsWith("system"))
+			.filter(rb -> rb.getSubjects().stream().allMatch(s -> s.getNamespace().equals(TestConfiguration.masterNamespace())))
+			.forEach(this::deleteRoleBinding);
+		getRoles().forEach(this::deleteRole);
 
 		// Remove only users service accounts
 		getServiceAccounts().stream()
