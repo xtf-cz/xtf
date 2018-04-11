@@ -42,7 +42,6 @@ public class XTFConfiguration {
 	private static final String ROUTE_DOMAIN = "xtf.config.route_domain";
 	private static final String PROXY_DOMAIN = "xtf.config.domain.proxy";
 	private static final String SOAK_TEST_ITERATIONS = "xtf.config.soak_test_iterations";
-	private static final String IMAGE_REPO_BASE = "xtf.config.image.repo";
 	private static final String MAVEN_BASE_URL = "xtf.config.maven.web.url";
 	private static final String MAVEN_PROXY_URL = "xtf.config.maven.proxy.url";
 	private static final String MAVEN_PROXY_GROUP = "xtf.config.maven.proxy.group";
@@ -597,9 +596,6 @@ public class XTFConfiguration {
 					break;
 				case "SOAK_TEST_ITERATIONS":
 					props.setProperty(SOAK_TEST_ITERATIONS, entry.getValue());
-					break;
-				case "IMAGE_REPO_BASE":
-					props.setProperty(IMAGE_REPO_BASE, entry.getValue());
 					break;
 				case "MAVEN_BASE_URL":
 					props.setProperty(MAVEN_BASE_URL, entry.getValue());
