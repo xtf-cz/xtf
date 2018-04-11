@@ -40,6 +40,17 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String IMAGE_MM_SERVICE = "org.hawkular.service";
 	public static final String IMAGE_MM_DATASTORE = "org.hawkular.datastore";
 
+	public static final String VERSION_EAP = "xtf.version.eap";
+	public static final String VERSION_JDV = "xtf.version.jdv";
+	public static final String VERSION_JDG = "xtf.version.jdg";
+	public static final String VERSION_EWS = "xtf.version.ews";
+	public static final String VERSION_FUSE = "xtf.version.fuse";
+	public static final String VERSION_KIE = "xtf.version.kie";
+	public static final String VERSION_JDK = "xtf.version.jdk";
+	public static final String VERSION_SSO = "xtf.version.sso";
+	public static final String VERSION_AMQ = "xtf.version.amq";
+	public static final String VERSION_MSA = "xtf.version.msa";
+
 	public static final String CDK_INTERNAL_HOSTNAME = "localhost.localdomain";
 
 	public static final String CI_USERNAME = "ci.username";
@@ -61,6 +72,18 @@ public class TestConfiguration extends XTFConfiguration {
 
 	public static String ocBinaryLocation() {
 		return get().readValue(OC_BINARY_LOCATION);
+	}
+
+	public static String kieVersion() {
+		return get().readValue(VERSION_KIE);
+	}
+
+	public static String getFuseVersion() {
+		return get().readValue(VERSION_FUSE);
+	}
+
+	public static String getMsaVersion() {
+		return get().readValue(VERSION_MSA);
 	}
 
 	@Override
@@ -160,6 +183,33 @@ public class TestConfiguration extends XTFConfiguration {
 				case "CI_PASSWORD":
 					props.setProperty(CI_PASSWORD, entry.getValue());
 					break;
+				case "VERSION_EAP":
+					props.setProperty(VERSION_EAP, entry.getValue());
+					break;
+				case "VERSION_JDV":
+					props.setProperty(VERSION_JDV, entry.getValue());
+					break;
+				case "VERSION_JDG":
+					props.setProperty(VERSION_JDG, entry.getValue());
+					break;
+				case "VERSION_EWS":
+					props.setProperty(VERSION_EWS, entry.getValue());
+					break;
+				case "VERSION_FUSE":
+					props.setProperty(VERSION_FUSE, entry.getValue());
+					break;
+				case "VERSION_KIE":
+					props.setProperty(VERSION_KIE, entry.getValue());
+					break;
+				case "VERSION_JDK":
+					props.setProperty(VERSION_JDK, entry.getValue());
+					break;
+				case "VERSION_SSO":
+					props.setProperty(VERSION_SSO, entry.getValue());
+					break;
+				case "VERSION_AMQ":
+					props.setProperty(VERSION_AMQ, entry.getValue());
+					break;
 				default:
 					break;
 			}
@@ -167,7 +217,10 @@ public class TestConfiguration extends XTFConfiguration {
 		return props;
 	}
 
-
-
-
+	@Override
+	protected Properties defaultValues(){
+		final Properties properties = new Properties();
+		properties.setProperty(VERSION_FUSE, "6.2.1");
+		return properties;
+	}
 }

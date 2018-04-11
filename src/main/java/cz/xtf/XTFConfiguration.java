@@ -78,16 +78,6 @@ public class XTFConfiguration {
 	private static final String OPENSTACK_USERNAME = "xtf.config.openstack.username";
 	private static final String OPENSTACK_PASSWORD = "xtf.config.openstack.password";
 
-	public static final String VERSION_EAP = "xtf.version.eap";
-	public static final String VERSION_JDV = "xtf.version.jdv";
-	public static final String VERSION_JDG = "xtf.version.jdg";
-	public static final String VERSION_EWS = "xtf.version.ews";
-	public static final String VERSION_FUSE = "xtf.version.fuse";
-	public static final String VERSION_KIE = "xtf.version.kie";
-	public static final String VERSION_JDK = "xtf.version.jdk";
-	public static final String VERSION_SSO = "xtf.version.sso";
-	public static final String VERSION_AMQ = "xtf.version.amq";
-	public static final String VERSION_MSA = "xtf.version.msa";
 
 	public static final String OC_BINARY_LOCATION = "oc.binary.location";
 
@@ -206,18 +196,6 @@ public class XTFConfiguration {
 		}
 
 		return result;
-	}
-
-	public static String kieVersion() {
-		return get().readValue(VERSION_KIE);
-	}
-
-	public static String getFuseVersion() {
-		return get().readValue(VERSION_FUSE);
-	}
-
-	public static String getMsaVersion() {
-		return get().readValue(VERSION_MSA);
 	}
 
 	public static String nfsSshUsername() {
@@ -663,33 +641,6 @@ public class XTFConfiguration {
 				case "OPENSTACK_OPEN_SECURITY_GROUP":
 					props.setProperty(OPENSTACK_OPEN_SECURITY_GROUP, entry.getValue());
 					break;
-				case "VERSION_EAP":
-					props.setProperty(VERSION_EAP, entry.getValue());
-					break;
-				case "VERSION_JDV":
-					props.setProperty(VERSION_JDV, entry.getValue());
-					break;
-				case "VERSION_JDG":
-					props.setProperty(VERSION_JDG, entry.getValue());
-					break;
-				case "VERSION_EWS":
-					props.setProperty(VERSION_EWS, entry.getValue());
-					break;
-				case "VERSION_FUSE":
-					props.setProperty(VERSION_FUSE, entry.getValue());
-					break;
-				case "VERSION_KIE":
-					props.setProperty(VERSION_KIE, entry.getValue());
-					break;
-				case "VERSION_JDK":
-					props.setProperty(VERSION_JDK, entry.getValue());
-					break;
-				case "VERSION_SSO":
-					props.setProperty(VERSION_SSO, entry.getValue());
-					break;
-				case "VERSION_AMQ":
-					props.setProperty(VERSION_AMQ, entry.getValue());
-					break;
 				case "BUILD_NAMESPACE":
 					props.setProperty(BUILD_NAMESPACE, entry.getValue());
 					break;
@@ -751,7 +702,6 @@ public class XTFConfiguration {
 		props.setProperty(FABRIC8_SERVICE_NAME_LIMIT, "2147483647");
 		props.setProperty(FUSE_CACHED_IMAGES, "true");
 		props.setProperty(FUSE_DISABLE_JOLOKIA, "false");
-		props.setProperty(VERSION_FUSE, "6.2.1");
 		props.setProperty(BUILD_NAMESPACE, "xtf-builds");
 		props.setProperty(FORCE_REBUILD, "false");
 		props.setProperty(BINARY_BUILD, "false");
