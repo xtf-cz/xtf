@@ -30,6 +30,7 @@ public class JBossAMQ extends DefaultStatefulAuxiliary implements MessageBroker 
 
 	private final List<String> queues = new ArrayList<>();
 	private final List<String> topics = new ArrayList<>();
+	private Boolean tracking = null;
 	private String jndiName;
 
 	public JBossAMQ() {
@@ -100,6 +101,11 @@ public class JBossAMQ extends DefaultStatefulAuxiliary implements MessageBroker 
 				.envVar(getEnvVarName("TOPICS"), getTopicList())
 				.envVar(getEnvVarName("PROTOCOL"), "tcp");
 
+		if (tracking != null) {
+			dcBuilder.podTemplate().container()
+					.envVar(getEnvVarName("TRACKING"), tracking.booleanValue() ? "true" : "false");
+		}
+
 		if (StringUtils.isNotBlank(jndiName)) {
 			dcBuilder.podTemplate().container().envVar(getEnvVarName("JNDI"), jndiName);
 		}
@@ -137,6 +143,11 @@ public class JBossAMQ extends DefaultStatefulAuxiliary implements MessageBroker 
 
 	public JBossAMQ withJndiName(final String jndiName) {
 		this.jndiName = jndiName;
+		return this;
+	}
+
+	public JBossAMQ withTracking(final boolean tracking) {
+		this.tracking = tracking;
 		return this;
 	}
 
