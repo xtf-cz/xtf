@@ -42,6 +42,8 @@ public class OpenShiftWaiters {
 	public Waiter isProjectClean() {
 		BooleanSupplier bs = () -> {
 			List<Boolean> cleanedResources = new ArrayList<>();
+			cleanedResources.add(openShiftUtil.client().extensions().deployments().list().getItems().isEmpty());
+			cleanedResources.add(openShiftUtil.client().extensions().jobs().list().getItems().isEmpty());
 			cleanedResources.add(openShiftUtil.getDeploymentConfigs().isEmpty());
 			cleanedResources.add(openShiftUtil.client().replicationControllers().list().getItems().isEmpty());
 			cleanedResources.add(openShiftUtil.getBuildConfigs().isEmpty());

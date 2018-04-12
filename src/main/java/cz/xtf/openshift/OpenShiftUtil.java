@@ -823,6 +823,8 @@ public class OpenShiftUtil  implements AutoCloseable {
 	 */
 	public void clean() {
 		// keep the order for deletion to prevent K8s creating resources again
+		client.extensions().deployments().delete();
+		client.extensions().jobs().delete();
 		getDeploymentConfigs().forEach(this::deleteDeploymentConfig);
 		getReplicationControllers().forEach(this::deleteReplicationController);
 		client.buildConfigs().delete();
