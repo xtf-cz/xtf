@@ -13,6 +13,7 @@ import rx.observables.StringObservable;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -83,7 +84,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 		return client;
 	}
 
-	// General functionsf
+	// General functions
 	public KubernetesList createResources(HasMetadata... resources) {
 		return createResources(Arrays.asList(resources));
 	}
@@ -100,6 +101,10 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 	public boolean deleteResources(KubernetesList resources) {
 		return client.lists().delete(resources);
+	}
+
+	public void loadResource(InputStream is){
+		client.load(is).deletingExisting().createOrReplace();
 	}
 
 	// Projects
