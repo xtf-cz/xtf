@@ -53,12 +53,16 @@ public class JBossAMQ extends DefaultStatefulAuxiliary implements MessageBroker 
 		return vars;
 	}
 
+	protected String getAmqImage() {
+		return ImageRegistry.get().amq();
+	}
+
 	@Override
 	public DeploymentConfigBuilder configureDeployment(ApplicationBuilder appBuilder, final boolean synchronous) {
 		final DeploymentConfigBuilder builder = appBuilder.deploymentConfig(
 				SYMBOLIC_NAME, SYMBOLIC_NAME, false);
 		builder.onConfigurationChange().podTemplate().container()
-				.fromImage(ImageRegistry.get().amq())
+				.fromImage(getAmqImage())
 				.envVars(getImageVariables())
 				.port(OPENWIRE_PORT, "tcp")
 				.port(8778, "jolokia");
