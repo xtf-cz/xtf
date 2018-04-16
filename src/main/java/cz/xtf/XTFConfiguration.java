@@ -716,7 +716,7 @@ public class XTFConfiguration {
 		return props;
 	}
 
-	private void copyValues(final Properties source) {
+	protected void copyValues(final Properties source) {
 		copyValues(source, false);
 	}
 
@@ -740,5 +740,9 @@ public class XTFConfiguration {
 	public enum PingProtocol {
 		DNSPING,
 		KUBEPING
+	}
+
+	protected Properties getXTFProperties(){
+		return this.properties;
 	}
 }

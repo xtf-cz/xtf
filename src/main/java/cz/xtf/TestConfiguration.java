@@ -44,51 +44,226 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String VERSION_JDV = "xtf.version.jdv";
 	public static final String VERSION_JDG = "xtf.version.jdg";
 	public static final String VERSION_EWS = "xtf.version.ews";
-	public static final String VERSION_FUSE = "xtf.version.fuse";
+
 	public static final String VERSION_KIE = "xtf.version.kie";
 	public static final String VERSION_JDK = "xtf.version.jdk";
 	public static final String VERSION_SSO = "xtf.version.sso";
 	public static final String VERSION_AMQ = "xtf.version.amq";
 	public static final String VERSION_MSA = "xtf.version.msa";
 
+	public static final String VERSION_FUSE = "xtf.version.fuse";
+
 	public static final String CDK_INTERNAL_HOSTNAME = "localhost.localdomain";
 
 	public static final String CI_USERNAME = "ci.username";
 	public static final String CI_PASSWORD = "ci.password";
 
-	private TestConfiguration() {
+	private Properties properties;
 
+	private static final TestConfiguration INSTANCE = new TestConfiguration();
+
+	protected TestConfiguration() {
 		super();
+		get().copyValues(fromEnvironment());
+		get().copyValues(defaultValues());
+		properties = getXTFProperties();
+	}
 
+	private static TestConfiguration getTC() {
+		return INSTANCE;
+	}
+
+	private static String getProperty(String property) {
+		return getTC().properties.getProperty(property);
 	}
 
 	public static String ciUsername() {
-		return get().readValue(CI_USERNAME);
+		return getProperty(CI_USERNAME);
 	}
 
 	public static String ciPassword() {
-		return get().readValue(CI_PASSWORD);
+		return getProperty(CI_PASSWORD);
 	}
 
 	public static String ocBinaryLocation() {
-		return get().readValue(OC_BINARY_LOCATION);
+		return getProperty(OC_BINARY_LOCATION);
 	}
 
 	public static String kieVersion() {
-		return get().readValue(VERSION_KIE);
+		return getProperty(VERSION_KIE);
 	}
 
 	public static String getFuseVersion() {
-		return get().readValue(VERSION_FUSE);
+		return getProperty(VERSION_FUSE);
 	}
 
 	public static String getMsaVersion() {
-		return get().readValue(VERSION_MSA);
+		return getProperty(VERSION_MSA);
+	}
+
+	public static String imageEap6() {
+		return getProperty(IMAGE_EAP_6);
+	}
+
+	public static String imageEap7() {
+		return getProperty(IMAGE_EAP_7);
+	}
+
+	public static String imageJdg() {
+		return getProperty(IMAGE_JDG);
+	}
+
+	public static String imageJdgClient() {
+		return getProperty(IMAGE_JDG_CLIENT);
+	}
+
+	public static String imageJdv() {
+		return getProperty(IMAGE_JDV);
+	}
+
+	public static String imageJdvClient() {
+		return getProperty(IMAGE_JDV_CLIENT);
+	}
+
+	public static String imageJdvOdbcTestImage() {
+		return getProperty(IMAGE_JDV_ODBC_TEST_IMAGE);
+	}
+
+	public static String imageEwsPrefix() {
+		return getProperty(IMAGE_EWS_PREFIX);
+	}
+
+	public static String imageTomcat7() {
+		return getProperty(IMAGE_TOMCAT7);
+	}
+
+	public static String imageTomcat8() {
+		return getProperty(IMAGE_TOMCAT8);
+	}
+
+	public static String imageAmq() {
+		return getProperty(IMAGE_AMQ);
+	}
+
+	public static String imagePostgres() {
+		return getProperty(IMAGE_POSTGRES);
+	}
+
+	public static String imageDerby() {
+		return getProperty(IMAGE_DERBY);
+	}
+
+	public static String imageMysql() {
+		return getProperty(IMAGE_MYSQL);
+	}
+
+	public static String imageMongo() {
+		return getProperty(IMAGE_MONGO);
+	}
+
+	public static String imageNfs() {
+		return getProperty(IMAGE_NFS);
+	}
+
+	public static String imageFuseJavaMain() {
+		return getProperty(IMAGE_FUSE_JAVA_MAIN);
+	}
+
+	public static String imageFuseKaraf() {
+		return getProperty(IMAGE_FUSE_KARAF);
+	}
+
+	public static String imageFuseEap() {
+		return getProperty(IMAGE_FUSE_EAP);
+	}
+
+	public static String imageBrms() {
+		return getProperty(IMAGE_BRMS);
+	}
+
+	public static String imageBpms() {
+		return getProperty(IMAGE_BPMS);
+	}
+
+	public static String imageBpmsLdapTestImage() {
+		return getProperty(IMAGE_BPMS_LDAP_TEST_IMAGE);
+	}
+
+	public static String imageSso() {
+		return getProperty(IMAGE_SSO);
+	}
+
+	public static String imagePhantomjs() {
+		return getProperty(IMAGE_PHANTOMJS);
+	}
+
+	public static String imageH2() {
+		return getProperty(IMAGE_H2);
+	}
+
+	public static String imageMsa() {
+		return getProperty(IMAGE_MSA);
+	}
+
+	public static String imageZipkin() {
+		return getProperty(IMAGE_ZIPKIN);
+	}
+
+	public static String imageSquid() {
+		return getProperty(IMAGE_SQUID);
+	}
+
+	public static String imageTcpProxy() {
+		return getProperty(IMAGE_TCP_PROXY);
+	}
+
+	public static String imageMmService() {
+		return getProperty(IMAGE_MM_SERVICE);
+	}
+
+	public static String imageMmDatastore() {
+		return getProperty(IMAGE_MM_DATASTORE);
+	}
+
+	public static String versionEap() {
+		return getProperty(VERSION_EAP);
+	}
+
+	public static String versionJdv() {
+		return getProperty(VERSION_JDV);
+	}
+
+	public static String versionJdg() {
+		return getProperty(VERSION_JDG);
+	}
+
+	public static String versionEws() {
+		return getProperty(VERSION_EWS);
+	}
+
+	public static String versionKie() {
+		return getProperty(VERSION_KIE);
+	}
+
+	public static String versionJdk() {
+		return getProperty(VERSION_JDK);
+	}
+
+	public static String versionSso() {
+		return getProperty(VERSION_SSO);
+	}
+
+	public static String versionAmq() {
+		return getProperty(VERSION_AMQ);
+	}
+
+	public static String versionMsa() {
+		return getProperty(VERSION_MSA);
 	}
 
 	@Override
 	protected Properties fromEnvironment() {
-		final Properties props = new Properties();
+		final Properties props = get().fromEnvironment();
 
 		for (final Map.Entry<String, String> entry : System.getenv()
 				.entrySet()) {
@@ -219,8 +394,8 @@ public class TestConfiguration extends XTFConfiguration {
 
 	@Override
 	protected Properties defaultValues(){
-		final Properties properties = new Properties();
-		properties.setProperty(VERSION_FUSE, "6.2.1");
-		return properties;
+		final Properties props = new Properties();
+		props.setProperty(VERSION_FUSE, "6.2.1");
+		return props;
 	}
 }
