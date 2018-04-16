@@ -79,7 +79,7 @@ public class XTFConfiguration {
 	private static final String OPENSTACK_PASSWORD = "xtf.config.openstack.password";
 
 
-	public static final String OC_BINARY_LOCATION = "oc.binary.location";
+
 
 	public static final String CDK_DOMAIN = "cd.xtf.cz";
 	public static final String CDK_IP = "10.1.2.2";
@@ -712,7 +712,6 @@ public class XTFConfiguration {
 		props.setProperty(TEST_ALERT, "false");
 		props.setProperty(TEMPLATE_REPO, "git://github.com/jboss-openshift/application-templates.git");
 		props.setProperty(TEMPLATE_BRANCH, "master");
-		props.setProperty(OC_BINARY_LOCATION, "/usr/bin/oc");
 		return props;
 	}
 

@@ -33,7 +33,7 @@ public class TestConfigurationTest {
 
 	@Test
 	public void canReadDefaultValueOfPropertyFromTestConfiguration() {
-		Assert.assertEquals("6.2.1", TestConfiguration.getFuseVersion());
+		Assert.assertEquals("/usr/bin/oc", TestConfiguration.ocBinaryLocation());
 	}
 
 	@Test
