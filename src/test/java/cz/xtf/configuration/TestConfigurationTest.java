@@ -32,7 +32,7 @@ public class TestConfigurationTest {
 
 
 	@Test
-	public void canReadDefaultValueOfPropertyFromTestConfiguration() {
+	public void canReadDefaultValueOfPropertyFromXTFConfiguration() {
 		Assert.assertEquals("/usr/bin/oc", TestConfiguration.ocBinaryLocation());
 	}
 

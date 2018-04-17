@@ -78,7 +78,7 @@ public class XTFConfiguration {
 	private static final String OPENSTACK_USERNAME = "xtf.config.openstack.username";
 	private static final String OPENSTACK_PASSWORD = "xtf.config.openstack.password";
 
-
+	public static final String OC_BINARY_LOCATION = "oc.binary.location";
 
 
 	public static final String CDK_DOMAIN = "cd.xtf.cz";
@@ -410,6 +410,9 @@ public class XTFConfiguration {
 		return Boolean.parseBoolean(get().readValue(GITLAB_GROUP_ENABLED));
 	}
 
+	public static String ocBinaryLocation() {
+		return get().readValue(OC_BINARY_LOCATION);
+	}
 
 	public static String buildNamespace() {
 		return get().readValue(BUILD_NAMESPACE);
@@ -712,6 +715,7 @@ public class XTFConfiguration {
 		props.setProperty(TEST_ALERT, "false");
 		props.setProperty(TEMPLATE_REPO, "git://github.com/jboss-openshift/application-templates.git");
 		props.setProperty(TEMPLATE_BRANCH, "master");
+		props.setProperty(OC_BINARY_LOCATION, "/usr/bin/oc");
 		return props;
 	}
 

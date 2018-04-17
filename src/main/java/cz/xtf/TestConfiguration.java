@@ -58,7 +58,6 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String CI_USERNAME = "ci.username";
 	public static final String CI_PASSWORD = "ci.password";
 
-	public static final String OC_BINARY_LOCATION = "oc.binary.location";
 
 	private Properties properties;
 
@@ -87,9 +86,7 @@ public class TestConfiguration extends XTFConfiguration {
 		return getProperty(CI_PASSWORD);
 	}
 
-	public static String ocBinaryLocation() {
-		return getProperty(OC_BINARY_LOCATION);
-	}
+
 
 	public static String kieVersion() {
 		return getProperty(VERSION_KIE);
@@ -398,7 +395,7 @@ public class TestConfiguration extends XTFConfiguration {
 	protected Properties defaultValues(){
 		final Properties props = new Properties();
 		props.setProperty(VERSION_FUSE, "6.2.1");
-		props.setProperty(OC_BINARY_LOCATION, "/usr/bin/oc");
+
 		return props;
 	}
 }
