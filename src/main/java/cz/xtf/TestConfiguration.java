@@ -39,6 +39,7 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String IMAGE_TCP_PROXY = "xtf.tcp-proxy";
 	public static final String IMAGE_MM_SERVICE = "org.hawkular.service";
 	public static final String IMAGE_MM_DATASTORE = "org.hawkular.datastore";
+
 	public static final String VERSION_EAP = "xtf.version.eap";
 	public static final String VERSION_JDV = "xtf.version.jdv";
 	public static final String VERSION_JDG = "xtf.version.jdg";
@@ -53,9 +54,6 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String CI_USERNAME = "ci.username";
 	public static final String CI_PASSWORD = "ci.password";
 
-	private Properties properties;
-	private static final TestConfiguration INSTANCE = new TestConfiguration();
-
 	static {
 		get().copyValues(fromEnvironment());
 		get().copyValues(defaultValues());
@@ -63,15 +61,10 @@ public class TestConfiguration extends XTFConfiguration {
 
 	private TestConfiguration() {
 		super();
-		properties = getXTFProperties();
-	}
-
-	private static TestConfiguration getTC() {
-		return INSTANCE;
 	}
 
 	private static String getProperty(String property) {
-		return getTC().properties.getProperty(property);
+		return get().readValue(property);
 	}
 
 	public static String ciUsername() {
@@ -383,7 +376,6 @@ public class TestConfiguration extends XTFConfiguration {
 		}
 		return props;
 	}
-
 
 	protected static Properties defaultValues(){
 		final Properties props = new Properties();
