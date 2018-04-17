@@ -24,12 +24,6 @@ public class TestConfigurationTest {
 		Assert.assertEquals("Fix TestConfiguration constructor", "IMAGE_JDV_CLIENT", TestConfiguration.imageJdvClient());
 	}
 
-	@Test
-	public void canReadEnvironmentVariableByTestConfigurationFromXTFConfiguration() {
-
-		Assert.assertEquals( "MASTER_USERNAME", TestConfiguration.masterUsername());
-	}
-
 
 	@Test
 	public void canReadDefaultValueOfPropertyFromXTFConfiguration() {
