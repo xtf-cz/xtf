@@ -503,7 +503,7 @@ public class XTFConfiguration {
 		return props;
 	}
 
-	protected Properties fromEnvironment() {
+	protected static Properties fromEnvironment() {
 		final Properties props = new Properties();
 
 		for (final Map.Entry<String, String> entry : System.getenv()
@@ -686,7 +686,7 @@ public class XTFConfiguration {
 		return props;
 	}
 
-	protected Properties defaultValues() {
+	protected static Properties defaultValues() {
 		final Properties props = new Properties();
 
 		props.setProperty(ROUTE_DOMAIN, "cloudapps.example.com");

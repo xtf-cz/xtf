@@ -56,10 +56,13 @@ public class TestConfiguration extends XTFConfiguration {
 	private Properties properties;
 	private static final TestConfiguration INSTANCE = new TestConfiguration();
 
-	private TestConfiguration() {
-		super();
+	static {
 		get().copyValues(fromEnvironment());
 		get().copyValues(defaultValues());
+	}
+
+	private TestConfiguration() {
+		super();
 		properties = getXTFProperties();
 	}
 
@@ -251,8 +254,7 @@ public class TestConfiguration extends XTFConfiguration {
 		return getProperty(VERSION_MSA);
 	}
 
-	@Override
-	protected Properties fromEnvironment() {
+	protected static Properties fromEnvironment() {
 		final Properties props = get().fromEnvironment();
 
 		for (final Map.Entry<String, String> entry : System.getenv()
@@ -382,8 +384,8 @@ public class TestConfiguration extends XTFConfiguration {
 		return props;
 	}
 
-	@Override
-	protected Properties defaultValues(){
+
+	protected static Properties defaultValues(){
 		final Properties props = new Properties();
 		props.setProperty(VERSION_FUSE, "6.2.1");
 
