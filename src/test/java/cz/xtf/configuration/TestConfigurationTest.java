@@ -15,4 +15,9 @@ public class TestConfigurationTest {
 	public void canReadDefaultValueByTestConfigurationFromXTFConfiguration() {
 		Assert.assertEquals(8080, TestConfiguration.vertxProxyPort());
 	}
+
+	@Test
+	public void canReadEnvironmentVariable(){
+		Assert.assertEquals("TRAVIS_CI", TestConfiguration.ciUsername());
+	}
 }
