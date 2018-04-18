@@ -39,12 +39,10 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String IMAGE_TCP_PROXY = "xtf.tcp-proxy";
 	public static final String IMAGE_MM_SERVICE = "org.hawkular.service";
 	public static final String IMAGE_MM_DATASTORE = "org.hawkular.datastore";
-
 	public static final String VERSION_EAP = "xtf.version.eap";
 	public static final String VERSION_JDV = "xtf.version.jdv";
 	public static final String VERSION_JDG = "xtf.version.jdg";
 	public static final String VERSION_EWS = "xtf.version.ews";
-
 	public static final String VERSION_KIE = "xtf.version.kie";
 	public static final String VERSION_JDK = "xtf.version.jdk";
 	public static final String VERSION_SSO = "xtf.version.sso";
@@ -80,8 +78,6 @@ public class TestConfiguration extends XTFConfiguration {
 	public static String ciPassword() {
 		return getProperty(CI_PASSWORD);
 	}
-
-
 
 	public static String kieVersion() {
 		return getProperty(VERSION_KIE);
