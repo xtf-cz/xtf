@@ -50,20 +50,15 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String VERSION_SSO = "xtf.version.sso";
 	public static final String VERSION_AMQ = "xtf.version.amq";
 	public static final String VERSION_MSA = "xtf.version.msa";
-
 	public static final String VERSION_FUSE = "xtf.version.fuse";
-
 	public static final String CDK_INTERNAL_HOSTNAME = "localhost.localdomain";
-
 	public static final String CI_USERNAME = "ci.username";
 	public static final String CI_PASSWORD = "ci.password";
 
-
 	private Properties properties;
-
 	private static final TestConfiguration INSTANCE = new TestConfiguration();
 
-	protected TestConfiguration() {
+	private TestConfiguration() {
 		super();
 		get().copyValues(fromEnvironment());
 		get().copyValues(defaultValues());
