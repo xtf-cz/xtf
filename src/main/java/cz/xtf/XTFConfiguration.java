@@ -1,10 +1,9 @@
 package cz.xtf;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
-
+@Slf4j
 public class XTFConfiguration {
 	private static final String DOMAIN = "xtf.config.domain";
 	private static final String MASTER_URL = "xtf.config.master.url";
@@ -84,7 +83,6 @@ public class XTFConfiguration {
 	public static final String CDK_DOMAIN = "cd.xtf.cz";
 	public static final String CDK_IP = "10.1.2.2";
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(XTFConfiguration.class);
 	private static final XTFConfiguration INSTANCE = new XTFConfiguration();
 
 	private final Properties properties = new Properties();
@@ -495,8 +493,8 @@ public class XTFConfiguration {
 			try (InputStream is = Files.newInputStream(propsPath)) {
 				props.load(is);
 			} catch (final IOException ex) {
-				LOGGER.warn("Unable to read properties from '{}'", propsPath);
-				LOGGER.debug("Exception", ex);
+				log.warn("Unable to read properties from '{}'", propsPath);
+				log.debug("Exception", ex);
 			}
 		}
 
