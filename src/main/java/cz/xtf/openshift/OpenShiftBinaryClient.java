@@ -16,6 +16,7 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Slf4j
@@ -237,6 +238,14 @@ public class OpenShiftBinaryClient {
 			version = result.replaceAll("(\n|.)*oc v(.*)\n(\n|.)*", "$2");
 		}
 		return version;
+	}
+
+	public Path getOcBinaryPath() {
+		return Paths.get(ocBinaryPath);
+	}
+
+	public Path getOcConfigPath() {
+		return Paths.get(CONFIG_FILE.getAbsolutePath());
 	}
 
 	@FunctionalInterface

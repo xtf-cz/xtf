@@ -28,6 +28,8 @@ import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
+import io.fabric8.openshift.api.model.Role;
+import io.fabric8.openshift.api.model.RoleBinding;
 import io.fabric8.openshift.api.model.Route;
 
 public class OpenshiftApplication {
@@ -48,6 +50,8 @@ public class OpenshiftApplication {
 	private List<Route> routes = new LinkedList<>();
 	private List<ConfigMap> configMaps = new LinkedList<>();
 	private List<HorizontalPodAutoscaler> autoScalers = new LinkedList<>();
+	private List<Role> roles = new LinkedList<>();
+	private List<RoleBinding> roleBindings = new LinkedList<>();
 
 	private BuildConfig buildConfig;
 	private DeploymentConfig mainDeployment;
@@ -96,6 +100,12 @@ public class OpenshiftApplication {
 
 		// add autoscaler
 		autoScalers.addAll(builder.buildAutoScalers());
+
+		// add roles
+		roles.addAll(builder.buildRoles());
+
+		// add role bindings
+		roleBindings.addAll(builder.buildRoleBindings());
 	}
 
 	public OpenshiftApplication createServiceAccountFromSecrets(final String accountName) {
@@ -164,6 +174,7 @@ public class OpenshiftApplication {
 		routes = routes.stream().map(openshift::createRoute).collect(Collectors.toList());
 		configMaps = configMaps.stream().map(openshift::createConfigMap).collect(Collectors.toList());
 		autoScalers = autoScalers.stream().map(openshift::createHorizontalPodAutoscaler).collect(Collectors.toList());
+
 		// find main resources
 		if (buildConfig != null) {
 			buildConfig = findMainResource(buildConfigs, buildConfig.getMetadata().getName());
@@ -179,6 +190,9 @@ public class OpenshiftApplication {
 		}
 
 		createServiceAccount();
+
+		roles = roles.stream().map(openshift::createRole).collect(Collectors.toList());
+		roleBindings = roleBindings.stream().map(openshift::createRoleBinding).collect(Collectors.toList());
 	}
 
 	public Build triggerManualBuild() {

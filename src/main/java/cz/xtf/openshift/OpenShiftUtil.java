@@ -1,39 +1,76 @@
 package cz.xtf.openshift;
 
-import cz.xtf.wait.SimpleWaiter;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.dsl.LogWatch;
-import io.fabric8.openshift.api.model.*;
-import io.fabric8.openshift.client.*;
-import lombok.extern.slf4j.Slf4j;
-import rx.Observable;
-import rx.observables.StringObservable;
-
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
+import cz.xtf.wait.SimpleWaiter;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.Endpoints;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.Event;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.Node;
+import io.fabric8.kubernetes.api.model.ObjectReference;
+import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.ReplicationController;
+import io.fabric8.kubernetes.api.model.ResourceQuota;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceAccount;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.dsl.LogWatch;
+import io.fabric8.openshift.api.model.Build;
+import io.fabric8.openshift.api.model.BuildConfig;
+import io.fabric8.openshift.api.model.BuildRequest;
+import io.fabric8.openshift.api.model.BuildRequestBuilder;
+import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.ImageStream;
+import io.fabric8.openshift.api.model.Project;
+import io.fabric8.openshift.api.model.ProjectRequest;
+import io.fabric8.openshift.api.model.ProjectRequestBuilder;
+import io.fabric8.openshift.api.model.RoleBinding;
+import io.fabric8.openshift.api.model.RoleBindingBuilder;
+import io.fabric8.openshift.api.model.Route;
+import io.fabric8.openshift.api.model.Template;
+import io.fabric8.openshift.client.DefaultOpenShiftClient;
+import io.fabric8.openshift.client.NamespacedOpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftConfig;
+import io.fabric8.openshift.client.OpenShiftConfigBuilder;
+import io.fabric8.openshift.client.ParameterValue;
+import lombok.extern.slf4j.Slf4j;
+import rx.Observable;
+import rx.observables.StringObservable;
 
 @Slf4j
-public class OpenShiftUtil  implements AutoCloseable {
+public class OpenShiftUtil implements AutoCloseable {
 
 	private final NamespacedOpenShiftClient client;
 	private final OpenShiftWaiters waiters;
 	private final String namespace;
 
 	public OpenShiftUtil(OpenShiftConfig openShiftConfig) {
-		if(openShiftConfig.getNamespace() == null) {
+		if (openShiftConfig.getNamespace() == null) {
 			throw new IllegalArgumentException("Namespace in OpenShiftConfig must not be null!");
 		}
 
@@ -43,7 +80,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 	}
 
 	public OpenShiftUtil(String masterUrl, String namespace, String username, String password) throws MalformedURLException {
-		new URL(masterUrl);	// masterUrl validation
+		new URL(masterUrl);    // masterUrl validation
 
 		OpenShiftConfig openShiftConfig = new OpenShiftConfigBuilder()
 				.withMasterUrl(masterUrl)
@@ -83,7 +120,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 		return client;
 	}
 
-	// General functionsf
+	// General functions
 	public KubernetesList createResources(HasMetadata... resources) {
 		return createResources(Arrays.asList(resources));
 	}
@@ -100,6 +137,10 @@ public class OpenShiftUtil  implements AutoCloseable {
 
 	public boolean deleteResources(KubernetesList resources) {
 		return client.lists().delete(resources);
+	}
+
+	public void loadResource(InputStream is) {
+		client.load(is).deletingExisting().createOrReplace();
 	}
 
 	// Projects
@@ -141,9 +182,9 @@ public class OpenShiftUtil  implements AutoCloseable {
 	 */
 	public ProjectRequest recreateProject(ProjectRequest projectRequest) throws TimeoutException {
 		boolean deleted = deleteProject(projectRequest.getMetadata().getName());
-		if(deleted) {
+		if (deleted) {
 			BooleanSupplier bs = () -> getProject(projectRequest.getMetadata().getName()) == null;
-			new SimpleWaiter(bs, TimeUnit.MINUTES,2,"Waiting for old project deletion before creating new one").execute();
+			new SimpleWaiter(bs, TimeUnit.MINUTES, 2, "Waiting for old project deletion before creating new one").execute();
 		}
 		return createProjectRequest(projectRequest);
 	}
@@ -394,7 +435,8 @@ public class OpenShiftUtil  implements AutoCloseable {
 		DeploymentConfig dc = getDeploymentConfig(name);
 
 		List<EnvVar> vars = envVars.entrySet().stream().map(x -> new EnvVarBuilder().withName(x.getKey()).withValue(x.getValue()).build()).collect(Collectors.toList());
-		dc.getSpec().getTemplate().getSpec().getContainers().get(0).setEnv(vars);
+		dc.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().removeIf(x -> envVars.containsKey(x.getName()));
+		dc.getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().addAll(vars);
 
 		return updateDeploymentconfig(dc);
 	}
@@ -441,7 +483,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 	}
 
 	public String getBuildLog(Build build) {
-		return  client.builds().withName(build.getMetadata().getName()).getLog();
+		return client.builds().withName(build.getMetadata().getName()).getLog();
 	}
 
 	public boolean deleteBuild(Build build) {
@@ -491,10 +533,11 @@ public class OpenShiftUtil  implements AutoCloseable {
 	 * @param envVars environment variables
 	 */
 	public BuildConfig updateBuildConfigEnvVars(String name, Map<String, String> envVars) {
-		List<EnvVar> vars = envVars.entrySet().stream().map(x -> new EnvVarBuilder().withName(x.getKey()).withValue(x.getValue()).build()).collect(Collectors.toList());
-
 		BuildConfig bc = getBuildConfig(name);
-		bc.getSpec().getStrategy().getSourceStrategy().setEnv(vars);
+
+		List<EnvVar> vars = envVars.entrySet().stream().map(x -> new EnvVarBuilder().withName(x.getKey()).withValue(x.getValue()).build()).collect(Collectors.toList());
+		bc.getSpec().getStrategy().getSourceStrategy().getEnv().removeIf(x -> envVars.containsKey(x.getName()));
+		bc.getSpec().getStrategy().getSourceStrategy().getEnv().addAll(vars);
 
 		return updateBuildConfig(bc);
 	}
@@ -520,9 +563,9 @@ public class OpenShiftUtil  implements AutoCloseable {
 	 * Retrieves service accounts that aren't considered default.
 	 * Service accounts that are left out from list:
 	 * <ul>
-	 *     <li>builder</li>
-	 *     <li>default</li>
-	 *     <li>deployer</li>
+	 * <li>builder</li>
+	 * <li>default</li>
+	 * <li>deployer</li>
 	 * </ul>
 	 *
 	 * @return List of service accounts that aren't considered default.
@@ -552,10 +595,10 @@ public class OpenShiftUtil  implements AutoCloseable {
 	 * Retrieves role bindings that aren't considered default.
 	 * Role bindings that are left out from list:
 	 * <ul>
-	 *     <li>admin</li>
-	 *     <li>system:deployers</li>
-	 *     <li>system:image-builders</li>
-	 *     <li>system:image-pullers</li>
+	 * <li>admin</li>
+	 * <li>system:deployers</li>
+	 * <li>system:image-builders</li>
+	 * <li>system:image-pullers</li>
 	 * </ul>
 	 *
 	 * @return List of role bindings that aren't considered default.
@@ -598,7 +641,7 @@ public class OpenShiftUtil  implements AutoCloseable {
 	private RoleBinding getOrCreateRoleBinding(String name) {
 		RoleBinding roleBinding = getRoleBinding(name);
 
-		if(roleBinding == null) {
+		if (roleBinding == null) {
 			roleBinding = new RoleBindingBuilder()
 					.withNewMetadata().withName(name).endMetadata()
 					.withNewRoleRef().withName(name).endRoleRef()
@@ -615,25 +658,25 @@ public class OpenShiftUtil  implements AutoCloseable {
 	private void addSubjectToRoleBinding(RoleBinding roleBinding, String entityKind, String entityName) {
 		ObjectReference subject = new ObjectReferenceBuilder().withKind(entityKind).withName(entityName).build();
 
-		if(roleBinding.getSubjects().stream().noneMatch(x -> x.getName().equals(subject.getName()) && x.getKind().equals(subject.getKind()))) {
+		if (roleBinding.getSubjects().stream().noneMatch(x -> x.getName().equals(subject.getName()) && x.getKind().equals(subject.getKind()))) {
 			roleBinding.getSubjects().add(subject);
 		}
 	}
 
 	private void addUserNameToRoleBinding(RoleBinding roleBinding, String userName) {
-		if( roleBinding.getUserNames() == null) {
+		if (roleBinding.getUserNames() == null) {
 			roleBinding.setUserNames(new ArrayList<>());
 		}
-		if( !roleBinding.getUserNames().contains(userName)) {
+		if (!roleBinding.getUserNames().contains(userName)) {
 			roleBinding.getUserNames().add(userName);
 		}
 	}
 
 	private void addGroupNameToRoleBinding(RoleBinding roleBinding, String groupName) {
-		if( roleBinding.getGroupNames() == null) {
+		if (roleBinding.getGroupNames() == null) {
 			roleBinding.setGroupNames(new ArrayList<>());
 		}
-		if(!roleBinding.getGroupNames().contains(groupName)) {
+		if (!roleBinding.getGroupNames().contains(groupName)) {
 			roleBinding.getGroupNames().add(groupName);
 		}
 	}
@@ -739,6 +782,13 @@ public class OpenShiftUtil  implements AutoCloseable {
 		return client.templates().delete(template);
 	}
 
+	public Template loadAndCreateTemplate(InputStream is) {
+		Template t = client().templates().load(is).get();
+		deleteTemplate(t);
+
+		return createTemplate(t);
+	}
+
 	public KubernetesList recreateAndProcessTemplate(Template template, Map<String, String> parameters) {
 		deleteTemplate(template.getMetadata().getName());
 		createTemplate(template);
@@ -746,9 +796,17 @@ public class OpenShiftUtil  implements AutoCloseable {
 		return processTemplate(template.getMetadata().getName(), parameters);
 	}
 
+	public KubernetesList recreateAndProcessAndDeployTemplate(Template template, Map<String, String> parameters) {
+		return createResources(recreateAndProcessTemplate(template, parameters));
+	}
+
 	public KubernetesList processTemplate(String name, Map<String, String> parameters) {
 		ParameterValue[] values = processParameters(parameters);
 		return client.templates().withName(name).process(values);
+	}
+
+	public KubernetesList processAndDeployTemplate(String name, Map<String, String> parameters) {
+		return createResources(processTemplate(name, parameters));
 	}
 
 	private ParameterValue[] processParameters(Map<String, String> parameters) {
@@ -774,17 +832,17 @@ public class OpenShiftUtil  implements AutoCloseable {
 	}
 
 	// Clean up function
+
 	/**
 	 * Deletes all* resources in namespace. Waits till all are deleted. <br/>
 	 * <br/>
-	 *
+	 * <p>
 	 * * Only user created secrets, service accounts and role bindings are deleted. Default will remain.
 	 *
+	 * @throws TimeoutException in case that some user resources will remain even after timeout.
 	 * @see #getUserSecrets()
 	 * @see #getUserServiceAccounts()
 	 * @see #getUserRoleBindings()
-	 *
-	 * @throws TimeoutException in case that some user resources will remain even after timeout.
 	 */
 	public void cleanAndWait() throws TimeoutException {
 		clean();
@@ -794,25 +852,23 @@ public class OpenShiftUtil  implements AutoCloseable {
 	/**
 	 * Deletes all* resources in namespace. Waits till all are deleted. <br/>
 	 * <br/>
-	 *
+	 * <p>
 	 * * Only user created secrets, service accounts and role bindings are deleted. Default will remain.
 	 *
+	 * @throws AssertionError in case that some user resources will remain even after timeout.
 	 * @see #getUserSecrets()
 	 * @see #getUserServiceAccounts()
 	 * @see #getUserRoleBindings()
-	 *
-	 * @throws AssertionError in case that some user resources will remain even after timeout.
 	 */
 	public void cleanAndAssert() {
 		clean();
 		waiters.isProjectClean().assertEventually();
 	}
 
-
 	/**
 	 * Deletes all* resources in namespace. Doesn't wait till all are deleted. <br/>
 	 * <br/>
-	 *
+	 * <p>
 	 * * Only user created secrets, service accounts and role bindings are deleted. Default will remain.
 	 *
 	 * @see #getUserSecrets()
@@ -821,6 +877,8 @@ public class OpenShiftUtil  implements AutoCloseable {
 	 */
 	public void clean() {
 		// keep the order for deletion to prevent K8s creating resources again
+		client.extensions().deployments().delete();
+		client.extensions().jobs().delete();
 		getDeploymentConfigs().forEach(this::deleteDeploymentConfig);
 		getReplicationControllers().forEach(this::deleteReplicationController);
 		client.buildConfigs().delete();
@@ -868,5 +926,4 @@ public class OpenShiftUtil  implements AutoCloseable {
 	public OpenShiftWaiters waiters() {
 		return waiters;
 	}
-
 }

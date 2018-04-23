@@ -216,7 +216,7 @@ public class HttpClient {
 	}
 
 	public Tuple.Pair<String, Integer> responseAndCode(final CloseableHttpClient hc) throws IOException {
-		return response(hc, (response) -> pair(EntityUtils.toString(response.getEntity()), response.getStatusLine().getStatusCode()));
+		return response(hc, (response) -> pair(response.getEntity() == null ? null : EntityUtils.toString(response.getEntity()), response.getStatusLine().getStatusCode()));
 	}
 
 	public Tuple.Pair<String, Integer> responseAndCode() throws IOException {
@@ -264,13 +264,13 @@ public class HttpClient {
 
 	public Tuple.Pair<String, List<Header>> responseAndResponseHeaders() throws IOException {
 		return response(build(), response -> pair(
-				EntityUtils.toString(response.getEntity()),
+				response.getEntity() == null ? null : EntityUtils.toString(response.getEntity()),
 				Arrays.asList(response.getAllHeaders())));
 	}
 	
 	public Tuple.Triple<String, Integer, List<Header>> responseAndCodeAndResponseHeaders() throws IOException {
 		return response(build(), response -> triple(
-				EntityUtils.toString(response.getEntity()),
+				response.getEntity() == null ? null : EntityUtils.toString(response.getEntity()),
 				response.getStatusLine().getStatusCode(),
 				Arrays.asList(response.getAllHeaders())));
 	}
