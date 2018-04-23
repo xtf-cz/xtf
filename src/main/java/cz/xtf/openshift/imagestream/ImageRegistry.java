@@ -166,34 +166,6 @@ public class ImageRegistry {
 				.readValue(TestConfiguration.IMAGE_ZIPKIN));
 	}
 
-	public String rad() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_RAD));
-	}
-	
-	public String oshinkoRest() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_OSHINKO_REST));
-	}
-	
-	public String oshinkoWeb() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_OSHINKO_WEBUI));
-	}
-
-	public String oshinkoCli() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_OSHINKO_CLI));
-	}
-
-	public String pySpark() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_PY_SPARK));
-	}
-	
-	public String javaSpark() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_JAVA_SPARK));
-	}
-
-	public String scalaSpark() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_SCALA_SPARK));
-	}
-
 	public String squid() {
 		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_SQUID));
 	}
