@@ -3,7 +3,7 @@
 
 	<groupId>cz.xtf</groupId>
 	<artifactId>utilities</artifactId>
-	<version>0.7</version>
+	<version>0.8-SNAPSHOT</version>
 
 	<name>XTF</name>
 
@@ -15,7 +15,7 @@
 		<connection>scm:git:git@github.com:xtf-cz/xtf.git</connection>
 		<developerConnection>scm:git:git@github.com:xtf-cz/xtf.git</developerConnection>
 		<url>http://github.com/xtf-cz/xtf.git</url>
-		<tag>utilities-0.7</tag>
+		<tag>${project.version}</tag>
 	</scm>
 
 	<distributionManagement>
