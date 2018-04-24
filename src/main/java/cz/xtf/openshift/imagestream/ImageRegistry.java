@@ -1,6 +1,7 @@
 package cz.xtf.openshift.imagestream;
 
 import cz.xtf.TestConfiguration;
+import cz.xtf.XTFConfiguration;
 import cz.xtf.openshift.VersionRegistry;
 
 import java.math.BigDecimal;
@@ -42,7 +43,7 @@ public class ImageRegistry {
 	}
 
 	public String eap6() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_EAP_6));
+		return normalize(TestConfiguration.imageEap6());
 	}
 
 	public String eap6Previous() {
@@ -50,7 +51,7 @@ public class ImageRegistry {
 	}
 
 	public String eap7() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_EAP_7));
+		return normalize(TestConfiguration.imageEap7());
 	}
 
 	public String eap7Previous() {
@@ -58,7 +59,7 @@ public class ImageRegistry {
 	}
 
 	public String jdg() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_JDG));
+		return normalize(TestConfiguration.imageJdg());
 	}
 
 	public String jdgPrevious() {
@@ -66,71 +67,71 @@ public class ImageRegistry {
 	}
 
 	public String jdgClient() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_JDG_CLIENT));
+		return normalize(TestConfiguration.imageJdgClient());
 	}
 
 	public String jdv() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_JDV));
+		return normalize(TestConfiguration.imageJdv());
 	}
 
 	public String jdvClient() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_JDV_CLIENT));
+		return normalize(TestConfiguration.imageJdvClient());
 	}
 
 	public String jdvOdbcTest() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_JDV_ODBC_TEST_IMAGE));
+		return normalize(TestConfiguration.imageJdvOdbcTestImage());
 	}
 
 	public String tomcat7() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_TOMCAT7));
+		return normalize(TestConfiguration.imageTomcat7());
 	}
 
 	public String tomcat8() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_TOMCAT8));
+		return normalize(TestConfiguration.imageTomcat8());
 	}
 
 	public String amq() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_AMQ));
+		return normalize(TestConfiguration.imageAmq());
 	}
 
 	public String postgresql() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_POSTGRES));
+		return normalize(TestConfiguration.imagePostgres());
 	}
 
 	public String derby() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_DERBY));
+		return normalize(TestConfiguration.imageDerby());
 	}
 
 	public String mysql() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_MYSQL));
+		return normalize(TestConfiguration.imageMysql());
 	}
 
 	public String mongodb() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_MONGO));
+		return normalize(TestConfiguration.imageMongo());
 	}
 
 	public String nfs() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_NFS));
+		return normalize(TestConfiguration.imageNfs());
 	}
 
 	public String fuseJavaMain() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_FUSE_JAVA_MAIN));
+		return normalize(TestConfiguration.imageFuseJavaMain());
 	}
 
 	public String fuseKaraf() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_FUSE_KARAF));
+		return normalize(TestConfiguration.imageFuseKaraf());
 	}
 
 	public String fuseEap() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_FUSE_EAP));
+		return normalize((TestConfiguration.imageFuseEap()));
 	}
 
 	public String brms() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_BRMS));
+		return normalize(TestConfiguration.imageBrms());
 	}
 
 	public String bpms() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_BPMS));
+		return normalize(TestConfiguration.imageBpms());
 	}
 
 	public String bpmsPrevious() {
@@ -138,11 +139,11 @@ public class ImageRegistry {
 	}
 
 	public String bpmsLdapTest() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_BPMS_LDAP_TEST_IMAGE));
+		return normalize(TestConfiguration.imageBpmsLdapTestImage());
 	}
 
 	public String sso() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_SSO));
+		return normalize(TestConfiguration.imageSso());
 	}
 
 	public String ssoPrevious() {
@@ -150,11 +151,11 @@ public class ImageRegistry {
 	}
 
 	public String phantomJs() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_PHANTOMJS));
+		return normalize(TestConfiguration.imagePhantomjs());
 	}
 
 	public String h2() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_H2));
+		return normalize(TestConfiguration.imageH2());
 	}
 	
 	public String msa() {
@@ -164,34 +165,6 @@ public class ImageRegistry {
 	public String zipkin() {
 		return normalize(TestConfiguration.get()
 				.readValue(TestConfiguration.IMAGE_ZIPKIN));
-	}
-
-	public String rad() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_RAD));
-	}
-	
-	public String oshinkoRest() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_OSHINKO_REST));
-	}
-	
-	public String oshinkoWeb() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_OSHINKO_WEBUI));
-	}
-
-	public String oshinkoCli() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_OSHINKO_CLI));
-	}
-
-	public String pySpark() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_PY_SPARK));
-	}
-	
-	public String javaSpark() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_JAVA_SPARK));
-	}
-
-	public String scalaSpark() {
-		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_SCALA_SPARK));
 	}
 
 	public String squid() {
