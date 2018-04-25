@@ -1,9 +1,6 @@
 package cz.xtf.openshift;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -240,6 +237,10 @@ public class OpenShiftUtil implements AutoCloseable {
 
 	public String getPodLog(Pod pod) {
 		return client.pods().withName(pod.getMetadata().getName()).getLog();
+	}
+
+	public Reader getPodLogReader(Pod pod) {
+		return client.pods().withName(pod.getMetadata().getName()).getLogReader();
 	}
 
 	public Observable<String> observePodLog(Pod pod) {
@@ -484,6 +485,10 @@ public class OpenShiftUtil implements AutoCloseable {
 
 	public String getBuildLog(Build build) {
 		return client.builds().withName(build.getMetadata().getName()).getLog();
+	}
+
+	public Reader getBuildLogReader(Build build) {
+		return client.builds().withName(build.getMetadata().getName()).getLogReader();
 	}
 
 	public boolean deleteBuild(Build build) {
