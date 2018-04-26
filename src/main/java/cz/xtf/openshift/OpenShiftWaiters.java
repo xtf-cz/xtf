@@ -1,10 +1,5 @@
 package cz.xtf.openshift;
 
-import cz.xtf.wait.SimpleWaiter;
-import cz.xtf.wait.SupplierWaiter;
-import cz.xtf.wait.Waiter;
-import io.fabric8.kubernetes.api.model.Pod;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -12,12 +7,17 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import cz.xtf.wait.SimpleWaiter;
+import cz.xtf.wait.SupplierWaiter;
+import cz.xtf.wait.Waiter;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.openshift.api.model.Build;
+
 public class OpenShiftWaiters {
 	private OpenShiftUtil openShiftUtil;
 
 	OpenShiftWaiters(OpenShiftUtil openShiftUtil) {
 		this.openShiftUtil = openShiftUtil;
-
 	}
 
 	/**
@@ -28,10 +28,24 @@ public class OpenShiftWaiters {
 	 * @return Waiter instance
 	 */
 	public Waiter hasBuildCompleted(String buildName) {
-		Supplier<String> supplier =  () -> openShiftUtil.getBuild(buildName).getStatus().getPhase();
+		Supplier<String> supplier = () -> openShiftUtil.getBuild(buildName).getStatus().getPhase();
 		String reason = "Waiting for completion of build " + buildName;
 
 		return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES, 10, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
+	}
+
+	/**
+	 * Creates waiter for latest build presence with 3 minutes timeout,
+	 * 5 seconds interval check and both logging points.
+	 *
+	 * @param buildConfigName name of buildConfig for which build to be waited upon
+	 * @return Waiter instance
+	 */
+	public Waiter isLatestBuildPresent(String buildConfigName) {
+		Supplier<Build> supplier = () -> openShiftUtil.getLatestBuild(buildConfigName);
+		String reason = "Waiting for presence of latest build of buildconfig " + buildConfigName;
+
+		return new SupplierWaiter<>(supplier, build -> build != null, TimeUnit.MINUTES, 3, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
 	}
 
 	/**
@@ -189,5 +203,24 @@ public class OpenShiftWaiters {
 
 	private Waiter areExactlyNPodsRunning(int n, Supplier<List<Pod>> podSupplier) {
 		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsRunning(n), TimeUnit.MINUTES, 3);
+	}
+
+	/**
+	 * Creates a waiter that waits until there aren't any pods in project.
+	 * Defaults to 3 minutes timeout.
+	 *
+	 * @param key label key for pod filtering
+	 * @param value label value for pod filtering
+	 * @return Waiter instance
+	 */
+	public Waiter areNoPodsPresent(String key, String value) {
+		Supplier<List<Pod>> ps = () -> openShiftUtil.getLabeledPods(key, value);
+		String reason = "Waiting for no present pods with label " + key + "=" + value + ".";
+
+		return areNoPodsPresent(ps).reason(reason);
+	}
+
+	private static Waiter areNoPodsPresent(Supplier<List<Pod>> podSupplier) {
+		return new SupplierWaiter<>(podSupplier, List::isEmpty, TimeUnit.MINUTES, 3);
 	}
 }

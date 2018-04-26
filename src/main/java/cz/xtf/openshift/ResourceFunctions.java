@@ -1,9 +1,9 @@
 package cz.xtf.openshift;
 
-import io.fabric8.kubernetes.api.model.Pod;
-
 import java.util.List;
 import java.util.function.Function;
+
+import io.fabric8.kubernetes.api.model.Pod;
 
 public class ResourceFunctions {
 
