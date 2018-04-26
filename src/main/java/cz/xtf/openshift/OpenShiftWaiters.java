@@ -7,6 +7,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import cz.xtf.XTFConfiguration;
 import cz.xtf.wait.SimpleWaiter;
 import cz.xtf.wait.SupplierWaiter;
 import cz.xtf.wait.Waiter;
@@ -35,7 +36,7 @@ public class OpenShiftWaiters {
 	}
 
 	/**
-	 * Creates waiter for latest build presence with 3 minutes timeout,
+	 * Creates waiter for latest build presence with default timeout,
 	 * 5 seconds interval check and both logging points.
 	 *
 	 * @param buildConfigName name of buildConfig for which build to be waited upon
@@ -45,7 +46,7 @@ public class OpenShiftWaiters {
 		Supplier<Build> supplier = () -> openShiftUtil.getLatestBuild(buildConfigName);
 		String reason = "Waiting for presence of latest build of buildconfig " + buildConfigName;
 
-		return new SupplierWaiter<>(supplier, build -> build != null, TimeUnit.MINUTES, 3, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
+		return new SupplierWaiter<>(supplier, build -> build != null, TimeUnit.MILLISECONDS, XTFConfiguration.defaultWaitTimeout(), reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
 	}
 
 	/**
@@ -82,7 +83,7 @@ public class OpenShiftWaiters {
 
 	/**
 	 * Creates a waiter object waiting till all pods created by deployment config with name {@code dcName} are ready.
-	 * Tolerates any container restarts. Defaults to 3 minutes timeout.
+	 * Tolerates any container restarts. Uses default timeout.
 	 *
 	 * @param dcName name of deploymentConfig
 	 * @return Waiter instance
@@ -93,7 +94,7 @@ public class OpenShiftWaiters {
 
 	/**
 	 * Creates a waiter object that waits till all pods created by deployment config with name {@code dcName} are ready.
-	 * Tolerates {@code restartTolerace} container restarts. Defaults to 3 minutes timeout.
+	 * Tolerates {@code restartTolerace} container restarts. Uses default timeout.
 	 *
 	 * @param dcName name of deploymentConfig
 	 * @param restartTolerance number of container rest
@@ -108,7 +109,7 @@ public class OpenShiftWaiters {
 
 	/**
 	 * Creates a waiter object that waits till all pods created by deployment config with name {@code dcName} are ready.
-	 * Tolerates any container restarts. Defaults to 3 minutes timeout.
+	 * Tolerates any container restarts. Uses default timeout.
 	 *
 	 * @param dcName name of deploymentConfig
 	 * @param version version of deploymentConfig to be waited upon
@@ -120,7 +121,7 @@ public class OpenShiftWaiters {
 
 	/**
 	 * Creates a waiter object that waits till all pods created by deployment config with name {@code dcName} are ready.
-	 * Tolerates any container restarts. Defaults to 3 minutes timeout.
+	 * Tolerates any container restarts. Uses default timeout.
 	 *
 	 * @param dcName name of deploymentConfig
 	 * @param version deployment version
@@ -140,12 +141,12 @@ public class OpenShiftWaiters {
 		Function<List<Pod>, Boolean> sc = ResourceFunctions.areExactlyNPodsReady(replicas);
 		Function<List<Pod>, Boolean> fc = ResourceFunctions.haveAnyPodRestartedAtLeastNTimes(restartTolerance);
 
-		return new SupplierWaiter<>(ps, sc, fc, TimeUnit.MINUTES, 3);
+		return new SupplierWaiter<>(ps, sc, fc, TimeUnit.MILLISECONDS, XTFConfiguration.defaultWaitTimeout());
 	}
 
 	/**
 	 * Creates a waiter that checks that exactly n pods is ready in project.
-	 * Defaults to 3 minutes timeout. Tolerates any container restarts.
+	 * Uses default timeout. Tolerates any container restarts.
 	 *
 	 * @param n number of expected pods to wait upon
 	 * @return Waiter instance
@@ -156,7 +157,7 @@ public class OpenShiftWaiters {
 
 	/**
 	 * Creates a waiter that checks that exactly n pods is ready in project.
-	 * Defaults to 3 minutes timeout. Tolerates any container restarts.
+	 * Uses default timeout. Tolerates any container restarts.
 	 *
 	 * @param n number of expected pods to wait upon
 	 * @param key label key for pod filtering
@@ -171,12 +172,12 @@ public class OpenShiftWaiters {
 	}
 
 	private Waiter areExactlyNPodsReady(int n, Supplier<List<Pod>> podSupplier) {
-		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsReady(n), TimeUnit.MINUTES, 3);
+		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsReady(n), TimeUnit.MILLISECONDS, XTFConfiguration.defaultWaitTimeout());
 	}
 
 	/**
 	 * Creates a waiter that checks that exactly n pods is running in project.
-	 * Defaults to 3 minutes timeout. Tolerates any container restarts.
+	 * Uses default timeout. Tolerates any container restarts.
 	 *
 	 * @param n number of expected pods to wait upon
 	 * @return Waiter instance
@@ -187,7 +188,7 @@ public class OpenShiftWaiters {
 
 	/**
 	 * Creates a waiter that checks that exactly n pods is running in project.
-	 * Defaults to 3 minutes timeout. Tolerates any container restarts.
+	 * Uses default timeout. Tolerates any container restarts.
 	 *
 	 * @param n number of expected pods to wait upon
 	 * @param key label key for pod filtering
@@ -202,12 +203,12 @@ public class OpenShiftWaiters {
 	}
 
 	private Waiter areExactlyNPodsRunning(int n, Supplier<List<Pod>> podSupplier) {
-		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsRunning(n), TimeUnit.MINUTES, 3);
+		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsRunning(n), TimeUnit.MILLISECONDS, XTFConfiguration.defaultWaitTimeout());
 	}
 
 	/**
 	 * Creates a waiter that waits until there aren't any pods in project.
-	 * Defaults to 3 minutes timeout.
+	 * Uses default timeout.
 	 *
 	 * @param key label key for pod filtering
 	 * @param value label value for pod filtering
@@ -221,6 +222,6 @@ public class OpenShiftWaiters {
 	}
 
 	private static Waiter areNoPodsPresent(Supplier<List<Pod>> podSupplier) {
-		return new SupplierWaiter<>(podSupplier, List::isEmpty, TimeUnit.MINUTES, 3);
+		return new SupplierWaiter<>(podSupplier, List::isEmpty, TimeUnit.MILLISECONDS, XTFConfiguration.defaultWaitTimeout());
 	}
 }
