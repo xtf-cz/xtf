@@ -201,8 +201,15 @@ public class OpenShiftBinaryClient {
 		String openShiftVersion = getOpenshiftVersion();
 		String clientLocation = String.format(CLIENTS_URL + "%s/%s/", openShiftVersion, systemType);
 
+		int code = -1;
+		try {
+			code = HttpClient.get(clientLocation).code();
+		} catch (IOException e) {
+			log.warn("Failed to retrieve code from binary clients mirror. Falling back to {}.", TestConfiguration.ocBinaryLocation());
+		}
+
 		// Fall back to default oc if version is not found
-		if(HttpClient.get(clientLocation).code() != 200) {
+		if(code != 200) {
 			String binaryLocation = TestConfiguration.ocBinaryLocation();
 			if(!Files.exists(Paths.get(binaryLocation))) throw new IllegalStateException("Unable to find executable oc binary!");
 
