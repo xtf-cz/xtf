@@ -39,7 +39,7 @@ public class OpenShiftUtils {
 
 	public static OpenShiftUtil master() {
 		if(masterUtil == null) {
-		    if(!TestConfiguration.openshiftOnline()) {
+		    if(TestConfiguration.getMasterToken() == null) {
 		        String masterUrl = TestConfiguration.masterUrl();
 		        String namespace = TestConfiguration.masterNamespace();
 		        String username = TestConfiguration.masterUsername();
@@ -57,7 +57,7 @@ public class OpenShiftUtils {
 
 	public static OpenShiftUtil master(String namespace) {
 		String masterUrl = TestConfiguration.masterUrl();
-		if(!TestConfiguration.openshiftOnline()) {
+		if(TestConfiguration.getMasterToken() == null) {
 			String username = TestConfiguration.masterUsername();
 			String password = TestConfiguration.masterPassword();
 			return getUtil(masterUrl, namespace, username, password);
@@ -83,10 +83,9 @@ public class OpenShiftUtils {
 	}
 
 	public static String getMasterToken() {
-		if(TestConfiguration.openshiftOnline() || TestConfiguration.getMasterToken() != null) {
+		if(TestConfiguration.getMasterToken() != null) {
 			return TestConfiguration.getMasterToken();
-		}
-		else {
+		} else {
 			String masterUrl = TestConfiguration.masterUrl();
 			String username = TestConfiguration.masterUsername();
 			String password = TestConfiguration.masterPassword();
