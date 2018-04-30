@@ -722,7 +722,7 @@ public class XTFConfiguration {
 		copyValues(source, false);
 	}
 
-	private void copyValues(final Properties source, final boolean overwrite) {
+	protected void copyValues(final Properties source, final boolean overwrite) {
 		source.stringPropertyNames().stream()
 				.filter(key -> overwrite || !this.properties.containsKey(key))
 				.forEach(key -> this.properties.setProperty(key, source.getProperty(key)));

@@ -55,8 +55,8 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String CI_PASSWORD = "ci.password";
 
 	static {
-		get().copyValues(fromEnvironment());
 		get().copyValues(defaultValues());
+		get().copyValues(fromEnvironment(), true);
 	}
 
 	private TestConfiguration() {
