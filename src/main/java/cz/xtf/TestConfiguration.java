@@ -59,6 +59,10 @@ public class TestConfiguration extends XTFConfiguration {
 		get().copyValues(fromEnvironment(), true);
 	}
 
+	public static XTFConfiguration get() {
+		return XTFConfiguration.get();
+	}
+
 	private TestConfiguration() {
 		super();
 	}
