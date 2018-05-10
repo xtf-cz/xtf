@@ -369,18 +369,25 @@ public class OpenshiftUtil implements AutoCloseable {
 		return withDefaultUser(client -> client.inNamespace(namespace).pods()
 				.withLabels(labels).list().getItems());
 	}
-
-	public Pod findNamedPod(String name) {
-		Collection<Pod> pods = findNamedPods(name);
-		if (pods.size() != 1) {
-			throw new IllegalStateException("Expected one named pod but got "
-					+ pods.size());
-		}
-		return pods.iterator().next();
+	
+	public List<Pod> findNamedPods(String name) {
+		return findNamedPods("name", name);
 	}
 
-	public List<Pod> findNamedPods(String name) {
-		return findPods(Collections.singletonMap("name", name));
+	public List<Pod> findNamedPods(String keyName, String valueName) {
+		return findPods(Collections.singletonMap(keyName, valueName));
+	}
+
+	public Pod findNamedPod(String name) {
+		return findNamedPod("name", name);
+	}
+	public Pod findNamedPod(String keyName, String valueName) {
+		Collection<Pod> pods = this.findNamedPods(keyName, valueName);
+		if (pods.size() != 1) {
+			throw new IllegalStateException("Expected one named pod with '" + keyName + "' = '" + valueName + "' but got " + pods.size());
+		} else {
+			return (Pod)pods.iterator().next();
+		}
 	}
 
 	public Pod findRandomlyChosenNamedPod(String name) {
