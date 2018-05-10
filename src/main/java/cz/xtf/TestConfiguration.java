@@ -19,6 +19,7 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String IMAGE_TOMCAT7 = IMAGE_EWS_PREFIX + "7";
 	public static final String IMAGE_TOMCAT8 = IMAGE_EWS_PREFIX + "8";
 	public static final String IMAGE_AMQ = "xtf.amq";
+	public static final String IMAGE_AMQ7 = "xtf.amq7";
 	public static final String IMAGE_POSTGRES = "org.postgresql";
 	public static final String IMAGE_DERBY = "org.apache.derby";
 	public static final String IMAGE_MYSQL = "com.mysql";
@@ -48,6 +49,7 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String VERSION_JDK = "xtf.version.jdk";
 	public static final String VERSION_SSO = "xtf.version.sso";
 	public static final String VERSION_AMQ = "xtf.version.amq";
+	public static final String VERSION_AMQ7 = "xtf.version.amq7";
 	public static final String VERSION_MSA = "xtf.version.msa";
 	public static final String VERSION_FUSE = "xtf.version.fuse";
 	public static final String CDK_INTERNAL_HOSTNAME = "localhost.localdomain";
@@ -133,6 +135,10 @@ public class TestConfiguration extends XTFConfiguration {
 
 	public static String imageAmq() {
 		return getProperty(IMAGE_AMQ);
+	}
+
+	public static String imageAmq7() {
+		return getProperty(IMAGE_AMQ7);
 	}
 
 	public static String imagePostgres() {
@@ -247,6 +253,10 @@ public class TestConfiguration extends XTFConfiguration {
 		return getProperty(VERSION_AMQ);
 	}
 
+	public static String versionAmq7() {
+		return getProperty(VERSION_AMQ7);
+	}
+
 	public static String versionMsa() {
 		return getProperty(VERSION_MSA);
 	}
@@ -283,6 +293,9 @@ public class TestConfiguration extends XTFConfiguration {
 					break;
 				case "IMAGE_AMQ":
 					props.setProperty(IMAGE_AMQ, entry.getValue());
+					break;
+				case "IMAGE_AMQ7":
+					props.setProperty(IMAGE_AMQ7, entry.getValue());
 					break;
 				case "IMAGE_POSTGRES":
 					props.setProperty(IMAGE_POSTGRES, entry.getValue());
@@ -373,6 +386,9 @@ public class TestConfiguration extends XTFConfiguration {
 					break;
 				case "VERSION_AMQ":
 					props.setProperty(VERSION_AMQ, entry.getValue());
+					break;
+				case "VERSION_AMQ7":
+					props.setProperty(VERSION_AMQ7, entry.getValue());
 					break;
 				default:
 					break;
