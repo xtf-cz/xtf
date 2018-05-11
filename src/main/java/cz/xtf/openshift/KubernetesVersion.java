@@ -42,9 +42,11 @@ public final class KubernetesVersion {
 
 	public int serviceNameLimit() {
 		// see https://github.com/kubernetes/kubernetes/pull/29523
-		if (major > 1 || major == 1 && minor >= 4) {
+		// if version cannot be parsed, assume a recent version
+		if ( major > 1 || major == 1 && minor >= 4 || major == 0 && minor == 0) {
 			return 63;
 		}
+
 		return 24;
 	}
 
