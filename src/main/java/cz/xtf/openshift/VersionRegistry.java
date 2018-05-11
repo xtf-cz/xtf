@@ -11,6 +11,7 @@ public class VersionRegistry {
 	private static final String DEFAULT_VERSION_JDK = "1.8";
 	private static final String DEFAULT_VERSION_SSO = "7";
 	private static final String DEFAULT_VERSION_AMQ = "6";
+	private static final String DEFAULT_VERSION_AMQ7 = "7";
 	private static VersionRegistry instance;
 
 	private VersionRegistry() {
@@ -72,6 +73,10 @@ public class VersionRegistry {
 
 	public ProductVersion amq() {
 		return new ProductVersion(DEFAULT_VERSION_AMQ , TestConfiguration.get().readValue(TestConfiguration.VERSION_AMQ));
+	}
+
+	public ProductVersion amq7() {
+		return new ProductVersion(DEFAULT_VERSION_AMQ7 , TestConfiguration.get().readValue(TestConfiguration.VERSION_AMQ7));
 	}
 
 }

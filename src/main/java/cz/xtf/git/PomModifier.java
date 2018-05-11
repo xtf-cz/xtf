@@ -211,6 +211,7 @@ public class PomModifier {
 				.anyMatch(
 						x -> x.getFileName().endsWith("test-eap")
 								|| x.getFileName().endsWith("test-amq")
+								|| x.getFileName().endsWith("test-amq7")
 								|| x.getFileName().endsWith("test-jdv")
 								|| x.getFileName().endsWith("test-ews")
 								|| x.getFileName().endsWith("test-fuse")
@@ -227,6 +228,7 @@ public class PomModifier {
 				.anyMatch(
 						x -> x.getFileName().endsWith("test-eap")
 								|| x.getFileName().endsWith("test-amq")
+								|| x.getFileName().endsWith("test-amq7")
 								|| x.getFileName().endsWith("test-jdv")
 								|| x.getFileName().endsWith("test-ews")
 								|| x.getFileName().endsWith("test-msa")

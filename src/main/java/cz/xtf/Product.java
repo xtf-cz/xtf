@@ -8,6 +8,7 @@ public enum Product {
 	EAP("eap"),
 	JWS("webserver"),
 	AMQ("amq"),
+	AMQ7("amq7"),
 	JDG("datagrid"),
 	JDV("datavirt"),
 	BRMS("decisionserver"),
