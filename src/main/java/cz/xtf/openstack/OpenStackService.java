@@ -21,7 +21,7 @@ public class OpenStackService {
 
 	public OpenStackService() {
 		openStack = OSFactory
-				.builder()
+				.builderV2()
 				.endpoint(TestConfiguration.openStackURL())
 				.credentials(TestConfiguration.openStackUsername(),
 						TestConfiguration.openStackPassword())
