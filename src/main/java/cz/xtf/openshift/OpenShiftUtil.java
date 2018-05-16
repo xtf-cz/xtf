@@ -46,6 +46,7 @@ import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.Project;
 import io.fabric8.openshift.api.model.ProjectRequest;
 import io.fabric8.openshift.api.model.ProjectRequestBuilder;
+import io.fabric8.openshift.api.model.Role;
 import io.fabric8.openshift.api.model.RoleBinding;
 import io.fabric8.openshift.api.model.RoleBindingBuilder;
 import io.fabric8.openshift.api.model.Route;
@@ -596,6 +597,10 @@ public class OpenShiftUtil implements AutoCloseable {
 		return client.roleBindings().list().getItems();
 	}
 
+	public List<Role> getRoles() {
+		return client.roles().list().getItems();
+	}
+
 	/**
 	 * Retrieves role bindings that aren't considered default.
 	 * Role bindings that are left out from list:
@@ -899,6 +904,7 @@ public class OpenShiftUtil implements AutoCloseable {
 		getUserSecrets().forEach(this::deleteSecret);
 		getUserServiceAccounts().forEach(this::deleteServiceAccount);
 		getUserRoleBindings().forEach(this::deleteRoleBinding);
+		client.roles().delete();
 	}
 
 	@Override
