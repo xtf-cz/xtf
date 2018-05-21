@@ -1,5 +1,10 @@
 package cz.xtf.docker;
 
+import com.google.gson.Gson;
+import cz.xtf.openshift.OpenShiftUtil;
+import cz.xtf.openshift.imagestream.ImageRegistry;
+import cz.xtf.wait.Waiters;
+import io.fabric8.openshift.api.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.dmr.ModelNode;
@@ -7,6 +12,7 @@ import org.jboss.dmr.ModelType;
 import org.jboss.dmr.Property;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -14,7 +20,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class DockerInspect {
-	private final ModelNode dockerInspect;
 
 	/**
 	 * Pulls given image to master and runs docker inspect command against it.
@@ -23,7 +28,9 @@ public class DockerInspect {
 	 * @param image image url to initialize new instance of this object
 	 * @return new instance
 	 */
+	@Deprecated
 	public static DockerInspect from(String image) {
+		log.warn("DockerInspect.from(String image) is deprecated!");
 		log.info("Pulling image '{}' to master", image);
 		OpenShiftNode.master().executeCommand("sudo docker pull " + image);
 
@@ -33,12 +40,39 @@ public class DockerInspect {
 		return new DockerInspect(ModelNode.fromJSONString(result).get(0));
 	}
 
+	/**
+	 * Creates ImageStream in provided OpenShift context and pulls back ImageStreamTag with imageUrl metadata.
+	 *
+	 * @param imageUrl  image url to initialize new instance of this object
+	 * @param openShift context for creating ImageStream and retrieving image metadata
+	 * @return new instance
+	 */
+	public static DockerInspect from(String imageUrl, OpenShiftUtil openShift) {
+		ImageRegistry.Image image = ImageRegistry.toImage(imageUrl);
+
+		String tag = image.getImageTag().replaceAll("-.*", "");
+		String name = image.getImageRepo();
+
+		TagReference tr = new TagReferenceBuilder().withName(tag).withNewImportPolicy().withInsecure(true).and().withNewFrom().withKind("DockerImage").withName(imageUrl).endFrom().build();
+		ImageStream is = new ImageStreamBuilder().withNewMetadata().withName(name).addToAnnotations("openshift.io/image.insecureRepository", "true").and().withNewSpec().withTags(tr).endSpec().build();
+
+		openShift.createImageStream(is);
+
+		Waiters.sleep(TimeUnit.SECONDS, 10, "Giving OpenShift instance time to download image metadata.");
+		ImageStreamTag isTag = openShift.client().imageStreamTags().withName(name + ":" + tag).get();
+
+		return new DockerInspect(ModelNode.fromJSONString(new Gson().toJson(isTag.getImage().getDockerImageMetadata().getAdditionalProperties())));
+	}
+
+	private final ModelNode dockerInspect;
+
 	private DockerInspect(ModelNode dockerInspect) {
 		this.dockerInspect = dockerInspect;
 	}
 
 	/**
 	 * Returns labels on Config:Labels path.
+	 *
 	 * @return map of labels
 	 */
 	public Map<String, String> labels() {
@@ -52,6 +86,7 @@ public class DockerInspect {
 
 	/**
 	 * Returns default container command on Config:Cmd path
+	 *
 	 * @return default command
 	 */
 	public String command() {
@@ -60,6 +95,7 @@ public class DockerInspect {
 
 	/**
 	 * Returns image environments of Config:Env path
+	 *
 	 * @return map of environments
 	 */
 	public Map<String, String> envs() {
@@ -67,7 +103,7 @@ public class DockerInspect {
 
 		dockerInspect.get("Config", "Env").asList().forEach(
 				node -> {
-					String[] keyValue = node.asString().split("=",2);
+					String[] keyValue = node.asString().split("=", 2);
 					env.put(keyValue[0], keyValue[1]);
 				}
 		);
@@ -77,6 +113,7 @@ public class DockerInspect {
 
 	/**
 	 * Returns integer set of exposed ports by specified protocol (eg. tcp, udp).
+	 *
 	 * @return port set
 	 */
 	public Set<Integer> exposedPorts(String protocol) {
