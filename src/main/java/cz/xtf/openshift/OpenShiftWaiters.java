@@ -74,6 +74,7 @@ public class OpenShiftWaiters {
 			cleanedResources.add(openShiftUtil.getUserSecrets().isEmpty());
 			cleanedResources.add(openShiftUtil.getUserServiceAccounts().isEmpty());
 			cleanedResources.add(openShiftUtil.getUserRoleBindings().isEmpty());
+			cleanedResources.add(openShiftUtil.getRoles().isEmpty());
 
 			return !cleanedResources.contains(false);
 		};
