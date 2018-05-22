@@ -19,7 +19,7 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String IMAGE_TOMCAT7 = IMAGE_EWS_PREFIX + "7";
 	public static final String IMAGE_TOMCAT8 = IMAGE_EWS_PREFIX + "8";
 	public static final String IMAGE_AMQ = "xtf.amq";
-	public static final String IMAGE_AMQ7 = "xtf.amq7";
+	public static final String IMAGE_AMQ7 = "xtf.amq.7";
 	public static final String IMAGE_POSTGRES = "org.postgresql";
 	public static final String IMAGE_DERBY = "org.apache.derby";
 	public static final String IMAGE_MYSQL = "com.mysql";
