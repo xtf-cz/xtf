@@ -310,7 +310,7 @@ public class XTFKeyStore {
 	 */
 	private KeyPair generateKeyPair() throws NoSuchAlgorithmException {
 		KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-		keyGen.initialize(1024, new SecureRandom());
+		keyGen.initialize(4096, new SecureRandom());
 
 		return keyGen.generateKeyPair();
 	}
