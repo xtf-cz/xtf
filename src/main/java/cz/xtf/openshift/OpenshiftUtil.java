@@ -46,8 +46,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watch;
-import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.KubernetesListMixedOperation;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.kubernetes.client.dsl.PodResource;
@@ -679,42 +677,9 @@ public class OpenshiftUtil implements AutoCloseable {
 		return startBuild(buildConfig, context.getNamespace());
 	}
 
-	// TODO: make the build-watcher thread-safe
 	public synchronized Build startBuild(BuildConfig buildConfig, String namespace) {
-		BuildConfig refreshed = withDefaultUser(client -> client
-				.inNamespace(namespace).buildConfigs()
-				.withName(buildConfig.getMetadata().getName()).get());
-
-		final long buildVersion = refreshed.getStatus().getLastVersion();
-
-		BuildRequest request = new BuildRequestBuilder().withNewMetadata()
-				.withName(buildConfig.getMetadata().getName()).endMetadata()
-				.build();
-
-		return withDefaultUser(client -> {
-			BuildWatcher buildWatcher = new BuildWatcher(buildConfig.getMetadata().getName(), buildVersion);
-
-			Watch watch = client.inNamespace(namespace).builds()
-					.watch(buildWatcher);
-			client.inNamespace(namespace).buildConfigs()
-					.withName(refreshed.getMetadata().getName())
-					.instantiate(request);
-
-			try {
-				// TODO this might prove problematic later, try to get fabric8
-				// team to return the build name
-				WaitUtil.waitFor(() -> buildWatcher.getBuild() != null);
-			} catch (TimeoutException ex) {
-				throw new RuntimeException("Failed to obtain build name", ex);
-			} catch (InterruptedException ex) {
-				LOGGER.error("Interrupted while waiting for Build to appear",
-						ex);
-			} finally {
-				watch.close();
-			}
-
-			return buildWatcher.getBuild();
-		});
+		BuildRequest request = new BuildRequestBuilder().withNewMetadata().withName(buildConfig.getMetadata().getName()).endMetadata().build();
+		return withDefaultUser(client -> client.inNamespace(namespace).buildConfigs().withName(buildConfig.getMetadata().getName()).instantiate(request));
 	}
 
 	public void deleteBuild(Build build) {
@@ -1463,50 +1428,6 @@ public class OpenshiftUtil implements AutoCloseable {
 		}
 		if (adminClient != null) {
 			adminClient.close();
-		}
-	}
-
-	private static class BuildWatcher implements Watcher<Build> {
-		private Build build;
-		private String buildConfigName;
-		private long sinceBuildNumber = -1;
-
-		BuildWatcher() {
-		}
-
-		BuildWatcher(String buildConfigName) {
-			this.buildConfigName = buildConfigName;
-		}
-
-		BuildWatcher(String buildConfigName, long sinceBuildNumber) {
-			this.buildConfigName = buildConfigName;
-			this.sinceBuildNumber = sinceBuildNumber;
-		}
-
-		public Build getBuild() {
-			return build;
-		}
-
-		@Override
-		public void eventReceived(Action action, Build resource) {
-			if (build == null && (buildConfigName == null || buildConfigName.equals(resource.getMetadata().getLabels().get("buildconfig")))) {
-
-				String buildNumberAnnotation = resource.getMetadata().getAnnotations().get("openshift.io/build.number");
-				if (buildNumberAnnotation != null) {
-					long currentBuildNumber = Integer.parseInt(buildNumberAnnotation);
-					
-					if (currentBuildNumber <= sinceBuildNumber) {
-						LOGGER.trace("ignoring build {} <= {}", currentBuildNumber, sinceBuildNumber);
-						return;
-					}
-				}
-
-				build = resource;
-			}
-		}
-
-		@Override
-		public void onClose(KubernetesClientException cause) {
 		}
 	}
 
