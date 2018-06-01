@@ -1261,7 +1261,7 @@ public class OpenshiftUtil implements AutoCloseable {
 		getRoleBindings().stream()
 			.filter(rb -> !rb.getRoleRef().getName().startsWith("admin"))
 			.filter(rb -> !rb.getRoleRef().getName().startsWith("system"))
-			.filter(rb -> rb.getSubjects().stream().allMatch(s -> s.getNamespace().equals(TestConfiguration.masterNamespace())))
+			.filter(rb -> rb.getSubjects().stream().allMatch(s -> s.getNamespace() == null || s.getNamespace().equals(TestConfiguration.masterNamespace())))
 			.forEach(this::deleteRoleBinding);
 		getRoles().forEach(this::deleteRole);
 
