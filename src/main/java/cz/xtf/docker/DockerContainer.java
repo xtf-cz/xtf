@@ -1,8 +1,13 @@
 package cz.xtf.docker;
 
+import static cz.xtf.openshift.OpenShiftUtils.admin;
+
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -16,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import cz.xtf.TestConfiguration;
 import cz.xtf.openshift.OpenshiftUtil;
 
+import io.fabric8.kubernetes.api.model.NodeAddress;
 import io.fabric8.kubernetes.api.model.Pod;
 
 public class DockerContainer {
@@ -59,6 +65,17 @@ public class DockerContainer {
 
 	public static DockerContainer createForPod(Pod pod, String containerLabel) {
 		String host = pod.getSpec().getNodeName();
+
+		try {
+			// attempt to treat the node name as a hostname
+			InetAddress.getByName(host);
+		} catch (UnknownHostException e) {
+			// try the node external address if exists
+			Optional<NodeAddress> nodeAddress = admin().client().nodes().withName(host).get().getStatus().getAddresses().stream().filter(addr -> "ExternalIP".equals(addr.getType())).findFirst();
+			if (nodeAddress.isPresent()) {
+				host = nodeAddress.get().getAddress();
+			}
+		}
 
 		String containerId = URI.create(pod.getStatus().getContainerStatuses().stream()
 						.filter(containerStats -> containerStats.getName().equals(containerLabel))
