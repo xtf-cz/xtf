@@ -8,6 +8,7 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import cz.xtf.TestConfiguration;
+import cz.xtf.XTFConfiguration;
 import cz.xtf.io.IOUtils;
 import cz.xtf.openshift.OpenshiftUtil;
 import cz.xtf.ssh.SshUtil;
@@ -99,7 +100,7 @@ public class OpenShiftNode {
 			channel.setOutputStream(System.err);
 
 			LOGGER.debug("Executing command: '{}'", command);
-			channel.connect();
+			channel.connect(XTFConfiguration.nodeSshChannelConnectionTimeout());
 			try {
 				if (consumer != null) {
 					consumer.consume(channel.getInputStream());
