@@ -27,6 +27,7 @@ public class XTFConfiguration {
 	private static final String MASTER_NAMESPACE = "xtf.config.master.namespace";
 	private static final String MASTER_SSH_USERNAME = "xtf.config.master.ssh_username";
 	private static final String MASTER_SSH_KEY_PATH = "xtf.config.master.ssh_key_path";
+	private static final String NODE_SSH_CHANNEL_CONNECTION_TIMEOUT = "xtf.config.node.ssh_channel_connection_timeout";
 	private static final String ADMIN_USERNAME = "xtf.config.master.admin.username";
 	private static final String ADMIN_PASSWORD = "xtf.config.master.admin.password";
 	private static final String CLEAN_NAMESPACE = "xtf.cleannamespace";
@@ -157,6 +158,10 @@ public class XTFConfiguration {
 
 	public static String masterSshKeyPath() {
 		return get().readValue(MASTER_SSH_KEY_PATH);
+	}
+
+	public static int nodeSshChannelConnectionTimeout() {
+		return Integer.parseInt(get().readValue(NODE_SSH_CHANNEL_CONNECTION_TIMEOUT));
 	}
 
 	public static String domain() {
@@ -532,6 +537,9 @@ public class XTFConfiguration {
 				case "MASTER_SSH_KEY_PATH":
 					props.setProperty(MASTER_SSH_KEY_PATH, entry.getValue());
 					break;
+				case "NODE_SSH_CHANNEL_CONNECTION_TIMEOUT":
+					props.setProperty(NODE_SSH_CHANNEL_CONNECTION_TIMEOUT, entry.getValue());
+					break;
 				case "ROUTE_DOMAIN":
 					props.setProperty(ROUTE_DOMAIN, entry.getValue());
 					break;
@@ -688,6 +696,7 @@ public class XTFConfiguration {
 	protected static Properties defaultValues() {
 		final Properties props = new Properties();
 
+		props.setProperty(NODE_SSH_CHANNEL_CONNECTION_TIMEOUT, "60000"); // 1 minute
 		props.setProperty(ROUTE_DOMAIN, "cloudapps.example.com");
 		props.setProperty(PROXY_DOMAIN, "proxy.xtf");
 		props.setProperty(CLEAN_NAMESPACE, "false");
