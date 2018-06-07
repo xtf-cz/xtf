@@ -9,8 +9,8 @@ cache:
   directories:
   - $HOME/.m2
 
-install: mvn -s src/main/resources/settings.xml install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-script: mvn -s src/main/resources/settings.xml clean verify
+install: mvn -s utilities/src/main/resources/settings.xml install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+script: mvn -s utilities/src/main/resources/settings.xml clean verify
 
 after_success:
   - test "${TRAVIS_PULL_REQUEST}" == "false" && test "${TRAVIS_TAG}" != "" && mvn -s .travis/settings.xml deploy -DskipTests
