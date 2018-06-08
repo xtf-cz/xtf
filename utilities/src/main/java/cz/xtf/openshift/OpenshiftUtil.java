@@ -258,12 +258,20 @@ public class OpenshiftUtil implements AutoCloseable {
 			}
 		}
 
-		withAdminUser(client -> client.projectrequests().createNew()
-				.withNewMetadata()
-				.withName(name)
-				.endMetadata()
-				.done()
-		);
+		try {
+			withAdminUser(client -> client.projectrequests().createNew()
+					.withNewMetadata()
+					.withName(name)
+					.endMetadata()
+					.done()
+			);
+		} catch (KubernetesClientException e) {
+			if (e.getMessage() != null && e.getMessage().contains("reason=AlreadyExists") && getProject(name) != null) {
+				LOGGER.error("Already existing namespace due to multiple concurrent invocations are OK", e);
+			} else {
+				throw e;
+			}
+		}
 
 		addRoleToUser(name, "admin", TestConfiguration.masterUsername());
 
