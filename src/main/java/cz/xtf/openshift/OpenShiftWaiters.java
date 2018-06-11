@@ -60,6 +60,7 @@ public class OpenShiftWaiters {
 			cleanedResources.add(openShiftUtil.client().extensions().deployments().list().getItems().isEmpty());
 			cleanedResources.add(openShiftUtil.client().extensions().jobs().list().getItems().isEmpty());
 			cleanedResources.add(openShiftUtil.getDeploymentConfigs().isEmpty());
+			cleanedResources.add(openShiftUtil.client().apps().statefulSets().list().getItems().isEmpty());
 			cleanedResources.add(openShiftUtil.client().replicationControllers().list().getItems().isEmpty());
 			cleanedResources.add(openShiftUtil.getBuildConfigs().isEmpty());
 			cleanedResources.add(openShiftUtil.getImageStreams().isEmpty());
