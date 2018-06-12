@@ -9,6 +9,7 @@
 	<name>XTF</name>
 
 	<modules>
+		<module>core</module>
 		<module>utilities</module>
 	</modules>
 
@@ -40,6 +41,12 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>cz.xtf</groupId>
+				<artifactId>utilities</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
 			<dependency>
 				<groupId>io.fabric8</groupId>
 				<artifactId>openshift-client</artifactId>
