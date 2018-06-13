@@ -227,13 +227,13 @@ public class ApplicationBuilder {
 	// services
 
 	/**
-	 * Gets default service (i.e. named '{applicationName}'). If default
+	 * Gets default service (i.e. named '{applicationName}-service'). If default
 	 * service does not exists, it is initiated with default values.
 	 *
 	 * @return Default service.
 	 */
 	public ServiceBuilder service() {
-		return service(applicationName);
+		return service(applicationName + "-service");
 	}
 
 	/**
@@ -249,7 +249,7 @@ public class ApplicationBuilder {
 	}
 
 	public ServiceBuilder secureService() {
-		return secureService(applicationName + "-secure");
+		return secureService(applicationName + "-secure-service");
 	}
 
 	public ServiceBuilder secureService(String serviceName) {
@@ -285,7 +285,7 @@ public class ApplicationBuilder {
 			result = orig.get();
 		} else {
 			result = new RouteBuilder(this, routeName);
-			result.forService(applicationName);
+			result.forService(applicationName + "-service");
 
 			routes.add(result);
 		}
