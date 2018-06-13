@@ -31,9 +31,13 @@ public class BuildManagerV2 {
 		builds = new HashMap<>();
 
 		OpenshiftUtil openshift = OpenshiftUtil.getInstance();
-		openshift.createProject(TestConfiguration.buildNamespace(), false);
-		openshift.addRoleToGroup(TestConfiguration.buildNamespace(), "system:image-puller", "system:authenticated");
-		openshift.createHardResourceQuota(TestConfiguration.buildNamespace(), "max-running-builds", "pods", "5");
+
+		// If the build namespace is in a separate namespace to "master" namespace, we assume it is a shared namespace
+		if (!TestConfiguration.buildNamespace().equals(TestConfiguration.masterNamespace())) {
+			openshift.createProject(TestConfiguration.buildNamespace(), false);
+			openshift.addRoleToGroup(TestConfiguration.buildNamespace(), "system:image-puller", "system:authenticated");
+			openshift.createHardResourceQuota(TestConfiguration.buildNamespace(), "max-running-builds", "pods", "5");
+		}
 	}
 
 	/**

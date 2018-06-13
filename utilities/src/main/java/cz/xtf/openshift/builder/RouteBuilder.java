@@ -20,7 +20,7 @@ public class RouteBuilder extends AbstractBuilder<Route, RouteBuilder> {
 	private int targetPort = 0;
 
 	public static String createHostName(String appName) {
-		return createHostName(appName, ".", ".");
+		return createHostName(appName, "-", ".");
 	}
 
 	public static String createHostName(String appName, String namespaceSeparator, String domainSeparator) {
@@ -29,7 +29,7 @@ public class RouteBuilder extends AbstractBuilder<Route, RouteBuilder> {
 	}
 
 	public static String createProxiedHostName(String appName) {
-		return createProxiedHostName(appName, ".", ".");
+		return createProxiedHostName(appName, "-", ".");
 	}
 
 	public static String createProxiedHostName(String appName, String namespaceSeparator, String domainSeparator) {
@@ -37,17 +37,12 @@ public class RouteBuilder extends AbstractBuilder<Route, RouteBuilder> {
 				appName, namespaceSeparator, OpenshiftUtil.getInstance().getContext().getNamespace(), domainSeparator, TestConfiguration.routeDomain(), domainSeparator, TestConfiguration.proxyDomain());
 	}
 
-	// Workaround router issue with delete/create route with the same name
-	private static String transformName(final String originalName) {
-		return RandomUtil.generateUniqueId(originalName);
-	}
-
 	public RouteBuilder(String routeName) {
-		this(null, transformName(routeName));
+		this(null, routeName);
 	}
 
 	RouteBuilder(ApplicationBuilder applicationBuilder, String routeName) {
-		super(applicationBuilder, transformName(routeName));
+		super(applicationBuilder, routeName);
 		tlsType = TLSType.NONE;
 	}
 
