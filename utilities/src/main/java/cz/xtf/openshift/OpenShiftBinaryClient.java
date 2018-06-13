@@ -1,11 +1,12 @@
 package cz.xtf.openshift;
 
-import cz.xtf.docker.OpenShiftNode;
 import cz.xtf.http.HttpClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.SystemUtils;
+
+import org.jboss.dmr.ModelNode;
 
 import cz.xtf.TestConfiguration;
 import cz.xtf.io.IOUtils;
@@ -198,11 +199,12 @@ public class OpenShiftBinaryClient {
 	 */
 	private String getBinary() throws IOException, InterruptedException {
 		String systemType = SystemUtils.IS_OS_MAC ? "macosx" : "linux";
-		String openShiftVersion = getOpenshiftVersion();
-		String clientLocation = String.format(CLIENTS_URL + "%s/%s/", openShiftVersion, systemType);
+		String clientLocation = null;
 
 		int code = -1;
 		try {
+			String openShiftVersion = getOpenshiftVersion();
+			clientLocation = String.format(CLIENTS_URL + "%s/%s/", openShiftVersion, systemType);
 			code = HttpClient.get(clientLocation).code();
 		} catch (IOException e) {
 			log.warn("Failed to retrieve code from binary clients mirror. Falling back to {}.", TestConfiguration.ocBinaryLocation());
@@ -236,13 +238,12 @@ public class OpenShiftBinaryClient {
 		return ocFile.getPath();
 	}
 
-	private String getOpenshiftVersion() {
+	private String getOpenshiftVersion() throws IOException {
 		String version = TestConfiguration.openshiftVersion();
 		if(StringUtils.isEmptyOrNull(version)) {
-			if (TestConfiguration.openshiftOnline()) return "N/A";
-
-			String result = OpenShiftNode.master().executeCommand("oc version");
-			version = result.replaceAll("(\n|.)*oc v(.*)\n(\n|.)*", "$2");
+			String versionJson = HttpClient.get(TestConfiguration.masterUrl() + "/version/openshift").response();
+			ModelNode versionNode = ModelNode.fromJSONString(versionJson);
+			version = versionNode.get("gitVersion").asString().replaceAll("^v(.*)", "$1");
 		}
 		return version;
 	}
