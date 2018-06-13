@@ -227,13 +227,13 @@ public class ApplicationBuilder {
 	// services
 
 	/**
-	 * Gets default service (i.e. named '{applicationName}-service'). If default
+	 * Gets default service (i.e. named '{applicationName}'). If default
 	 * service does not exists, it is initiated with default values.
 	 *
 	 * @return Default service.
 	 */
 	public ServiceBuilder service() {
-		return service(applicationName + "-service");
+		return service(applicationName);
 	}
 
 	/**
@@ -249,7 +249,7 @@ public class ApplicationBuilder {
 	}
 
 	public ServiceBuilder secureService() {
-		return secureService(applicationName + "-secure-service");
+		return secureService(applicationName + "-secure");
 	}
 
 	public ServiceBuilder secureService(String serviceName) {
@@ -260,13 +260,13 @@ public class ApplicationBuilder {
 	// routes
 
 	/**
-	 * Gets default route (i.e. named '{applicationName}-route'). If default
+	 * Gets default route (i.e. named '{applicationName}'). If default
 	 * route does not exists, it is initiated with default values.
 	 *
 	 * @return Default route.
 	 */
 	public RouteBuilder route() {
-		return route(applicationName + "-route");
+		return route(applicationName);
 	}
 
 	/**
@@ -285,7 +285,7 @@ public class ApplicationBuilder {
 			result = orig.get();
 		} else {
 			result = new RouteBuilder(this, routeName);
-			result.forService(applicationName + "-service");
+			result.forService(applicationName);
 			result.exposedAsHost(RouteBuilder.createHostName(applicationName));
 
 			routes.add(result);
@@ -297,11 +297,11 @@ public class ApplicationBuilder {
 	// roles
 
 	/**
-	 * Gets default role (i.e. named '{applicationName}-role'). If default
+	 * Gets default role (i.e. named '{applicationName}'). If default
 	 * role does not exists, it is initiated with default values.
 	*/
 	public RoleBuilder role() {
-	   return role(applicationName + "-role");
+	   return role(applicationName);
 	}
 
 	/**
@@ -325,11 +325,11 @@ public class ApplicationBuilder {
 	// role bindings
 
 	/**
-	 * Gets default role binding (i.e. named '{applicationName}-rolebinding'). If default
+	 * Gets default role binding (i.e. named '{applicationName}'). If default
 	 * role binding does not exists, it is initiated with default values.
 	 */
 	public RoleBindingBuilder roleBinding() {
-		return roleBinding(applicationName + "-rolebinding");
+		return roleBinding(applicationName);
 	}
 
 	/**
@@ -353,13 +353,13 @@ public class ApplicationBuilder {
 	// config maps
 
 	/**
-	 * Gets default ConfigMap (i.e. named '{applicationName}-cm'). If default
+	 * Gets default ConfigMap (i.e. named '{applicationName}'). If default
 	 * ConfigMap does not exist, it is created.
 	 *
 	 * @return Default ConfigMap.
 	 */
 	public ConfigMapWithPropertyFilesBuilder configMap() {
-		return configMap(applicationName + "-cm");
+		return configMap(applicationName);
 	}
 
 	/**
@@ -517,7 +517,7 @@ public class ApplicationBuilder {
 	}
 
 	public ApplicationBuilder addSecret(final String name, InputStream value) {
-		return addSecret(name + "-secret", name, value);
+		return addSecret(name, name, value);
 	}
 
 	public SourceBuildStrategy getS2iStrategy() {
