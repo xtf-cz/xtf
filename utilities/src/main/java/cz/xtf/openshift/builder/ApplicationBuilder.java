@@ -286,7 +286,6 @@ public class ApplicationBuilder {
 		} else {
 			result = new RouteBuilder(this, routeName);
 			result.forService(applicationName);
-			result.exposedAsHost(RouteBuilder.createHostName(applicationName));
 
 			routes.add(result);
 		}
