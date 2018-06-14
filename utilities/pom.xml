@@ -10,7 +10,7 @@
 	</parent>
 
 	<artifactId>utilities</artifactId>
-	<name>Utilities</name>
+	<name>XTF :: Utilities</name>
 	<description>Utilities module - Deprecated</description>
 
 	<dependencies>
