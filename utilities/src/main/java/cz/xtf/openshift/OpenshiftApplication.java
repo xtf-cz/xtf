@@ -93,7 +93,7 @@ public class OpenshiftApplication {
 
 		// add routes
 		routes.addAll(builder.buildRoutes());
-		mainRoute = findMainResourceWithPrefix(routes, name + "-route");
+		mainRoute = findMainResourceWithPrefix(routes, name);
 
 		// add configMaps
 		configMaps.addAll(builder.buildConfigMaps());
