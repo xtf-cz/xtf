@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import cz.xtf.openshift.builder.ApplicationBuilder;
 import cz.xtf.openshift.builder.DeploymentConfigBuilder;
+import cz.xtf.openshift.builder.RouteBuilder;
 import cz.xtf.wait.WaitUtil;
 
 import java.util.Collection;
@@ -221,6 +222,11 @@ public class OpenshiftApplication {
 	public String getHostName() {
 		if (mainRoute == null) {
 			throw new IllegalStateException("Default route was not found in application " + name);
+		}
+
+		if (mainRoute.getSpec().getHost() == null) {
+			// Use the expected default hostname
+			return RouteBuilder.createHostName(mainRoute.getMetadata().getName());
 		}
 
 		return mainRoute.getSpec().getHost();
