@@ -59,11 +59,11 @@ public class OpenShiftWaiters {
 	public Waiter isProjectClean() {
 		BooleanSupplier bs = () -> {
 			List<Boolean> cleanedResources = new ArrayList<>();
-			cleanedResources.add(openShift.client().extensions().deployments().list().getItems().isEmpty());
-			cleanedResources.add(openShift.client().extensions().jobs().list().getItems().isEmpty());
+			cleanedResources.add(openShift.extensions().deployments().list().getItems().isEmpty());
+			cleanedResources.add(openShift.extensions().jobs().list().getItems().isEmpty());
 			cleanedResources.add(openShift.getDeploymentConfigs().isEmpty());
-			cleanedResources.add(openShift.client().apps().statefulSets().list().getItems().isEmpty());
-			cleanedResources.add(openShift.client().replicationControllers().list().getItems().isEmpty());
+			cleanedResources.add(openShift.apps().statefulSets().list().getItems().isEmpty());
+			cleanedResources.add(openShift.replicationControllers().list().getItems().isEmpty());
 			cleanedResources.add(openShift.getBuildConfigs().isEmpty());
 			cleanedResources.add(openShift.getImageStreams().isEmpty());
 			cleanedResources.add(openShift.getEndpoints().isEmpty());

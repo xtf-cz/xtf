@@ -12,8 +12,6 @@ import rx.Observable;
 import rx.observables.StringObservable;
 
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -23,24 +21,9 @@ import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class OpenShift implements AutoCloseable {
-	private final NamespacedOpenShiftClient client;
-	private final OpenShiftWaiters waiters;
-	private final String namespace;
+public class OpenShift extends DefaultOpenShiftClient implements AutoCloseable {
 
-	public OpenShift(OpenShiftConfig openShiftConfig) {
-		if (openShiftConfig.getNamespace() == null) {
-			throw new IllegalArgumentException("Namespace in OpenShiftConfig must not be null!");
-		}
-
-		this.namespace = openShiftConfig.getNamespace();
-		this.client = new DefaultOpenShiftClient(openShiftConfig);
-		this.waiters = new OpenShiftWaiters(this);
-	}
-
-	public OpenShift(String masterUrl, String namespace, String username, String password) throws MalformedURLException {
-		new URL(masterUrl);    // masterUrl validation
-
+	public static OpenShift get(String masterUrl, String namespace, String username, String password) {
 		OpenShiftConfig openShiftConfig = new OpenShiftConfigBuilder()
 				.withMasterUrl(masterUrl)
 				.withTrustCerts(true)
@@ -50,14 +33,10 @@ public class OpenShift implements AutoCloseable {
 				.withPassword(password)
 				.build();
 
-		this.namespace = namespace;
-		this.client = new DefaultOpenShiftClient(openShiftConfig);
-		this.waiters = new OpenShiftWaiters(this);
+		return new OpenShift(openShiftConfig);
 	}
 
-	public OpenShift(String masterUrl, String namespace, String token) throws MalformedURLException {
-		new URL(masterUrl); // masterUrl validation
-
+	public static OpenShift get(String masterUrl, String namespace, String token) {
 		OpenShiftConfig openShiftConfig = new OpenShiftConfigBuilder()
 				.withMasterUrl(masterUrl)
 				.withTrustCerts(true)
@@ -66,17 +45,15 @@ public class OpenShift implements AutoCloseable {
 				.withOauthToken(token)
 				.build();
 
-		this.namespace = namespace;
-		this.client = new DefaultOpenShiftClient(openShiftConfig);
+		return new OpenShift(openShiftConfig);
+	}
+
+	private final OpenShiftWaiters waiters;
+
+	public OpenShift(OpenShiftConfig openShiftConfig) {
+		super(openShiftConfig);
+
 		this.waiters = new OpenShiftWaiters(this);
-	}
-
-	public String namespace() {
-		return namespace;
-	}
-
-	public NamespacedOpenShiftClient client() {
-		return client;
 	}
 
 	// General functions
@@ -91,20 +68,20 @@ public class OpenShift implements AutoCloseable {
 	}
 
 	public KubernetesList createResources(KubernetesList resources) {
-		return client.lists().create(resources);
+		return lists().create(resources);
 	}
 
 	public boolean deleteResources(KubernetesList resources) {
-		return client.lists().delete(resources);
+		return lists().delete(resources);
 	}
 
 	public void loadResource(InputStream is) {
-		client.load(is).deletingExisting().createOrReplace();
+		load(is).deletingExisting().createOrReplace();
 	}
 
 	// Projects
 	public ProjectRequest createProjectRequest() {
-		return createProjectRequest(new ProjectRequestBuilder().withNewMetadata().withName(namespace).endMetadata().build());
+		return createProjectRequest(new ProjectRequestBuilder().withNewMetadata().withName(getNamespace()).endMetadata().build());
 	}
 
 	public ProjectRequest createProjectRequest(String name) {
@@ -112,7 +89,7 @@ public class OpenShift implements AutoCloseable {
 	}
 
 	public ProjectRequest createProjectRequest(ProjectRequest projectRequest) {
-		return client.projectrequests().create(projectRequest);
+		return projectrequests().create(projectRequest);
 	}
 
 	/**
@@ -121,7 +98,7 @@ public class OpenShift implements AutoCloseable {
 	 * @see OpenShift#recreateProject(String)
 	 */
 	public ProjectRequest recreateProject() throws TimeoutException {
-		return recreateProject(new ProjectRequestBuilder().withNewMetadata().withName(namespace).endMetadata().build());
+		return recreateProject(new ProjectRequestBuilder().withNewMetadata().withName(getNamespace()).endMetadata().build());
 	}
 
 	/**
@@ -157,61 +134,61 @@ public class OpenShift implements AutoCloseable {
 	 */
 	public Project getProject(String name) {
 		try {
-			return client.projects().withName(name).get();
+			return projects().withName(name).get();
 		} catch (KubernetesClientException e) {
 			return null;
 		}
 	}
 
 	public boolean deleteProject() {
-		return deleteProject(namespace);
+		return deleteProject(getNamespace());
 	}
 
 	public boolean deleteProject(String name) {
-		return getProject(name) != null ? client.projects().withName(name).delete() : false;
+		return getProject(name) != null ? projects().withName(name).delete() : false;
 	}
 
 	// ImageStreams
 	public ImageStream createImageStream(ImageStream imageStream) {
-		return client.imageStreams().create(imageStream);
+		return imageStreams().create(imageStream);
 	}
 
 	public ImageStream getImageStream(String name) {
-		return client.imageStreams().withName(name).get();
+		return imageStreams().withName(name).get();
 	}
 
 	public List<ImageStream> getImageStreams() {
-		return client.imageStreams().list().getItems();
+		return imageStreams().list().getItems();
 	}
 
 	public boolean deleteImageStream(ImageStream imageStream) {
-		return client.imageStreams().delete(imageStream);
+		return imageStreams().delete(imageStream);
 	}
 
 	// Pods
 	public Pod createPod(Pod pod) {
-		return client.pods().create(pod);
+		return pods().create(pod);
 	}
 
 	public Pod getPod(String name) {
-		return client.pods().withName(name).get();
+		return pods().withName(name).get();
 	}
 
 	public String getPodLog(Pod pod) {
-		return client.pods().withName(pod.getMetadata().getName()).getLog();
+		return pods().withName(pod.getMetadata().getName()).getLog();
 	}
 
 	public Reader getPodLogReader(Pod pod) {
-		return client.pods().withName(pod.getMetadata().getName()).getLogReader();
+		return pods().withName(pod.getMetadata().getName()).getLogReader();
 	}
 
 	public Observable<String> observePodLog(Pod pod) {
-		LogWatch watcher = client.pods().withName(pod.getMetadata().getName()).watchLog();
+		LogWatch watcher = pods().withName(pod.getMetadata().getName()).watchLog();
 		return StringObservable.byLine(StringObservable.from(new InputStreamReader(watcher.getOutput())));
 	}
 
 	public List<Pod> getPods() {
-		return client.pods().list().getItems();
+		return pods().list().getItems();
 	}
 
 	/**
@@ -236,7 +213,7 @@ public class OpenShift implements AutoCloseable {
 	}
 
 	public List<Pod> getLabeledPods(Map<String, String> labels) {
-		return client.pods().withLabels(labels).list().getItems();
+		return pods().withLabels(labels).list().getItems();
 	}
 
 	public Pod getAnyPod(String deploymentConfigName) {
@@ -257,7 +234,7 @@ public class OpenShift implements AutoCloseable {
 	}
 
 	public boolean deletePod(Pod pod, long gracePeriod) {
-		return client.pods().withName(pod.getMetadata().getName()).withGracePeriod(gracePeriod).delete();
+		return pods().withName(pod.getMetadata().getName()).withGracePeriod(gracePeriod).delete();
 	}
 
 	/**
@@ -268,24 +245,24 @@ public class OpenShift implements AutoCloseable {
 	 * @return True if any pod has been deleted
 	 */
 	public boolean deletePods(String key, String value) {
-		return client.pods().withLabel(key, value).delete();
+		return pods().withLabel(key, value).delete();
 	}
 
 	public boolean deletePods(Map<String, String> labels) {
-		return client.pods().withLabels(labels).delete();
+		return pods().withLabels(labels).delete();
 	}
 
 	// Secrets
 	public Secret createSecret(Secret secret) {
-		return client.secrets().create(secret);
+		return secrets().create(secret);
 	}
 
 	public Secret getSecret(String name) {
-		return client.secrets().withName(name).get();
+		return secrets().withName(name).get();
 	}
 
 	public List<Secret> getSecrets() {
-		return client.secrets().list().getItems();
+		return secrets().list().getItems();
 	}
 
 	/**
@@ -298,80 +275,80 @@ public class OpenShift implements AutoCloseable {
 	}
 
 	public boolean deleteSecret(Secret secret) {
-		return client.secrets().delete(secret);
+		return secrets().delete(secret);
 	}
 
 	// Services
 	public Service createService(Service service) {
-		return client.services().create(service);
+		return services().create(service);
 	}
 
 	public Service getService(String name) {
-		return client.services().withName(name).get();
+		return services().withName(name).get();
 	}
 
 	public List<Service> getServices() {
-		return client.services().list().getItems();
+		return services().list().getItems();
 	}
 
 	public boolean deleteService(Service service) {
-		return client.services().delete(service);
+		return services().delete(service);
 	}
 
 	// Endpoints
 	public Endpoints createEndpoint(Endpoints endpoint) {
-		return client.endpoints().create(endpoint);
+		return endpoints().create(endpoint);
 	}
 
 	public Endpoints getEndpoint(String name) {
-		return client.endpoints().withName(name).get();
+		return endpoints().withName(name).get();
 	}
 
 	public List<Endpoints> getEndpoints() {
-		return client.endpoints().list().getItems();
+		return endpoints().list().getItems();
 	}
 
 	public boolean deleteEndpoint(Endpoints endpoint) {
-		return client.endpoints().delete(endpoint);
+		return endpoints().delete(endpoint);
 	}
 
 	// Routes
 	public Route createRoute(Route route) {
-		return client.routes().create(route);
+		return routes().create(route);
 	}
 
 	public Route getRoute(String name) {
-		return client.routes().withName(name).get();
+		return routes().withName(name).get();
 	}
 
 	public List<Route> getRoutes() {
-		return client.routes().list().getItems();
+		return routes().list().getItems();
 	}
 
 	public boolean deleteRoute(Route route) {
-		return client.routes().delete(route);
+		return routes().delete(route);
 	}
 
 	// ReplicationControllers - Only for internal usage with clean
 	private List<ReplicationController> getReplicationControllers() {
-		return client.replicationControllers().list().getItems();
+		return replicationControllers().list().getItems();
 	}
 
 	private boolean deleteReplicationController(ReplicationController replicationController) {
-		return client.replicationControllers().withName(replicationController.getMetadata().getName()).cascading(false).delete();
+		return replicationControllers().withName(replicationController.getMetadata().getName()).cascading(false).delete();
 	}
 
 	// DeploymentConfigs
 	public DeploymentConfig createDeploymentConfig(DeploymentConfig deploymentConfig) {
-		return client.deploymentConfigs().create(deploymentConfig);
+		return deploymentConfigs().create(deploymentConfig);
 	}
 
 	public DeploymentConfig getDeploymentConfig(String name) {
-		return client.deploymentConfigs().withName(name).get();
+		return deploymentConfigs().withName(name).get();
 	}
 
 	public List<DeploymentConfig> getDeploymentConfigs() {
-		return client.deploymentConfigs().list().getItems();
+		return deploymentConfigs().list().getItems();
 	}
 
 	/**
@@ -385,7 +362,7 @@ public class OpenShift implements AutoCloseable {
 	}
 
 	public DeploymentConfig updateDeploymentconfig(DeploymentConfig deploymentConfig) {
-		return client.deploymentConfigs().withName(deploymentConfig.getMetadata().getName()).replace(deploymentConfig);
+		return deploymentConfigs().withName(deploymentConfig.getMetadata().getName()).replace(deploymentConfig);
 	}
 
 	/**
@@ -409,7 +386,7 @@ public class OpenShift implements AutoCloseable {
 	}
 
 	public boolean deleteDeploymentConfig(DeploymentConfig deploymentConfig, boolean cascading) {
-		return client.deploymentConfigs().withName(deploymentConfig.getMetadata().getName()).cascading(cascading).delete();
+		return deploymentConfigs().withName(deploymentConfig.getMetadata().getName()).cascading(cascading).delete();
 	}
 
 	/**
@@ -419,7 +396,7 @@ public class OpenShift implements AutoCloseable {
 	 * @param replicas number of target replicas
 	 */
 	public void scale(String name, int replicas) {
-		client.deploymentConfigs().withName(name).scale(replicas);
+		deploymentConfigs().withName(name).scale(replicas);
 	}
 
 	/**
@@ -428,55 +405,55 @@ public class OpenShift implements AutoCloseable {
 	 * @param name name of deploymentConfig
 	 */
 	public void deployLatest(String name) {
-		client.deploymentConfigs().withName(name).deployLatest();
+		deploymentConfigs().withName(name).deployLatest();
 	}
 
 	// Builds
 	public Build getBuild(String name) {
-		return client.inNamespace(namespace).builds().withName(name).get();
+		return inNamespace(getNamespace()).builds().withName(name).get();
 	}
 
 	public Build getLatestBuild(String buildConfigName) {
-		long lastVersion = client.buildConfigs().withName(buildConfigName).get().getStatus().getLastVersion();
+		long lastVersion = buildConfigs().withName(buildConfigName).get().getStatus().getLastVersion();
 		return getBuild(buildConfigName + "-" + lastVersion);
 	}
 
 	public List<Build> getBuilds() {
-		return client.builds().list().getItems();
+		return builds().list().getItems();
 	}
 
 	public String getBuildLog(Build build) {
-		return client.builds().withName(build.getMetadata().getName()).getLog();
+		return builds().withName(build.getMetadata().getName()).getLog();
 	}
 
 	public Reader getBuildLogReader(Build build) {
-		return client.builds().withName(build.getMetadata().getName()).getLogReader();
+		return builds().withName(build.getMetadata().getName()).getLogReader();
 	}
 
 	public boolean deleteBuild(Build build) {
-		return client.builds().delete(build);
+		return builds().delete(build);
 	}
 
 	public Build startBuild(String buildConfigName) {
 		BuildRequest request = new BuildRequestBuilder().withNewMetadata().withName(buildConfigName).endMetadata().build();
-		return client.buildConfigs().withName(buildConfigName).instantiate(request);
+		return buildConfigs().withName(buildConfigName).instantiate(request);
 	}
 
 	public Build startBinaryBuild(String buildConfigName, File file) {
-		return client.buildConfigs().withName(buildConfigName).instantiateBinary().fromFile(file);
+		return buildConfigs().withName(buildConfigName).instantiateBinary().fromFile(file);
 	}
 
 	// BuildConfigs
 	public BuildConfig createBuildConfig(BuildConfig buildConfig) {
-		return client.buildConfigs().create(buildConfig);
+		return buildConfigs().create(buildConfig);
 	}
 
 	public BuildConfig getBuildConfig(String name) {
-		return client.buildConfigs().withName(name).get();
+		return buildConfigs().withName(name).get();
 	}
 
 	public List<BuildConfig> getBuildConfigs() {
-		return client.buildConfigs().list().getItems();
+		return buildConfigs().list().getItems();
 	}
 
 	/**
@@ -490,7 +467,7 @@ public class OpenShift implements AutoCloseable {
 	}
 
 	public BuildConfig updateBuildConfig(BuildConfig buildConfig) {
-		return client.buildConfigs().withName(buildConfig.getMetadata().getName()).replace(buildConfig);
+		return buildConfigs().withName(buildConfig.getMetadata().getName()).replace(buildConfig);
 	}
 
 	/**
@@ -510,20 +487,20 @@ public class OpenShift implements AutoCloseable {
 	}
 
 	public boolean deleteBuildConfig(BuildConfig buildConfig) {
-		return client.buildConfigs().delete(buildConfig);
+		return buildConfigs().delete(buildConfig);
 	}
 
 	// ServiceAccounts
 	public ServiceAccount createServiceAccount(ServiceAccount serviceAccount) {
-		return client.serviceAccounts().create(serviceAccount);
+		return serviceAccounts().create(serviceAccount);
 	}
 
 	public ServiceAccount getServiceAccount(String name) {
-		return client.serviceAccounts().withName(name).get();
+		return serviceAccounts().withName(name).get();
 	}
 
 	public List<ServiceAccount> getServiceAccounts() {
-		return client.serviceAccounts().list().getItems();
+		return serviceAccounts().list().getItems();
 	}
 
 	/**
@@ -542,24 +519,24 @@ public class OpenShift implements AutoCloseable {
 	}
 
 	public boolean deleteServiceAccount(ServiceAccount serviceAccount) {
-		return client.serviceAccounts().delete(serviceAccount);
+		return serviceAccounts().delete(serviceAccount);
 	}
 
 	// RoleBindings
 	public RoleBinding createRoleBinding(RoleBinding roleBinding) {
-		return client.roleBindings().create(roleBinding);
+		return roleBindings().create(roleBinding);
 	}
 
 	public RoleBinding getRoleBinding(String name) {
-		return client.roleBindings().withName(name).get();
+		return roleBindings().withName(name).get();
 	}
 
 	public List<RoleBinding> getRoleBindings() {
-		return client.roleBindings().list().getItems();
+		return roleBindings().list().getItems();
 	}
 
 	public List<Role> getRoles() {
-		return client.roles().list().getItems();
+		return roles().list().getItems();
 	}
 
 	/**
@@ -579,7 +556,7 @@ public class OpenShift implements AutoCloseable {
 	}
 
 	public boolean deleteRoleBinding(RoleBinding roleBinding) {
-		return client.roleBindings().delete(roleBinding);
+		return roleBindings().delete(roleBinding);
 	}
 
 	public RoleBinding addRoleToUser(String roleName, String username) {
@@ -595,7 +572,7 @@ public class OpenShift implements AutoCloseable {
 		RoleBinding roleBinding = getOrCreateRoleBinding(roleName);
 
 		addSubjectToRoleBinding(roleBinding, "ServiceAccount", serviceAccountName);
-		addUserNameToRoleBinding(roleBinding, String.format("system:serviceaccount:%s:%s", namespace, serviceAccountName));
+		addUserNameToRoleBinding(roleBinding, String.format("system:serviceaccount:%s:%s", getNamespace(), serviceAccountName));
 
 		return updateRoleBinding(roleBinding);
 	}
@@ -623,7 +600,7 @@ public class OpenShift implements AutoCloseable {
 	}
 
 	public RoleBinding updateRoleBinding(RoleBinding roleBinding) {
-		return client.roleBindings().withName(roleBinding.getMetadata().getName()).replace(roleBinding);
+		return roleBindings().withName(roleBinding.getMetadata().getName()).replace(roleBinding);
 	}
 
 	private void addSubjectToRoleBinding(RoleBinding roleBinding, String entityKind, String entityName) {
@@ -653,14 +630,14 @@ public class OpenShift implements AutoCloseable {
 	}
 
 	public RoleBinding removeRoleFromServiceAccount(String roleName, String serviceAccountName) {
-		return removeRoleFromEntity(roleName, "ServiceAccount", serviceAccountName, String.format("system:serviceaccount:%s:%s", namespace, serviceAccountName));
+		return removeRoleFromEntity(roleName, "ServiceAccount", serviceAccountName, String.format("system:serviceaccount:%s:%s", getNamespace(), serviceAccountName));
 	}
 
 	public RoleBinding removeRoleFromEntity(String roleName, String entityKind, String entityName, String userName) {
-		RoleBinding roleBinding = client.roleBindings().withName(roleName).get();
+		RoleBinding roleBinding = this.roleBindings().withName(roleName).get();
 
 		if (roleBinding != null) {
-			roleBinding.getSubjects().remove(new ObjectReferenceBuilder().withKind(entityKind).withName(entityName).withNamespace(namespace).build());
+			roleBinding.getSubjects().remove(new ObjectReferenceBuilder().withKind(entityKind).withName(entityName).withNamespace(getNamespace()).build());
 			roleBinding.getUserNames().remove(userName);
 
 			return updateRoleBinding(roleBinding);
@@ -670,91 +647,91 @@ public class OpenShift implements AutoCloseable {
 
 	// ResourceQuotas
 	public ResourceQuota createResourceQuota(ResourceQuota resourceQuota) {
-		return client.resourceQuotas().create(resourceQuota);
+		return resourceQuotas().create(resourceQuota);
 	}
 
 	public ResourceQuota getResourceQuota(String name) {
-		return client.resourceQuotas().withName(name).get();
+		return resourceQuotas().withName(name).get();
 	}
 
 	public boolean deleteResourceQuota(ResourceQuota resourceQuota) {
-		return client.resourceQuotas().delete(resourceQuota);
+		return resourceQuotas().delete(resourceQuota);
 	}
 
 	// Persistent volume claims
 	public PersistentVolumeClaim createPersistentVolumeClaim(PersistentVolumeClaim pvc) {
-		return client.persistentVolumeClaims().create(pvc);
+		return persistentVolumeClaims().create(pvc);
 	}
 
 	public PersistentVolumeClaim getPersistentVolumeClaim(String name) {
-		return client.persistentVolumeClaims().withName(name).get();
+		return persistentVolumeClaims().withName(name).get();
 	}
 
 	public List<PersistentVolumeClaim> getPersistentVolumeClaims() {
-		return client.persistentVolumeClaims().list().getItems();
+		return persistentVolumeClaims().list().getItems();
 	}
 
 	public boolean deletePersistentVolumeClaim(PersistentVolumeClaim pvc) {
-		return client.persistentVolumeClaims().delete(pvc);
+		return persistentVolumeClaims().delete(pvc);
 	}
 
 	// HorizontalPodAutoscalers
 	public HorizontalPodAutoscaler createHorizontalPodAutoscaler(HorizontalPodAutoscaler hpa) {
-		return client.autoscaling().horizontalPodAutoscalers().create(hpa);
+		return autoscaling().horizontalPodAutoscalers().create(hpa);
 	}
 
 	public HorizontalPodAutoscaler getHorizontalPodAutoscaler(String name) {
-		return client.autoscaling().horizontalPodAutoscalers().withName(name).get();
+		return autoscaling().horizontalPodAutoscalers().withName(name).get();
 	}
 
 	public List<HorizontalPodAutoscaler> getHorizontalPodAutoscalers() {
-		return client.autoscaling().horizontalPodAutoscalers().list().getItems();
+		return autoscaling().horizontalPodAutoscalers().list().getItems();
 	}
 
 	public boolean deleteHorizontalPodAutoscaler(HorizontalPodAutoscaler hpa) {
-		return client.autoscaling().horizontalPodAutoscalers().delete(hpa);
+		return autoscaling().horizontalPodAutoscalers().delete(hpa);
 	}
 
 	// ConfigMaps
 	public ConfigMap createConfigMap(ConfigMap configMap) {
-		return client.configMaps().create(configMap);
+		return configMaps().create(configMap);
 	}
 
 	public ConfigMap getConfigMap(String name) {
-		return client.configMaps().withName(name).get();
+		return configMaps().withName(name).get();
 	}
 
 	public List<ConfigMap> getConfigMaps() {
-		return client.configMaps().list().getItems();
+		return configMaps().list().getItems();
 	}
 
 	public boolean deleteConfigMap(ConfigMap configMap) {
-		return client.configMaps().delete(configMap);
+		return configMaps().delete(configMap);
 	}
 
 	// Templates
 	public Template createTemplate(Template template) {
-		return client.templates().create(template);
+		return templates().create(template);
 	}
 
 	public Template getTemplate(String name) {
-		return client.templates().withName(name).get();
+		return templates().withName(name).get();
 	}
 
 	public List<Template> getTemplates() {
-		return client.templates().list().getItems();
+		return templates().list().getItems();
 	}
 
 	public boolean deleteTemplate(String name) {
-		return client.templates().withName(name).delete();
+		return templates().withName(name).delete();
 	}
 
 	public boolean deleteTemplate(Template template) {
-		return client.templates().delete(template);
+		return templates().delete(template);
 	}
 
 	public Template loadAndCreateTemplate(InputStream is) {
-		Template t = client().templates().load(is).get();
+		Template t = templates().load(is).get();
 		deleteTemplate(t);
 
 		return createTemplate(t);
@@ -773,7 +750,7 @@ public class OpenShift implements AutoCloseable {
 
 	public KubernetesList processTemplate(String name, Map<String, String> parameters) {
 		ParameterValue[] values = processParameters(parameters);
-		return client.templates().withName(name).process(values);
+		return templates().withName(name).process(values);
 	}
 
 	public KubernetesList processAndDeployTemplate(String name, Map<String, String> parameters) {
@@ -786,20 +763,20 @@ public class OpenShift implements AutoCloseable {
 
 	// Nodes
 	public Node getNode(String name) {
-		return client.nodes().withName(name).get();
+		return nodes().withName(name).get();
 	}
 
 	public List<Node> getNodes() {
-		return client.nodes().list().getItems();
+		return nodes().list().getItems();
 	}
 
 	public List<Node> getNodes(Map<String, String> labels) {
-		return client.nodes().withLabels(labels).list().getItems();
+		return nodes().withLabels(labels).list().getItems();
 	}
 
 	// Events
 	public List<Event> getEvents() {
-		return client.events().list().getItems();
+		return events().list().getItems();
 	}
 
 	// Clean up function
@@ -815,32 +792,27 @@ public class OpenShift implements AutoCloseable {
 	 */
 	public Waiter clean() {
 		// keep the order for deletion to prevent K8s creating resources again
-		client.extensions().deployments().delete();
-		client.apps().statefulSets().delete();
-		client.extensions().jobs().delete();
+		extensions().deployments().delete();
+		apps().statefulSets().delete();
+		extensions().jobs().delete();
 		getDeploymentConfigs().forEach(this::deleteDeploymentConfig);
 		getReplicationControllers().forEach(this::deleteReplicationController);
-		client.buildConfigs().delete();
-		client.imageStreams().delete();
-		client.endpoints().delete();
-		client.services().delete();
-		client.builds().delete();
-		client.routes().delete();
-		client.pods().withGracePeriod(0).delete();
-		client.persistentVolumeClaims().delete();
-		client.autoscaling().horizontalPodAutoscalers().delete();
-		client.configMaps().delete();
+		buildConfigs().delete();
+		imageStreams().delete();
+		endpoints().delete();
+		services().delete();
+		builds().delete();
+		routes().delete();
+		pods().withGracePeriod(0).delete();
+		persistentVolumeClaims().delete();
+		autoscaling().horizontalPodAutoscalers().delete();
+		configMaps().delete();
 		getUserSecrets().forEach(this::deleteSecret);
 		getUserServiceAccounts().forEach(this::deleteServiceAccount);
 		getUserRoleBindings().forEach(this::deleteRoleBinding);
-		client.roles().delete();
+		roles().delete();
 
 		return waiters.isProjectClean();
-	}
-
-	@Override
-	public void close() {
-		client.close();
 	}
 
 	// Logs storing
