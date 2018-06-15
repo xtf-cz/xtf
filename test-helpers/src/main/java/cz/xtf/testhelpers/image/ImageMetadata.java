@@ -33,7 +33,7 @@ public class ImageMetadata {
 		openShift.createImageStream(image.getImageStream());
 
 		Waiters.sleep(TimeUnit.SECONDS, 10, "Giving OpenShift instance time to download image metadata.");
-		ImageStreamTag isTag = openShift.client().imageStreamTags().withName(image.getRepo() + ":" + image.getMajorTag()).get();
+		ImageStreamTag isTag = openShift.imageStreamTags().withName(image.getRepo() + ":" + image.getMajorTag()).get();
 
 		return new ImageMetadata(ModelNode.fromJSONString(new Gson().toJson(isTag.getImage().getDockerImageMetadata().getAdditionalProperties())));
 	}

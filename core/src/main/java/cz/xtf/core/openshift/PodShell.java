@@ -46,7 +46,7 @@ public class PodShell {
 
 		StateExecListener execListener = new StateExecListener();
 
-		openShift.client().pods().withName(podName).writingOutput(baosOutput).writingError(baosError).usingListener(execListener).exec(commands);
+		openShift.pods().withName(podName).writingOutput(baosOutput).writingError(baosError).usingListener(execListener).exec(commands);
 
 		return new SimpleWaiter(execListener::hasExecutionFinished, TimeUnit.MINUTES, 1, "Waiting for" + Arrays.toString(commands) + " execution in '" + podName + "' pod.");
 	}
