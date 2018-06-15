@@ -6,6 +6,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
@@ -14,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Stream;
 
 @Slf4j
 public class PodShell {
@@ -55,13 +55,12 @@ public class PodShell {
 		return baosOutput.toString();
 	}
 
-	public List<String> getOutputAsList(){
+	public List<String> getOutputAsList() {
 		return getOutputAsList("\n");
 	}
 
-	public List<String> getOutputAsList(String delimiter){
-		String[] result = getOutput().split(delimiter);
-		return Arrays.asList(result);
+	public List<String> getOutputAsList(String delimiter) {
+		return Arrays.asList(StringUtils.split(getOutput(), delimiter));
 	}
 
 	public Map<String, String> getOutputAsMap(String keyValueDelimiter) {
@@ -71,8 +70,8 @@ public class PodShell {
 	public Map<String, String> getOutputAsMap(String keyValueDelimiter, String entryDelimiter) {
 		Map<String, String> map = new HashMap<>();
 
-		Stream.of(getOutput().split(entryDelimiter)).forEach(entry -> {
-			String[] parsedEntry = entry.split(keyValueDelimiter, 2);
+		getOutputAsList(entryDelimiter).forEach(entry -> {
+			String[] parsedEntry = StringUtils.split(entry, keyValueDelimiter, 2);
 			map.put(parsedEntry[0], parsedEntry[1]);
 		});
 
