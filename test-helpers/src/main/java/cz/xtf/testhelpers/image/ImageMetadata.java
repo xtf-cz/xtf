@@ -25,11 +25,11 @@ public class ImageMetadata {
 	 * @param openShift context for creating ImageStream and retrieving image metadata
 	 * @return new instance
 	 */
-	public static ImageMetadata prepare(String imageUrl, OpenShift openShift) {
-		return ImageMetadata.prepare(Image.from(imageUrl), openShift);
+	public static ImageMetadata prepare(OpenShift openShift, String imageUrl) {
+		return ImageMetadata.prepare(openShift, Image.from(imageUrl));
 	}
 
-	public static ImageMetadata prepare(Image image, OpenShift openShift) {
+	public static ImageMetadata prepare(OpenShift openShift, Image image) {
 		openShift.createImageStream(image.getImageStream());
 
 		Waiters.sleep(TimeUnit.SECONDS, 10, "Giving OpenShift instance time to download image metadata.");

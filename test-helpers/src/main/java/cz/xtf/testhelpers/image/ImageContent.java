@@ -29,22 +29,22 @@ public class ImageContent {
 			"jrunscript", "jsadebugd", "jstack", "jstat", "jstat", "jstatd", "native2ascii", "rmic", "schemagen",
 			"serialver", "wsgen", "wsimport", "xjc", "pack200"};
 
-	public static ImageContent prepare(String imageUrl, OpenShift openShift) {
-		return ImageContent.prepare("test-pod", imageUrl, null, openShift);
+	public static ImageContent prepare(OpenShift openShift, String imageUrl) {
+		return ImageContent.prepare(openShift, imageUrl, "test-pod", null);
 	}
 
-	public static ImageContent prepare(String name, String imageUrl, List<String> command, OpenShift openShift) {
-		final Pod pod = ImageContent.getPod(name, imageUrl, command);
+	public static ImageContent prepare(OpenShift openShift, String imageUrl, String name, List<String> command) {
+		final Pod pod = ImageContent.getPod(imageUrl, name, command);
 
 		openShift.createPod(pod);
 
 		BooleanSupplier bs = () -> ResourceParsers.isPodRunning(openShift.getPod(name));
 		new SimpleWaiter(bs, "Waiting for '" + name + "' pod to be running").timeout(WaitingConfig.timeout()).waitForOrAssertFail("'" + name + "' pod didn't started in time!");
 
-		return new ImageContent(new PodShell(pod, openShift));
+		return new ImageContent(new PodShell(openShift, pod));
 	}
 
-	private static Pod getPod(String name, String imageUrl, List<String> command) {
+	private static Pod getPod(String imageUrl, String name, List<String> command) {
 		Container container = new ContainerBuilder().withName(name).withImage(imageUrl).build();
 		if(command != null) container.setCommand(command);
 
