@@ -24,11 +24,11 @@ public class PodShell {
 	private ByteArrayOutputStream baosOutput;
 	private ByteArrayOutputStream baosError;
 
-	public PodShell(String dcName, OpenShift openShift) {
-		this(openShift.getAnyPod(dcName), openShift);
+	public PodShell(OpenShift openShift, String dcName) {
+		this(openShift, openShift.getAnyPod(dcName));
 	}
 
-	public PodShell(Pod pod, OpenShift openShift) {
+	public PodShell(OpenShift openShift, Pod pod) {
 		this.openShift = openShift;
 		this.podName = pod.getMetadata().getName();
 
