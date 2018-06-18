@@ -32,6 +32,7 @@ public class JBossAMQ extends DefaultStatefulAuxiliary implements MessageBroker 
 	private final List<String> topics = new ArrayList<>();
 	private Boolean tracking = null;
 	private String jndiName;
+	private String serviceName = "amq";
 
 	public JBossAMQ() {
 		super(SYMBOLIC_NAME, "/opt/amq/data");
@@ -97,8 +98,8 @@ public class JBossAMQ extends DefaultStatefulAuxiliary implements MessageBroker 
 		}
 		dcBuilder.podTemplate().container()
 				.envVar("MQ_SERVICE_PREFIX_MAPPING",
-						mqServiceMapping.concat(String.format("%s-amq=%S",
-								SYMBOLIC_NAME, SYMBOLIC_NAME)))
+						mqServiceMapping.concat(String.format("%s-%s=%S",
+								SYMBOLIC_NAME, serviceName, SYMBOLIC_NAME)))
 				.envVar(getEnvVarName("USERNAME"), USERNAME)
 				.envVar(getEnvVarName("PASSWORD"), PASSWORD)
 				.envVar(getEnvVarName("QUEUES"), getQueueList())
@@ -152,6 +153,11 @@ public class JBossAMQ extends DefaultStatefulAuxiliary implements MessageBroker 
 
 	public JBossAMQ withTracking(final boolean tracking) {
 		this.tracking = tracking;
+		return this;
+	}
+
+	public JBossAMQ withServiceName(final String serviceName) {
+		this.serviceName = serviceName;
 		return this;
 	}
 
