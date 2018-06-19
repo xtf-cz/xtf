@@ -6,6 +6,9 @@ import io.fabric8.openshift.api.model.TagReference;
 import io.fabric8.openshift.api.model.TagReferenceBuilder;
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 public class Image {
 
@@ -59,7 +62,18 @@ public class Image {
 	}
 
 	public ImageStream getImageStream() {
-		TagReference tr = new TagReferenceBuilder().withName(getMajorTag()).withNewImportPolicy().withInsecure(true).and().withNewFrom().withKind("DockerImage").withName(url).endFrom().build();
-		return new ImageStreamBuilder().withNewMetadata().withName(repo).addToAnnotations("openshift.io/image.insecureRepository", "true").and().withNewSpec().withTags(tr).endSpec().build();
+		return getImageStream(repo);
+	}
+
+	public ImageStream getImageStream(String name) {
+		return getImageStream(name, getMajorTag());
+	}
+
+	public ImageStream getImageStream(String name, String... tags) {
+		List<TagReference> tagRefs = new ArrayList<>(tags.length);
+		for (String tag : tags) {
+			tagRefs.add(new TagReferenceBuilder().withName(tag).withNewImportPolicy().withInsecure(true).and().withNewFrom().withKind("DockerImage").withName(url).endFrom().build());
+		}
+		return new ImageStreamBuilder().withNewMetadata().withName(name).addToAnnotations("openshift.io/image.insecureRepository", "true").and().withNewSpec().withTags(tagRefs).endSpec().build();
 	}
 }
