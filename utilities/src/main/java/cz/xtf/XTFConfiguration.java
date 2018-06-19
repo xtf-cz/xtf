@@ -688,7 +688,6 @@ public class XTFConfiguration {
 	protected static Properties defaultValues() {
 		final Properties props = new Properties();
 
-		props.setProperty(ROUTE_DOMAIN, "cloudapps.example.com");
 		props.setProperty(PROXY_DOMAIN, "proxy.xtf");
 		props.setProperty(CLEAN_NAMESPACE, "false");
 		props.setProperty(JACOCO_ENABLED, "false");
