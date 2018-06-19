@@ -3,13 +3,30 @@ package cz.xtf.openshift.builder;
 import cz.xtf.TestConfiguration;
 import cz.xtf.keystore.XTFKeyStore;
 import cz.xtf.openshift.OpenshiftUtil;
-import cz.xtf.util.RandomUtil;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteSpecBuilder;
 import io.fabric8.openshift.api.model.TLSConfigBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 public class RouteBuilder extends AbstractBuilder<Route, RouteBuilder> {
+	private static final OpenshiftUtil openshift = OpenshiftUtil.getInstance();
+	private static String routeSuffix = null;
+
+	static {
+		routeSuffix = TestConfiguration.routeDomain();
+		if(routeSuffix == null) {
+			Route route = new Route();
+			route.setMetadata(new ObjectMetaBuilder().withName("probing-route").build());
+			route.setSpec(new RouteSpecBuilder().withNewTo().withKind("Service").withName("imaginary-service").endTo().build());
+
+			route = openshift.createRoute(route);
+			openshift.deleteRoute(route);
+
+			routeSuffix = route.getSpec().getHost().replaceAll("^[^\\.]*\\.(.*)", "$1");
+		}
+	}
+
 	private String hostName;
 	private String serviceName;
 	private String routeKey;
@@ -25,7 +42,7 @@ public class RouteBuilder extends AbstractBuilder<Route, RouteBuilder> {
 
 	public static String createHostName(String appName, String namespaceSeparator, String domainSeparator) {
 		return String.format("%s%s%s%s%s",
-				appName, namespaceSeparator, OpenshiftUtil.getInstance().getContext().getNamespace(), domainSeparator, TestConfiguration.routeDomain());
+				appName, namespaceSeparator, openshift.getContext().getNamespace(), domainSeparator, routeSuffix);
 	}
 
 	public static String createProxiedHostName(String appName) {
@@ -34,7 +51,7 @@ public class RouteBuilder extends AbstractBuilder<Route, RouteBuilder> {
 
 	public static String createProxiedHostName(String appName, String namespaceSeparator, String domainSeparator) {
 		return String.format("%s%s%s%s%s%s%s",
-				appName, namespaceSeparator, OpenshiftUtil.getInstance().getContext().getNamespace(), domainSeparator, TestConfiguration.routeDomain(), domainSeparator, TestConfiguration.proxyDomain());
+				appName, namespaceSeparator, openshift.getContext().getNamespace(), domainSeparator, routeSuffix, domainSeparator, TestConfiguration.proxyDomain());
 	}
 
 	public RouteBuilder(String routeName) {
