@@ -33,6 +33,7 @@ public class JBossAMQ extends DefaultStatefulAuxiliary implements MessageBroker 
 	private Boolean tracking = null;
 	private String jndiName;
 	private String serviceName = "amq";
+	private String image = ImageRegistry.get().amq();
 
 	public JBossAMQ() {
 		super(SYMBOLIC_NAME, "/opt/amq/data");
@@ -55,7 +56,7 @@ public class JBossAMQ extends DefaultStatefulAuxiliary implements MessageBroker 
 	}
 
 	protected String getAmqImage() {
-		return ImageRegistry.get().amq();
+		return image;
 	}
 
 	@Override
@@ -158,6 +159,11 @@ public class JBossAMQ extends DefaultStatefulAuxiliary implements MessageBroker 
 
 	public JBossAMQ withServiceName(final String serviceName) {
 		this.serviceName = serviceName;
+		return this;
+	}
+
+	public JBossAMQ withAMQ7Image() {
+		this.image = ImageRegistry.get().amq7();
 		return this;
 	}
 
