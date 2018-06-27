@@ -117,11 +117,12 @@ public class XTFConfiguration {
 	}
 
 	public static String masterUrl() {
-		String result = get().readValue(DOMAIN);
-		if (StringUtils.isNotBlank(result)) {
-			result = "https://" + (result.equals(CDK_DOMAIN) ? CDK_IP : ("api." + result)) + ":8443";
-		} else {
-			result = get().readValue(MASTER_URL);
+		String result = get().readValue(MASTER_URL);
+		if (StringUtils.isBlank(result)) {
+			result = get().readValue(DOMAIN);
+			if (StringUtils.isNotBlank(result)) {
+				result = "https://" + (result.equals(CDK_DOMAIN) ? CDK_IP : ("api." + result)) + ":8443";
+			}
 		}
 
 		return result;
