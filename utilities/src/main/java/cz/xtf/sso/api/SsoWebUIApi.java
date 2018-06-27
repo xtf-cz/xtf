@@ -3,6 +3,7 @@ package cz.xtf.sso.api;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.Select;
 
@@ -17,7 +18,11 @@ import java.util.stream.Collectors;
 public class SsoWebUIApi implements SsoApi {
 
 	public static SsoWebUIApi get(String authUrl, String realm) {
-		return new SsoWebUIApi(authUrl, realm);
+		return new SsoWebUIApi(authUrl, realm, WebDriverService.get().start());
+	}
+
+	public static SsoWebUIApi get(String authUrl, String realm, WebDriver webDriver) {
+		return  new SsoWebUIApi(authUrl, realm, webDriver);
 	}
 
 	private final String authUrl;
@@ -25,11 +30,11 @@ public class SsoWebUIApi implements SsoApi {
 
 	private final WebDriver driver;
 
-	private SsoWebUIApi(String authUrl, String realm) {
+	private SsoWebUIApi(String authUrl, String realm, WebDriver webDriver) {
 		this.authUrl = authUrl;
 		this.realm = realm;
+		this.driver = webDriver;
 
-		this.driver = WebDriverService.get().start();
 		login(driver);
 	}
 
@@ -77,7 +82,7 @@ public class SsoWebUIApi implements SsoApi {
 					// We therefore navigate to the right role with the arrow keys and click "add selected"
 					// and repeat the whole process
 
-					List<String> list = driver.findElement(By.id("available")).findElements(By.tagName("option")).stream().map(element -> element.getText()).collect(Collectors.toList());
+					List<String> list = driver.findElement(By.id("available")).findElements(By.tagName("option")).stream().map(WebElement::getText).collect(Collectors.toList());
 
 					new Actions(driver).moveToElement(driver.findElement(By.xpath("//select[@id='available']"))).click().perform();
 
@@ -392,7 +397,7 @@ public class SsoWebUIApi implements SsoApi {
 	@Override
 	public void deleteUser(String userId) {
 		throw new UnsupportedOperationException("Not yet implemented");
-	};
+	}
 
 	@Override
 	public void forceNameIdFormat(String clientId) {
@@ -413,7 +418,7 @@ public class SsoWebUIApi implements SsoApi {
 	@Override
 	public void updateClientRedirectUri(String clientId, List<String> redirectUris) {
 		throw new UnsupportedOperationException("Not yet implemented");
-	};
+	}
 
 	public void close() {
 		driver.close();
