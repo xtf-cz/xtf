@@ -4,6 +4,7 @@ import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.LocalPortForward;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
 import io.fabric8.openshift.api.model.*;
 import io.fabric8.openshift.client.*;
@@ -21,7 +22,7 @@ import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class OpenShift extends DefaultOpenShiftClient implements AutoCloseable {
+public class OpenShift extends DefaultOpenShiftClient {
 	private static String routeSuffix;
 
 	public static OpenShift get(String masterUrl, String namespace, String username, String password) {
@@ -802,6 +803,15 @@ public class OpenShift extends DefaultOpenShiftClient implements AutoCloseable {
 	// Events
 	public List<Event> getEvents() {
 		return events().list().getItems();
+	}
+
+	// Port Forward
+	public LocalPortForward portForward(String deploymentConfigName, int remotePort, int localPort) {
+		return portForward(getAnyPod(deploymentConfigName), remotePort, localPort);
+	}
+
+	public LocalPortForward portForward(Pod pod, int remotePort, int localPort) {
+		return pods().withName(pod.getMetadata().getName()).portForward(remotePort, localPort);
 	}
 
 	// Clean up function
