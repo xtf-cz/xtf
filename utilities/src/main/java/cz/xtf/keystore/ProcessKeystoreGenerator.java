@@ -62,8 +62,7 @@ public class ProcessKeystoreGenerator {
 			return caDir.resolve(keystore);
 		}
 
-		processCall(caDir, "keytool", "-genkeypair", "-keyalg", "RSA", "-noprompt", "-alias", keyAlias, "-dname", "CN=" + hostname + ", OU=TF, O=XTF, L=Brno, S=CZ, C=CZ", "-keystore", keystore, "-storepass", "password", "-keypass",
-				"password");
+		processCall(caDir, "keytool", "-genkeypair", "-keyalg", "RSA", "-noprompt", "-alias", keyAlias, "-dname", "CN=" + hostname + ", OU=TF, O=XTF, L=Brno, S=CZ, C=CZ", "-keystore", keystore, "-storepass", "password", "-keypass",	"password", "-deststoretype", "pkcs12");
 
 		processCall(caDir, "keytool", "-keystore", keystore, "-certreq", "-alias", keyAlias, "--keyalg", "rsa", "-file", hostname + ".csr", "-storepass", "password");
 
@@ -88,12 +87,8 @@ public class ProcessKeystoreGenerator {
 		// export cert as CN.keystore.pem
 		processCall(caDir, "keytool", "-exportcert", "-rfc", "-keystore", keystore, "-alias", hostname, "-storepass", "password", "-file", keystore + ".pem");
 
-		// export key as CN.keystore.p12
-		processCall(caDir, "keytool", "-importkeystore", "-noprompt", "-srckeystore", keystore, "-destkeystore", keystore + ".p12", "-deststoretype", "PKCS12", "-srcalias", hostname, "-deststorepass", "password", "-destkeypass", "password",
-				"-srcstorepass", "password");
-
 		// convert to CN.keystore.keywithattrs.pem
-		processCall(caDir, "openssl", "pkcs12", "-in", keystore + ".p12", "-nodes", "-nocerts", "-out", keystore + ".keywithattrs.pem", "-passin", "pass:password");
+		processCall(caDir, "openssl", "pkcs12", "-in", keystore, "-nodes", "-nocerts", "-out", keystore + ".keywithattrs.pem", "-passin", "pass:password");
 
 		// Remove the Bag attributes to CN.keystore.key.pem
 		processCall(caDir, "openssl", "rsa", "-in", keystore + ".keywithattrs.pem", "-out", keystore + ".key.pem");
