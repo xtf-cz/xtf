@@ -68,6 +68,7 @@
 		<version.jboss-jaxrs-api_2.0_spec>1.0.0.Final</version.jboss-jaxrs-api_2.0_spec>
 		<version.java-gitlab-api>1.2.8</version.java-gitlab-api>
 		<version.gson>2.8.5</version.gson>
+		<version.keycloak>2.5.5.Final</version.keycloak>
 
 		<!-- Plugin version properties -->
 		<version.maven-source-plugin>3.0.1</version.maven-source-plugin>
@@ -268,7 +269,7 @@
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-log4j12</artifactId>
-				<version>1.7.21</version>
+				<version>${version.slf4j-api}</version>
 				<scope>test</scope>
 			</dependency>
 
@@ -276,13 +277,13 @@
 			<dependency>
 				<groupId>org.keycloak</groupId>
 				<artifactId>keycloak-admin-client</artifactId>
-				<version>2.5.5.Final</version>
+				<version>${version.keycloak}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.keycloak</groupId>
 				<artifactId>keycloak-core</artifactId>
-				<version>2.5.5.Final</version>
+				<version>${version.keycloak}</version>
 			</dependency>
 
 			<dependency>
