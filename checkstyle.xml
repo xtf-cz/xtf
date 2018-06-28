@@ -23,7 +23,7 @@
 
 		<module name="OverloadMethodsDeclarationOrder"/>
 
-		<!--<module name="AvoidStarImport"/>-->
+		<module name="AvoidStarImport"/>
 	</module>
 
 	<module name="TreeWalker">
