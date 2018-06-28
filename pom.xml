@@ -407,6 +407,14 @@
 					<encoding>UTF-8</encoding>
 					<consoleOutput>true</consoleOutput>
 				</configuration>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 
 		</plugins>
