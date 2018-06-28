@@ -1,5 +1,6 @@
 package cz.xtf;
 
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Properties;
 
@@ -56,17 +57,39 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String CI_USERNAME = "ci.username";
 	public static final String CI_PASSWORD = "ci.password";
 
-	static {
-		get().copyValues(defaultValues());
-		get().copyValues(fromEnvironment(), true);
-	}
-
 	public static XTFConfiguration get() {
 		return XTFConfiguration.get();
 	}
 
 	private TestConfiguration() {
 		super();
+	}
+
+	static {
+		get().getXTFProperties().clear();
+
+		get().copyValues(get().fromPath("test.properties"), true);
+
+		// then product properties
+		get().copyValues(get().fromPath("../test.properties"));
+
+		// then system variables
+		get().copyValues(System.getProperties());
+
+		// then environment variables
+		get().copyValues(fromEnvironment());
+		get().copyValues(XTFConfiguration.fromEnvironment());
+
+		// Use global properties stored in repository - typically images - if not set before
+		if (Paths.get("global-test.properties").toAbsolutePath().toFile().exists()) {
+			get().copyValues(get().fromPath("global-test.properties"));
+		} else if (Paths.get("../global-test.properties").toAbsolutePath().toFile().exists()) {
+			get().copyValues(get().fromPath("../global-test.properties"));
+		}
+
+		// then defaults
+		get().copyValues(defaultValues());
+		get().copyValues(XTFConfiguration.defaultValues());
 	}
 
 	private static String getProperty(String property) {
