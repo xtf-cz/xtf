@@ -73,6 +73,7 @@
 		<version.maven-source-plugin>3.0.1</version.maven-source-plugin>
 		<version.maven-release-plugin>2.5.3</version.maven-release-plugin>
 		<version.maven-compiler-plugin>3.2</version.maven-compiler-plugin>
+		<version.maven-checkstyle-plugin>3.0.0</version.maven-checkstyle-plugin>
 	</properties>
 
 	<dependencyManagement>
@@ -358,6 +359,11 @@
 					<artifactId>maven-source-plugin</artifactId>
 					<version>${version.maven-source-plugin}</version>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-checkstyle-plugin</artifactId>
+					<version>${version.maven-checkstyle-plugin}</version>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 
@@ -388,6 +394,24 @@
 						<id>attach-sources</id>
 						<goals>
 							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<configuration>
+					<configLocation>checkstyle.xml</configLocation>
+					<encoding>UTF-8</encoding>
+					<consoleOutput>true</consoleOutput>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>check</goal>
 						</goals>
 					</execution>
 				</executions>
