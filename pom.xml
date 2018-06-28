@@ -45,6 +45,29 @@
 		<version.jackson>2.8.9</version.jackson>
 		<version.openstack4j>3.1.0</version.openstack4j>
 		<version.resteasy>3.1.4.Final</version.resteasy>
+		<version.openshift-client>3.1.12</version.openshift-client>
+		<version.commons-lang3>3.4</version.commons-lang3>
+		<version.reflections>0.9.10</version.reflections>
+		<version.slf4j-api>1.7.12</version.slf4j-api>
+		<version.jms-api>1.1-rev-1</version.jms-api>
+		<version.jsch>0.1.53</version.jsch>
+		<version.org.eclipse.jgit>4.1.0.201509280440-r</version.org.eclipse.jgit>
+		<version.bcpkix-jdk15on>1.52</version.bcpkix-jdk15on>
+		<version.maven-verifier>1.5</version.maven-verifier>
+		<version.snakeyaml>1.16</version.snakeyaml>
+		<version.rxjava-string>1.1.1</version.rxjava-string>
+		<version.rxjava>1.3.0</version.rxjava>
+		<version.jboss-dmr>1.3.0.Final</version.jboss-dmr>
+		<version.junit>4.12</version.junit>
+		<version.assertj-core>3.5.2</version.assertj-core>
+		<version.lombok>1.16.10</version.lombok>
+		<version.selenium-java>2.52.0</version.selenium-java>
+		<version.junit-dataprovider>1.10.0</version.junit-dataprovider>
+		<version.mockito-core>1.10.19</version.mockito-core>
+		<version.powermock>1.6.5</version.powermock>
+		<version.jboss-jaxrs-api_2.0_spec>1.0.0.Final</version.jboss-jaxrs-api_2.0_spec>
+		<version.java-gitlab-api>1.2.8</version.java-gitlab-api>
+		<version.gson>2.8.5</version.gson>
 
 		<!-- Plugin version properties -->
 		<version.maven-source-plugin>3.0.1</version.maven-source-plugin>
@@ -63,7 +86,7 @@
 			<dependency>
 				<groupId>io.fabric8</groupId>
 				<artifactId>openshift-client</artifactId>
-				<version>3.1.12</version>
+				<version>${version.openshift-client}</version>
 			</dependency>
 
 			<!-- align jackson with the versions used by fabric8-client -->
@@ -106,19 +129,19 @@
 			<dependency>
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
-				<version>3.4</version>
+				<version>${version.commons-lang3}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.reflections</groupId>
 				<artifactId>reflections</artifactId>
-				<version>0.9.10</version>
+				<version>${version.reflections}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.slf4j</groupId>
 				<artifactId>slf4j-api</artifactId>
-				<version>1.7.12</version>
+				<version>${version.slf4j-api}</version>
 			</dependency>
 
 			<dependency>
@@ -130,113 +153,113 @@
 			<dependency>
 				<groupId>javax.jms</groupId>
 				<artifactId>jms-api</artifactId>
-				<version>1.1-rev-1</version>
+				<version>${version.jms-api}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.jcraft</groupId>
 				<artifactId>jsch</artifactId>
-				<version>0.1.53</version>
+				<version>${version.jsch}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.eclipse.jgit</groupId>
 				<artifactId>org.eclipse.jgit</artifactId>
-				<version>4.1.0.201509280440-r</version>
+				<version>${version.org.eclipse.jgit}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.bouncycastle</groupId>
 				<artifactId>bcpkix-jdk15on</artifactId>
-				<version>1.52</version>
+				<version>${version.bcpkix-jdk15on}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.apache.maven.shared</groupId>
 				<artifactId>maven-verifier</artifactId>
-				<version>1.5</version>
+				<version>${version.maven-verifier}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.yaml</groupId>
 				<artifactId>snakeyaml</artifactId>
-				<version>1.16</version>
+				<version>${version.snakeyaml}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>io.reactivex</groupId>
 				<artifactId>rxjava-string</artifactId>
-				<version>1.1.1</version>
+				<version>${version.rxjava-string}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>io.reactivex</groupId>
 				<artifactId>rxjava</artifactId>
-				<version>1.3.0</version>
+				<version>${version.rxjava}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.jboss</groupId>
 				<artifactId>jboss-dmr</artifactId>
-				<version>1.3.0.Final</version>
+				<version>${version.jboss-dmr}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
-				<version>4.12</version>
+				<version>${version.junit}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.assertj</groupId>
 				<artifactId>assertj-core</artifactId>
-				<version>3.5.2</version>
+				<version>${version.assertj-core}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.projectlombok</groupId>
 				<artifactId>lombok</artifactId>
-				<version>1.16.10</version>
+				<version>${version.lombok}</version>
 				<scope>provided</scope>
 			</dependency>
 
 			<dependency>
 				<groupId>org.seleniumhq.selenium</groupId>
 				<artifactId>selenium-java</artifactId>
-				<version>2.52.0</version>
+				<version>${version.selenium-java}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.seleniumhq.selenium</groupId>
 				<artifactId>selenium-remote-driver</artifactId>
-				<version>2.52.0</version>
+				<version>${version.selenium-java}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.tngtech.java</groupId>
 				<artifactId>junit-dataprovider</artifactId>
-				<version>1.10.0</version>
+				<version>${version.junit-dataprovider}</version>
 				<scope>test</scope>
 			</dependency>
 
 			<dependency>
 				<groupId>org.mockito</groupId>
 				<artifactId>mockito-core</artifactId>
-				<version>1.10.19</version>
+				<version>${version.mockito-core}</version>
 				<scope>test</scope>
 			</dependency>
 
 			<dependency>
 				<groupId>org.powermock</groupId>
 				<artifactId>powermock-module-junit4</artifactId>
-				<version>1.6.5</version>
+				<version>${version.powermock}</version>
 				<scope>test</scope>
 			</dependency>
 
 			<dependency>
 				<groupId>org.powermock</groupId>
 				<artifactId>powermock-api-mockito</artifactId>
-				<version>1.6.5</version>
+				<version>${version.powermock}</version>
 				<scope>test</scope>
 			</dependency>
 
@@ -282,13 +305,13 @@
 			<dependency>
 				<groupId>org.jboss.spec.javax.ws.rs</groupId>
 				<artifactId>jboss-jaxrs-api_2.0_spec</artifactId>
-				<version>1.0.0.Final</version>
+				<version>${version.jboss-jaxrs-api_2.0_spec}</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.gitlab</groupId>
 				<artifactId>java-gitlab-api</artifactId>
-				<version>1.2.8</version>
+				<version>${version.java-gitlab-api}</version>
 			</dependency>
 
 			<dependency>
@@ -312,7 +335,7 @@
 			<dependency>
 				<groupId>com.google.code.gson</groupId>
 				<artifactId>gson</artifactId>
-				<version>2.8.5</version>
+				<version>${version.gson}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
