@@ -1,10 +1,7 @@
 package cz.xtf.client;
 
-import cz.xtf.core.waiting.SimpleWaiter;
-import cz.xtf.core.waiting.Waiter;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.StringUtils;
-import org.apache.http.Header;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -28,9 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.function.BooleanSupplier;
 
 public class Http {
 

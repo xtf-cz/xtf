@@ -11,7 +11,6 @@ import java.util.List;
 
 @Getter
 public class Image {
-
 	public static Image from(String imageUrl) {
 		final String[] slashTokens = imageUrl.split("/");
 		final String repoTag;
