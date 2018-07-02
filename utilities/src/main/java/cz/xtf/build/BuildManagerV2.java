@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -36,7 +37,11 @@ public class BuildManagerV2 {
 		if (!TestConfiguration.buildNamespace().equals(TestConfiguration.masterNamespace())) {
 			openshift.createProject(TestConfiguration.buildNamespace(), false);
 			openshift.addRoleToGroup(TestConfiguration.buildNamespace(), "system:image-puller", "system:authenticated");
-			openshift.createHardResourceQuota(TestConfiguration.buildNamespace(), "max-running-builds", "pods", "5");
+			try {
+				openshift.createHardResourceQuota(TestConfiguration.buildNamespace(), "max-running-builds", "pods", "5");
+			} catch (KubernetesClientException e) {
+				log.warn("Attempt to add hard resource quota on {} namespace failed!", TestConfiguration.buildNamespace());
+			}
 		}
 	}
 
