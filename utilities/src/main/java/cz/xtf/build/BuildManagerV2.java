@@ -2,14 +2,17 @@ package cz.xtf.build;
 
 import cz.xtf.TestConfiguration;
 import cz.xtf.build.BuildProcess.BuildStatus;
-import cz.xtf.openshift.OpenshiftUtil;
+import cz.xtf.openshift.OpenShiftUtil;
+import cz.xtf.openshift.OpenShiftUtils;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.ResourceQuota;
+import io.fabric8.kubernetes.api.model.ResourceQuotaBuilder;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Singleton class responsible for centralized shared builds management.
@@ -22,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class BuildManagerV2 {
+	private static final String buildNamespace = TestConfiguration.buildNamespace();
 	private final Map<BuildDefinition, BuildProcess> builds;
 
 	public static BuildManagerV2 get() {
@@ -31,14 +35,25 @@ public class BuildManagerV2 {
 	private BuildManagerV2() {
 		builds = new HashMap<>();
 
-		OpenshiftUtil openshift = OpenshiftUtil.getInstance();
+		OpenShiftUtil admin = OpenShiftUtils.admin(buildNamespace);
+		OpenShiftUtil master = OpenShiftUtils.master(buildNamespace);
 
 		// If the build namespace is in a separate namespace to "master" namespace, we assume it is a shared namespace
 		if (!TestConfiguration.buildNamespace().equals(TestConfiguration.masterNamespace())) {
-			openshift.createProject(TestConfiguration.buildNamespace(), false);
-			openshift.addRoleToGroup(TestConfiguration.buildNamespace(), "system:image-puller", "system:authenticated");
+			if (master.getProject(buildNamespace) == null) {
+				master.createProjectRequest();
+			}
+
+			master.addRoleToGroup("system:image-puller", "system:authenticated");
+
 			try {
-				openshift.createHardResourceQuota(TestConfiguration.buildNamespace(), "max-running-builds", "pods", "5");
+				if (admin.getResourceQuota("max-running-builds") == null) {
+					ResourceQuota rq = new ResourceQuotaBuilder()
+							.withNewMetadata().withName("max-running-builds").endMetadata()
+							.withNewSpec().addToHard("pods", new Quantity("5")).endSpec()
+							.build();
+					admin.createResourceQuota(rq);
+				}
 			} catch (KubernetesClientException e) {
 				log.warn("Attempt to add hard resource quota on {} namespace failed!", TestConfiguration.buildNamespace());
 			}
@@ -58,7 +73,7 @@ public class BuildManagerV2 {
 	 * Will deploy undeployed build to shared namespace.
 	 *
 	 * @param waitForCompletion whether to wait or not on build completion
-	 * @param definition 			build to be deployed
+	 * @param definition        build to be deployed
 	 */
 	public void deployBuild(boolean waitForCompletion, BuildDefinition definition) {
 		BuildProcess process = builds.getOrDefault(definition, BuildProcessFactory.getProcess(definition));
@@ -108,7 +123,7 @@ public class BuildManagerV2 {
 	 * Will wait for build completion.
 	 *
 	 * @param definition
-	 * @param timeout timeout for build in minutes
+	 * @param timeout    timeout for build in minutes
 	 */
 	public void waitForBuildCompletion(BuildDefinition definition, long timeout) {
 		builds.get(definition).waitForCompletion(timeout);
@@ -124,8 +139,8 @@ public class BuildManagerV2 {
 	}
 
 	/**
-	 * @param definition	definition of build
-	 * @return			status of build
+	 * @param definition definition of build
+	 * @return status of build
 	 */
 	public BuildStatus getBuildStatus(BuildDefinition definition) {
 		return builds.get(definition).getBuildStatus();
