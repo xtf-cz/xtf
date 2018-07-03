@@ -179,7 +179,7 @@ public class OpenShiftBinaryClient {
 
 	private static void loginStatic(String masterUrl, String masterUserName, String masterPassword, String masterToken) throws IOException, InterruptedException {
 
-		if (TestConfiguration.openshiftOnline()) {
+		if (masterToken != null) {
 			executeLocalCommand("oc login failed!", ocBinaryPath, "login", masterUrl,
 					"--token=" + masterToken,
 					"--config=" + CONFIG_FILE);
