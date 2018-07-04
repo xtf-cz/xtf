@@ -259,7 +259,7 @@ public class HttpClient {
 	}
 
 	private String response(final CloseableHttpClient hc) throws IOException {
-		return response(hc, response -> EntityUtils.toString(response.getEntity()));
+		return response(hc, response -> response.getEntity() == null ? null : EntityUtils.toString(response.getEntity()));
 	}
 
 	public Tuple.Pair<String, List<Header>> responseAndResponseHeaders() throws IOException {
