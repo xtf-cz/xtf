@@ -30,13 +30,21 @@ public class SimpleDependencyCheck {
 	}
 
 	public void verifyDeploymentHaveRightVersions( Path dir, Path settingsPath, Map<Pattern, String> groupIdRegexToExpectedVersion) throws VerificationException, IOException {
+		verifyDeploymentHaveRightVersions(dir, settingsPath, groupIdRegexToExpectedVersion, true);
+	}
+
+	public void verifyDeploymentHaveRightVersions( Path dir, Path settingsPath, Map<Pattern, String> groupIdRegexToExpectedVersion, boolean withDebug) throws VerificationException, IOException {
 
 		IOUtils.TMP_DIRECTORY.toFile().mkdirs();
 		Path tmp = Files.createTempDirectory(IOUtils.TMP_DIRECTORY, dir.getFileName().toString());
 
 		IOUtils.copy(dir, tmp);
 
-		MavenUtil.forProject(tmp, settingsPath).forkJvm().addCliOptions("-X").executeGoals("dependency:tree");
+		MavenUtil mavenUtil = MavenUtil.forProject(tmp, settingsPath).forkJvm();
+		if (withDebug) {
+			mavenUtil.addCliOptions("-X");
+		}
+		mavenUtil.executeGoals("dependency:tree");
 
 		final Pattern pattern = Pattern.compile(".* (([^ :]+):([^ :]+):([^ :]+):([^ :]+)(:[^ :]+)?(:[^ :]+)?)");
 
