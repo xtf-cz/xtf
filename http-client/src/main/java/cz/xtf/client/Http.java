@@ -143,8 +143,9 @@ public class Http {
 	public HttpResponseParser execute() throws IOException {
 		try (CloseableHttpClient hc = build()) {
 			try (CloseableHttpResponse response = hc.execute(request)) {
+				HttpResponseParser parser = new HttpResponseParser(response);
 				EntityUtils.consume(response.getEntity());
-				return new HttpResponseParser(response);
+				return parser;
 			}
 		}
 	}

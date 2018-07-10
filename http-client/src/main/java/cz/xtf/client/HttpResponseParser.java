@@ -9,21 +9,25 @@ import java.util.Arrays;
 import java.util.List;
 
 public class HttpResponseParser {
-	private final HttpResponse response;
+	private final int code;
+	private final String response;
+	private final List<Header> headers;
 
-	HttpResponseParser(HttpResponse response) {
-		this.response = response;
+	HttpResponseParser(HttpResponse httpResponse) throws IOException {
+		this.code = httpResponse.getStatusLine().getStatusCode();
+		this.headers = Arrays.asList(httpResponse.getAllHeaders());
+		this.response = httpResponse.getEntity() == null ? null : EntityUtils.toString(httpResponse.getEntity());
 	}
 
 	public int code() {
-		return response.getStatusLine().getStatusCode();
+		return code;
 	}
 
 	public String response() throws IOException {
-		return EntityUtils.toString(response.getEntity());
+		return response;
 	}
 
 	public List<Header> headers() {
-		return Arrays.asList(response.getAllHeaders());
+		return headers;
 	}
 }
