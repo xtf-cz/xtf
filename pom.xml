@@ -52,7 +52,7 @@
 		<version.jms-api>1.1-rev-1</version.jms-api>
 		<version.jsch>0.1.53</version.jsch>
 		<version.org.eclipse.jgit>4.1.0.201509280440-r</version.org.eclipse.jgit>
-		<version.bcpkix-jdk15on>1.52</version.bcpkix-jdk15on>
+		<version.bcpkix-jdk15on>1.56</version.bcpkix-jdk15on>
 		<version.maven-verifier>1.5</version.maven-verifier>
 		<version.snakeyaml>1.16</version.snakeyaml>
 		<version.rxjava-string>1.1.1</version.rxjava-string>
@@ -68,7 +68,7 @@
 		<version.jboss-jaxrs-api_2.0_spec>1.0.0.Final</version.jboss-jaxrs-api_2.0_spec>
 		<version.java-gitlab-api>1.2.8</version.java-gitlab-api>
 		<version.gson>2.8.5</version.gson>
-		<version.keycloak>2.5.5.Final</version.keycloak>
+		<version.keycloak>3.4.3.Final</version.keycloak>
 
 		<!-- Plugin version properties -->
 		<version.maven-source-plugin>3.0.1</version.maven-source-plugin>
