@@ -1,5 +1,6 @@
 package cz.xtf.sso.api;
 
+import cz.xtf.wait.Waiters;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
@@ -12,6 +13,7 @@ import cz.xtf.sso.util.DriverUtil;
 import cz.xtf.webdriver.WebDriverService;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -118,6 +120,7 @@ public class SsoWebUIApi implements SsoApi {
 
 			driver.navigate().to(createRolePage);
 			DriverUtil.waitFor(driver, By.id("name"));
+			Waiters.sleep(TimeUnit.SECONDS, 5);
 
 			driver.findElement(By.id("name")).sendKeys(rolename);
 			DriverUtil.waitFor(driver, By.cssSelector(".btn-primary"));
