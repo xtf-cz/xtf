@@ -1,12 +1,15 @@
 package cz.xtf.keystore;
 
 import cz.xtf.TestConfiguration;
+
 import org.apache.commons.io.FileUtils;
 
 import cz.xtf.docker.OpenShiftNode;
 import cz.xtf.io.IOUtils;
 
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -48,14 +51,22 @@ public class ProcessKeystoreGenerator {
 	}
 
 	public static Path generateKeystore(String hostname) {
-		return generateKeystore(hostname, hostname, false);
+		return generateKeystore(hostname, null, hostname, false);
 	}
 	
 	public static Path generateKeystore(String hostname, String keyAlias) {
-		return generateKeystore(hostname, keyAlias, false); 
+		return generateKeystore(hostname, null, keyAlias, false);
 	}
 
 	public static Path generateKeystore(String hostname, String keyAlias, boolean deleteCaFromKeyStore) {
+		return generateKeystore(hostname, null, keyAlias, deleteCaFromKeyStore);
+	}
+
+	public static Path generateKeystore(String hostname, String[] alternativeHostnames) {
+		return generateKeystore(hostname, alternativeHostnames, hostname, false);
+	}
+
+	public static Path generateKeystore(String hostname, String[] alternativeHostnames, String keyAlias, boolean deleteCaFromKeyStore) {
 		String keystore = hostname + ".keystore";
 
 		if (caDir.resolve(keystore).toFile().exists()) {
@@ -66,7 +77,31 @@ public class ProcessKeystoreGenerator {
 
 		processCall(caDir, "keytool", "-keystore", keystore, "-certreq", "-alias", keyAlias, "--keyalg", "rsa", "-file", hostname + ".csr", "-storepass", "password");
 
-		processCall(caDir, "openssl", "x509", "-req", "-CA", "ca-certificate.pem", "-CAkey", "ca-key.pem", "-in", hostname + ".csr", "-out", hostname + ".cer", "-days", "365", "-CAcreateserial", "-passin", "pass:password");
+		if (alternativeHostnames != null && alternativeHostnames.length > 0) {
+			try {
+				Writer writer = new FileWriter(caDir.resolve(keyAlias + ".extensions").toFile());
+				writer.write("[ req_ext ]\n");
+				writer.write("subjectAltName = @alt_names\n");
+				writer.write("\n");
+				writer.write("[ alt_names ]\n");
+
+				writer.write("DNS.1 = " + hostname + "\n");
+				for (int i = 0; i < alternativeHostnames.length; ++i) {
+					writer.write("DNS." + (i + 2) + " = " + alternativeHostnames[i] + "\n");
+				}
+				writer.flush();
+				writer.close();
+
+				processCall(caDir, "openssl", "x509", "-req", "-CA", "ca-certificate.pem", "-CAkey", "ca-key.pem", "-in", hostname + ".csr", "-out", hostname + ".cer", "-days", "365", "-CAcreateserial", "-passin", "pass:password", "-extfile", keyAlias + ".extensions", "-extensions", "req_ext");
+
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		else {
+			processCall(caDir, "openssl", "x509", "-req", "-CA", "ca-certificate.pem", "-CAkey", "ca-key.pem", "-in", hostname + ".csr", "-out", hostname + ".cer", "-days", "365", "-CAcreateserial", "-passin", "pass:password");
+		}
+
 
 		processCall(caDir, "keytool", "-import", "-noprompt", "-keystore", keystore, "-file", "ca-certificate.pem", "-alias", "xtf.ca", "-storepass", "password");
 
@@ -80,9 +115,13 @@ public class ProcessKeystoreGenerator {
 	}
 
 	public static CertPaths generateCerts(String hostname) {
+		return generateCerts(hostname, null);
+	}
+
+	public static CertPaths generateCerts(String hostname, String[] alternativeHostnames) {
 		String keystore = hostname + ".keystore";
 
-		generateKeystore(hostname);
+		generateKeystore(hostname, alternativeHostnames);
 
 		// export cert as CN.keystore.pem
 		processCall(caDir, "keytool", "-exportcert", "-rfc", "-keystore", keystore, "-alias", hostname, "-storepass", "password", "-file", keystore + ".pem");
