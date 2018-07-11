@@ -1,6 +1,13 @@
 package cz.xtf.docker;
 
-import static cz.xtf.openshift.OpenShiftUtils.admin;
+import cz.xtf.TestConfiguration;
+import cz.xtf.openshift.OpenshiftUtil;
+import io.fabric8.kubernetes.api.model.NodeAddress;
+import io.fabric8.kubernetes.api.model.Pod;
+import org.apache.commons.io.IOUtils;
+import org.assertj.core.api.Assertions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.URI;
@@ -13,16 +20,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.IOUtils;
-import org.assertj.core.api.Assertions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import cz.xtf.TestConfiguration;
-import cz.xtf.openshift.OpenshiftUtil;
-
-import io.fabric8.kubernetes.api.model.NodeAddress;
-import io.fabric8.kubernetes.api.model.Pod;
+import static cz.xtf.openshift.OpenShiftUtils.admin;
 
 public class DockerContainer {
 
@@ -63,9 +61,9 @@ public class DockerContainer {
 		return createForPod(pod, pod.getMetadata().getLabels().get("name"));
 	}
 
+
 	public static DockerContainer createForPod(Pod pod, String containerLabel) {
 		String host = pod.getSpec().getNodeName();
-
 		try {
 			// attempt to treat the node name as a hostname
 			InetAddress.getByName(host);
@@ -76,10 +74,13 @@ public class DockerContainer {
 				host = nodeAddress.get().getAddress();
 			}
 		}
+		return createForPod(pod, containerLabel, host);
+	}
 
+	public static DockerContainer createForPod(Pod pod, String containerLabel, String host) {
 		String containerId = URI.create(pod.getStatus().getContainerStatuses().stream()
-						.filter(containerStats -> containerStats.getName().equals(containerLabel))
-						.findFirst().get().getContainerID()
+				.filter(containerStats -> containerStats.getName().equals(containerLabel))
+				.findFirst().get().getContainerID()
 		).getHost();
 
 		return new DockerContainer(host, containerId);
