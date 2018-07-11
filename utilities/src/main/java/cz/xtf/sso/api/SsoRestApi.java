@@ -1,6 +1,8 @@
 package cz.xtf.sso.api;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.conn.ssl.TrustAllStrategy;
+import org.apache.http.ssl.SSLContexts;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.representations.idm.ClientRepresentation;
 import org.keycloak.representations.idm.CredentialRepresentation;
@@ -10,8 +12,12 @@ import org.keycloak.representations.idm.UserRepresentation;
 
 import cz.xtf.sso.api.entity.User;
 
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.core.Response;
 
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -32,9 +38,6 @@ public class SsoRestApi implements SsoApi {
 	private Keycloak client;
 
 	private SsoRestApi(String authUrl, String realmName) {
-		if (authUrl.contains("https://")) {
-			throw new UnsupportedOperationException("Rest api does not work through https withing openshift router, see (there is issue somewhere)");
-		}
 		this.realmName = realmName;
 		this.authUrl = authUrl;
 
@@ -45,7 +48,15 @@ public class SsoRestApi implements SsoApi {
 	 * Keycloak client is initialized by creating class instance however, if redirected to another node, it needs to be reinitialized.
 	 */
 	public void initClient() {
-		this.client = Keycloak.getInstance(authUrl, "master", "admin", "admin", "admin-cli");
+		SSLContext sslContext = null;
+		if(authUrl.contains("https")) {
+			try {
+				sslContext = SSLContexts.custom().loadTrustMaterial(new TrustAllStrategy()).build();
+			} catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+				log.warn("Failed to create naive sslContext!");
+			}
+		}
+		this.client = Keycloak.getInstance(authUrl, "master", "admin", "admin", "admin-cli", null, sslContext);
 	}
 
 	public <R> R withKeycloakClient(Function<Keycloak, R> f) {
