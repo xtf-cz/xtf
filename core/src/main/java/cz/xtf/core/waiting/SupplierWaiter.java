@@ -1,5 +1,7 @@
 package cz.xtf.core.waiting;
 
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
@@ -9,6 +11,10 @@ public class SupplierWaiter<X> implements Waiter {
 	private Supplier<X> supplier;
 	private Function<X, Boolean> successCondition;
 	private Function<X, Boolean> failureCondition;
+
+	private Collection<Runnable> successHandlers = new LinkedList<>();
+	private Collection<Runnable> failureHandlers = new LinkedList<>();
+	private Collection<Runnable> timeoutHandlers = new LinkedList<>();
 
 	private long timeout = 60_000L;
 	private long interval = 1_000L;
@@ -85,6 +91,21 @@ public class SupplierWaiter<X> implements Waiter {
 		return this;
 	}
 
+	public SupplierWaiter onSuccess(Runnable successHandler) {
+		this.successHandlers.add(successHandler);
+		return this;
+	}
+
+	public SupplierWaiter onFailure(Runnable failureHandler) {
+		this.failureHandlers.add(failureHandler);
+		return this;
+	}
+
+	public SupplierWaiter onTimeout(Runnable timeoutHandler) {
+		this.timeoutHandlers.add(timeoutHandler);
+		return this;
+	}
+
 	@Override
 	public boolean waitFor() throws TimeoutException {
 		long startTime = System.currentTimeMillis();
@@ -96,10 +117,12 @@ public class SupplierWaiter<X> implements Waiter {
 
 			if (failureCondition.apply(x)) {
 				logPoint.logEnd(reason + " (Failure)", System.currentTimeMillis() - startTime);
+				failureHandlers.forEach(Runnable::run);
 				return false;
 			}
 			if (successCondition.apply(x)) {
 				logPoint.logEnd(reason + " (Success)", System.currentTimeMillis() - startTime);
+				successHandlers.forEach(Runnable::run);
 				return true;
 			}
 
@@ -110,6 +133,7 @@ public class SupplierWaiter<X> implements Waiter {
 			}
 		}
 		logPoint.logEnd(reason + "(Timeout)", timeout);
+		timeoutHandlers.forEach(Runnable::run);
 		throw new TimeoutException(reason);
 	}
 }

@@ -1,5 +1,8 @@
 package cz.xtf.core.openshift;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cz.xtf.core.config.WaitingConfig;
 import cz.xtf.core.openshift.helpers.ResourceFunctions;
 import cz.xtf.core.waiting.SimpleWaiter;
@@ -7,7 +10,10 @@ import cz.xtf.core.waiting.SupplierWaiter;
 import cz.xtf.core.waiting.Waiter;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.openshift.api.model.Build;
+import lombok.extern.slf4j.Slf4j;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -16,6 +22,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+@Slf4j
 public class OpenShiftWaiters {
 	private OpenShift openShift;
 
@@ -34,7 +41,25 @@ public class OpenShiftWaiters {
 		Supplier<String> supplier = () -> openShift.getBuild(buildName).getStatus().getPhase();
 		String reason = "Waiting for completion of build " + buildName;
 
-		return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES, 10, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
+		Runnable logBuildPodLog = () -> {
+			Build build = openShift.getBuild(buildName);
+			if (build != null) {
+				log.debug("hasBuildCompleted build {} log follows", buildName);
+				try (BufferedReader reader = new BufferedReader(openShift.getBuildLogReader(build))) {
+					final Logger buildLogger = LoggerFactory.getLogger(OpenShiftWaiters.class.getName() + "." + build.getMetadata().getName());
+					reader.lines().forEach(line ->
+						buildLogger.debug(line.trim())
+					);
+				} catch (IOException e) {
+					log.debug("Error reading " + buildName + " log", e);
+				}
+				log.debug("hasBuildCompleted build {} log ends", buildName);
+			}
+		};
+
+		return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES, 10, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000)
+				.onFailure(logBuildPodLog)
+				.onTimeout(logBuildPodLog);
 	}
 
 	/**
@@ -145,7 +170,27 @@ public class OpenShiftWaiters {
 		Function<List<Pod>, Boolean> sc = ResourceFunctions.areExactlyNPodsReady(replicas);
 		Function<List<Pod>, Boolean> fc = ResourceFunctions.haveAnyPodRestartedAtLeastNTimes(restartTolerance);
 
-		return new SupplierWaiter<>(ps, sc, fc, TimeUnit.MILLISECONDS, WaitingConfig.timeout());
+		Runnable logPodLogs = () -> {
+			log.debug("isDeploymentReady pods log follows");
+			ps.get().forEach(pod -> {
+				final String podName = pod.getMetadata().getName();
+				log.debug("isDeploymentReady pod {} logs follows", podName);
+				try (BufferedReader reader = new BufferedReader(openShift.getPodLogReader(pod))) {
+					final Logger buildLogger = LoggerFactory.getLogger(OpenShiftWaiters.class.getName() + "." + podName);
+					reader.lines().forEach(line ->
+							buildLogger.debug(line.trim())
+					);
+				} catch (IOException e) {
+					log.debug("Error reading " + podName + " log", e);
+				}
+				log.debug("isDeploymentReady pod {} logs end", podName);
+			});
+			log.debug("isDeploymentReady pods log ends");
+		};
+
+		return new SupplierWaiter<>(ps, sc, fc, TimeUnit.MILLISECONDS, WaitingConfig.timeout())
+				.onTimeout(logPodLogs)
+				.onFailure(logPodLogs);
 	}
 
 	/**
