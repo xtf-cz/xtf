@@ -101,7 +101,14 @@ public class ProjectHandler {
 		OpenshiftUtil.getProjectLogsDir().toFile().mkdirs();
 		try (final FileWriter writer = new FileWriter(OpenshiftUtil.getProjectLogsDir().resolve("events.log").toFile())) {
 			log.info("action=record-events status=START namespace={}", namespace);
-			writer.write(OpenShiftBinaryClient.getInstance().executeCommandWithReturn("oc get events -n " + namespace));
+			writer.write(OpenShiftBinaryClient.getInstance().executeCommandWithReturn(
+					// error
+					"Error executing 'oc get events -n " + namespace,
+					// command
+					"get",
+					"events",
+					"-n",
+					namespace));
 			log.info("action=record-events status=FINISH namespace={}", namespace);
 		} catch (IOException e) {
 			log.info("action=record-events status=ERROR namespace={}", namespace, e);
