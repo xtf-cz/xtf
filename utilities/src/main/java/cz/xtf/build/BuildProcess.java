@@ -13,7 +13,6 @@ import io.fabric8.openshift.api.model.ImageStream;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.sql.Time;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -166,6 +165,7 @@ public abstract class BuildProcess {
 	public void waitForCompletion(long timeout) {
 		boolean success = false;
 		try {
+			new SimpleWaiter(() -> openshift.getLatestBuild(buildName) != null).timeout(TimeUnit.MINUTES, 1).execute();
 			success = openshift.waiters().hasBuildCompleted(openshift.getLatestBuild(buildName).getMetadata().getName()).timeout(TimeUnit.MINUTES, timeout).execute();
 		} catch (TimeoutException e) {
 			throw new IllegalStateException("Build " + buildName + " has timed out");
