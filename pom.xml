@@ -68,7 +68,7 @@
 		<version.jboss-jaxrs-api_2.0_spec>1.0.0.Final</version.jboss-jaxrs-api_2.0_spec>
 		<version.java-gitlab-api>1.2.8</version.java-gitlab-api>
 		<version.gson>2.8.5</version.gson>
-		<version.keycloak>3.4.3.Final</version.keycloak>
+		<version.keycloak>4.0.0.Final</version.keycloak>
 
 		<!-- Plugin version properties -->
 		<version.maven-source-plugin>3.0.1</version.maven-source-plugin>
