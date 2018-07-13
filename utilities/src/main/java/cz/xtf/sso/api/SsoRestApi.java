@@ -277,8 +277,6 @@ public class SsoRestApi implements SsoApi {
 		ProtocolMapperRepresentation pmr = new ProtocolMapperRepresentation();
 		pmr.setProtocol("saml");
 		pmr.setName("X500 givenName");
-		pmr.setConsentRequired(true);
-		pmr.setConsentText("${givenName}");
 		pmr.setProtocolMapper("saml-user-property-mapper");
 		pmr.setConfig(properties);
 
@@ -295,8 +293,6 @@ public class SsoRestApi implements SsoApi {
 		ProtocolMapperRepresentation pmr = new ProtocolMapperRepresentation();
 		pmr.setProtocol("saml");
 		pmr.setName("X500 surname");
-		pmr.setConsentRequired(true);
-		pmr.setConsentText("${familyName}");
 		pmr.setProtocolMapper("saml-user-property-mapper");
 		pmr.setConfig(properties);
 
@@ -313,8 +309,6 @@ public class SsoRestApi implements SsoApi {
 		ProtocolMapperRepresentation pmr = new ProtocolMapperRepresentation();
 		pmr.setProtocol("saml");
 		pmr.setName("X500 email");
-		pmr.setConsentRequired(true);
-		pmr.setConsentText("${email}");
 		pmr.setProtocolMapper("saml-user-property-mapper");
 		pmr.setConfig(properties);
 
