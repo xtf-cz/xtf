@@ -152,7 +152,7 @@ public class AmqStandaloneBuilder {
 		//enable default ssl config in the A-MQ image
 		//enable Jolokia by default
 		//enable default readiness probe
-		appBuilder.deploymentConfig(this.appName).podTemplate().container().envVar("AMQ_KEYSTORE_TRUSTSTORE_DIR", "/opt/amq/conf")
+		appBuilder.deploymentConfig(this.appName).podTemplate().container(this.appName).envVar("AMQ_KEYSTORE_TRUSTSTORE_DIR", "/opt/amq/conf")
 				.envVar("AMQ_KEYSTORE", "broker.ks")
 				.envVar("AMQ_TRUSTSTORE", "broker.ts")
 				.envVar("AMQ_KEYSTORE_PASSWORD", "password")
