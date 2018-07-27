@@ -21,7 +21,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 public class LogChecker {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(LogChecker.class);
-	private static final Pattern defaultLogErrors = Pattern.compile("FATAL|ERROR|WARN|Exception");
+	private static final Pattern defaultLogErrors = Pattern.compile("FATAL|SEVERE|ERROR|WARN|Exception");
 
 	private final Pattern logErrors;
 	private final Pattern logWhitelist;
