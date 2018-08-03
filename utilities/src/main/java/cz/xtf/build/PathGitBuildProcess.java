@@ -36,7 +36,10 @@ public class PathGitBuildProcess extends PathBuildProcess {
 
 	@Override
 	public void deleteBuild() {
-		if (isBuildConfigPresent() && GitUtil.checkIfRepositoryExist(getGitUri(getBuildConfig()))) {
+		BuildConfig buildConfig = getBuildConfig();
+		String gitUri = buildConfig != null ? getGitUri(buildConfig) : null;
+
+		if (gitUri != null && GitUtil.checkIfRepositoryExist(gitUri)) {
 			TestParent.gitlab().deleteProject(buildName);
 		}
 		deleteOpenshiftResources();
@@ -63,7 +66,7 @@ public class PathGitBuildProcess extends PathBuildProcess {
 		// Get code and compare once only per jvm run
 		if (checkCodeForEquality && buildPresent) {
 			String gitUri = getGitUri(bc);
-			if (GitUtil.checkIfRepositoryExist(gitUri)) {
+			if (gitUri != null && GitUtil.checkIfRepositoryExist(gitUri)) {
 				Tuple.Pair<Path, Path> projects;
 				try { 
 					projects = prepareProjects(gitUri);
@@ -83,7 +86,8 @@ public class PathGitBuildProcess extends PathBuildProcess {
 	}
 
 	private String getGitUri(BuildConfig bc) {
-		return bc.getSpec().getSource().getGit().getUri();
+		boolean isGitSource = bc.getSpec().getSource().getType().equals("Git");
+		return isGitSource ? bc.getSpec().getSource().getGit().getUri() : null;
 	}
 
 	/**
