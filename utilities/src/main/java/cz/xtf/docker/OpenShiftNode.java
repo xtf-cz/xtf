@@ -1,5 +1,7 @@
 package cz.xtf.docker;
 
+import static cz.xtf.openshift.OpenShiftUtils.admin;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,10 +21,13 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import io.fabric8.kubernetes.api.model.NodeAddress;
 import io.fabric8.kubernetes.api.model.NodeCondition;
+import io.fabric8.kubernetes.api.model.Pod;
 
 public class OpenShiftNode {
 
@@ -79,6 +84,26 @@ public class OpenShiftNode {
 //		TODO Disabled due to insufficient privileges
 //		return OpenshiftUtil.getInstance().getNodes().stream().filter(OpenShiftNode::isRouter).findFirst().orElseThrow(() -> new IllegalStateException("No router found"));
 		return OpenShiftNode.master();
+	}
+
+	static String extractExternalNodeAddress(String nodename) {
+		String host = nodename;
+		try {
+			// attempt to treat the node name as a hostname
+			InetAddress.getByName(host);
+		} catch (UnknownHostException e) {
+			// try the node external address if exists
+			Optional<NodeAddress> nodeAddress = admin().client().nodes().withName(host).get().getStatus().getAddresses().stream().filter(addr -> "ExternalIP".equals(addr.getType())).findFirst();
+			if (nodeAddress.isPresent()) {
+				host = nodeAddress.get().getAddress();
+			}
+		}
+
+		return host;
+	}
+
+	public static OpenShiftNode ofPod(Pod pod) {
+		return new OpenShiftNode(extractExternalNodeAddress(pod.getSpec().getNodeName()));
 	}
 
 	public int executeCommand(String command, CommandResultConsumer consumer) {

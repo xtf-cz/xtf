@@ -2,25 +2,19 @@ package cz.xtf.docker;
 
 import cz.xtf.TestConfiguration;
 import cz.xtf.openshift.OpenshiftUtil;
-import io.fabric8.kubernetes.api.model.NodeAddress;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static cz.xtf.openshift.OpenShiftUtils.admin;
 
 public class DockerContainer {
 
@@ -63,18 +57,7 @@ public class DockerContainer {
 
 
 	public static DockerContainer createForPod(Pod pod, String containerLabel) {
-		String host = pod.getSpec().getNodeName();
-		try {
-			// attempt to treat the node name as a hostname
-			InetAddress.getByName(host);
-		} catch (UnknownHostException e) {
-			// try the node external address if exists
-			Optional<NodeAddress> nodeAddress = admin().client().nodes().withName(host).get().getStatus().getAddresses().stream().filter(addr -> "ExternalIP".equals(addr.getType())).findFirst();
-			if (nodeAddress.isPresent()) {
-				host = nodeAddress.get().getAddress();
-			}
-		}
-		return createForPod(pod, containerLabel, host);
+		return createForPod(pod, containerLabel, OpenShiftNode.extractExternalNodeAddress(pod.getSpec().getNodeName()));
 	}
 
 	public static DockerContainer createForPod(Pod pod, String containerLabel, String host) {
