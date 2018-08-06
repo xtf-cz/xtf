@@ -13,10 +13,12 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 import cz.xtf.wait.SimpleWaiter;
+import cz.xtf.wait.Waiters;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Endpoints;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -179,12 +181,23 @@ public class OpenShiftUtil implements AutoCloseable {
 	 * @return ProjectRequest instatnce
 	 */
 	public ProjectRequest recreateProject(ProjectRequest projectRequest) throws TimeoutException {
-		boolean deleted = deleteProject(projectRequest.getMetadata().getName());
-		if (deleted) {
-			BooleanSupplier bs = () -> getProject(projectRequest.getMetadata().getName()) == null;
-			new SimpleWaiter(bs, TimeUnit.MINUTES, 2, "Waiting for old project deletion before creating new one").execute();
-		}
-		return createProjectRequest(projectRequest);
+		deleteProject(projectRequest.getMetadata().getName());
+		Waiters.sleep(TimeUnit.SECONDS, 30);
+
+		AtomicReference<ProjectRequest> pr = new AtomicReference<>();
+		BooleanSupplier bs = () -> {
+			try {
+				ProjectRequest attempt = createProjectRequest(projectRequest);
+				pr.set(attempt);
+				return true;
+			} catch (KubernetesClientException e) {
+				log.warn("Failed to create project: {}", projectRequest.getMetadata().getName());
+				return false;
+			}
+		};
+		new SimpleWaiter(bs, TimeUnit.MINUTES, 3, "Waiting for successful project recreation").interval(TimeUnit.SECONDS, 10).execute();
+
+		return pr.get();
 	}
 
 	/**

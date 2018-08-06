@@ -3,6 +3,7 @@ package cz.xtf.manipulation;
 import cz.xtf.TestConfiguration;
 import cz.xtf.openshift.OpenShiftBinaryClient;
 import cz.xtf.openshift.OpenShiftContext;
+import cz.xtf.openshift.OpenShiftUtils;
 import cz.xtf.openshift.OpenshiftUtil;
 import lombok.Getter;
 import lombok.NonNull;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 
 import static cz.xtf.TestConfiguration.masterNamespace;
 import static cz.xtf.TestConfiguration.masterPassword;
@@ -62,17 +64,21 @@ public class ProjectHandler {
 		}
 	}
 
-	private static void createProject(String project, boolean recreate) {
-		log.info("action=create-project status=START project={} recreate={}", project, recreate);
+	private static void createProject(String project) {
+		log.info("action=create-project status=START project={} recreate=true", project);
 
 		final OpenShiftContext originalContext = openshift.getContext();
 		// create project under admin context
 		openshift.setOpenShiftContext(OpenShiftContext.getContext(OpenShiftContext.ADMIN_CONTEXT_NAME));
-		openshift.createProject(project, recreate);
+		try {
+			OpenShiftUtils.master().recreateProject(project);
+		} catch (TimeoutException e) {
+			log.warn("Failed to create {} project. Assuming it already exists.", project);
+		}
 		// restore original context
 		openshift.setOpenShiftContext(originalContext);
 
-		log.info("action=create-project status=FINISH project={} recreate={}", project, recreate);
+		log.info("action=create-project status=FINISH project={} recreate=true", project);
 	}
 
 	/**
@@ -91,7 +97,7 @@ public class ProjectHandler {
 			openshift.setOpenShiftContext(OpenShiftContext.getContext(project));
 			log.info("action=create-temp-context status=FINISH project={} namespace={}", project, namespace);
 		}
-		createProject(namespace, temporaryNamespace);
+		createProject(namespace);
 	}
 
 	/**
