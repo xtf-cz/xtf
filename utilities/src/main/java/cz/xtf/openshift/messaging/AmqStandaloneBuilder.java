@@ -40,6 +40,7 @@ public class AmqStandaloneBuilder {
 	private boolean enableNodePort = false;
 	private boolean enableDrainer = false;
 	private String claimName;
+	private long deployTimeout = 5 * 60 * 1000L;
 
 	public AmqStandaloneBuilder(String appName) {
 		this(appName, null);
@@ -127,6 +128,11 @@ public class AmqStandaloneBuilder {
 		return this;
 	}
 
+	public AmqStandaloneBuilder withDeployTimeout(long timeout){
+		this.deployTimeout = timeout;
+		return this;
+	}
+
 	public AmqStandaloneBuilder deploy() {
 		//build services&routes
 		if (transports.isEmpty()) {
@@ -190,7 +196,7 @@ public class AmqStandaloneBuilder {
 		}
 
 		try {
-			if (!WaitUtil.waitFor(WaitUtil.areNPodsReady(podName, replicas), WaitUtil.hasPodRestarted(podName), 1000L, 5 * 60 * 1000L)) {
+			if (!WaitUtil.waitFor(WaitUtil.areNPodsReady(podName, replicas), WaitUtil.hasPodRestarted(podName), 1000L, deployTimeout)) {
 				Assertions.fail("Pod " + podName + " has restarted, presumably failing.");
 			}
 		} catch (InterruptedException x) {
