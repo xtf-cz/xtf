@@ -1,10 +1,6 @@
 package cz.xtf.keystore;
 
 import cz.xtf.TestConfiguration;
-
-import org.apache.commons.io.FileUtils;
-
-import cz.xtf.docker.OpenShiftNode;
 import cz.xtf.io.IOUtils;
 
 import java.io.FileWriter;
@@ -37,12 +33,12 @@ public class ProcessKeystoreGenerator {
 			// Generate truststore with ca cert
 			processCall(caDir, "keytool", "-import", "-noprompt", "-keystore", "truststore", "-file", "ca-certificate.pem", "-alias", "xtf.ca", "-storepass", "password");
 
-			// Import openshift router cert to truststore
-			if(!TestConfiguration.openshiftOnline()) {
-				String routerCrt = OpenShiftNode.master().executeCommand("sudo cat /etc/origin/master/ca.crt");
-				FileUtils.writeStringToFile(caDir.resolve("openshift-router.pem").toFile(), routerCrt);
-				processCall(caDir, "keytool", "-import", "-noprompt", "-keystore", "truststore", "-file", "openshift-router.pem", "-alias", "openshift-router", "-storepass", "password");
-			}
+			// Import openshift server certs to truststore
+			processCall(caDir, "/bin/sh", "-c", "echo \"Q\" | openssl s_client -connect " + TestConfiguration.masterUrl().replaceFirst("https://", "") + " -showcerts 2>/dev/null > serversOpenSslResponse");
+			processCall(caDir, "/bin/sh", "-c", "csplit -f serverCert -s serversOpenSslResponse '/^-----BEGIN CERTIFICATE-----$/' '{*}'");
+
+			processCall(caDir, "/bin/sh", "-c", "find . -type f -not -name \"serverCert00\" -name \"serverCert[0-9][0-9]\" -exec openssl x509 -in {} -out {}.pem \\;");
+			processCall(caDir, "/bin/sh", "-c", "find . -type f -name \"serverCert[0-9][0-9].pem\" -exec keytool -import -noprompt -keystore truststore -file {} -alias {} -storepass password \\;");
 
 			truststore = caDir.resolve("truststore");
 		} catch (IOException e) {
@@ -53,7 +49,7 @@ public class ProcessKeystoreGenerator {
 	public static Path generateKeystore(String hostname) {
 		return generateKeystore(hostname, null, hostname, false);
 	}
-	
+
 	public static Path generateKeystore(String hostname, String keyAlias) {
 		return generateKeystore(hostname, null, keyAlias, false);
 	}
@@ -73,7 +69,7 @@ public class ProcessKeystoreGenerator {
 			return caDir.resolve(keystore);
 		}
 
-		processCall(caDir, "keytool", "-genkeypair", "-keyalg", "RSA", "-noprompt", "-alias", keyAlias, "-dname", "CN=" + hostname + ", OU=TF, O=XTF, L=Brno, S=CZ, C=CZ", "-keystore", keystore, "-storepass", "password", "-keypass",	"password", "-deststoretype", "pkcs12");
+		processCall(caDir, "keytool", "-genkeypair", "-keyalg", "RSA", "-noprompt", "-alias", keyAlias, "-dname", "CN=" + hostname + ", OU=TF, O=XTF, L=Brno, S=CZ, C=CZ", "-keystore", keystore, "-storepass", "password", "-keypass", "password", "-deststoretype", "pkcs12");
 
 		processCall(caDir, "keytool", "-keystore", keystore, "-certreq", "-alias", keyAlias, "--keyalg", "rsa", "-file", hostname + ".csr", "-storepass", "password");
 
@@ -97,16 +93,14 @@ public class ProcessKeystoreGenerator {
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-		}
-		else {
+		} else {
 			processCall(caDir, "openssl", "x509", "-req", "-CA", "ca-certificate.pem", "-CAkey", "ca-key.pem", "-in", hostname + ".csr", "-out", hostname + ".cer", "-days", "365", "-CAcreateserial", "-passin", "pass:password");
 		}
-
 
 		processCall(caDir, "keytool", "-import", "-noprompt", "-keystore", keystore, "-file", "ca-certificate.pem", "-alias", "xtf.ca", "-storepass", "password");
 
 		processCall(caDir, "keytool", "-import", "-keystore", keystore, "-file", hostname + ".cer", "-alias", keyAlias, "-storepass", "password");
-		
+
 		if (deleteCaFromKeyStore) {
 			processCall(caDir, "keytool", "-delete", "-noprompt", "-alias", "xtf.ca", "-keystore", keystore, "-storepass", "password");
 		}
