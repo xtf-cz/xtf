@@ -158,6 +158,10 @@ public class ImageRegistry {
 		return normalize(TestConfiguration.imagePhantomjs());
 	}
 
+	public String mitmProxy() {
+		return normalize(TestConfiguration.imageMitmProxy());
+	}
+
 	public String h2() {
 		return normalize(TestConfiguration.imageH2());
 	}
