@@ -34,6 +34,7 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String IMAGE_BPMS_LDAP_TEST_IMAGE = "xtf.bpms.ldap.test";
 	public static final String IMAGE_SSO = "xtf.sso";
 	public static final String IMAGE_PHANTOMJS = "xtf.phantomjs";
+	public static final String IMAGE_MITMPROXY = "xtf.mitmproxy";
 	public static final String IMAGE_H2 = "xtf.h2";
 	public static final String IMAGE_MSA = "xtf.msa";
 	public static final String IMAGE_ZIPKIN = "io.zipkin.java";
@@ -216,6 +217,10 @@ public class TestConfiguration extends XTFConfiguration {
 		return getProperty(IMAGE_PHANTOMJS);
 	}
 
+	public static String imageMitmProxy() {
+		return getProperty(IMAGE_MITMPROXY);
+	}
+
 	public static String imageH2() {
 		return getProperty(IMAGE_H2);
 	}
@@ -370,6 +375,9 @@ public class TestConfiguration extends XTFConfiguration {
 					break;
 				case "IMAGE_PHANTOMJS":
 					props.setProperty(IMAGE_PHANTOMJS, entry.getValue());
+					break;
+				case "IMAGE_MITMPROXY":
+					props.setProperty(IMAGE_MITMPROXY, entry.getValue());
 					break;
 				case "IMAGE_MM_SERVICE":
 					props.setProperty(IMAGE_MM_SERVICE, entry.getValue());
