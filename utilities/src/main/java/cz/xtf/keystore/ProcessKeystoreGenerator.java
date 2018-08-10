@@ -35,7 +35,8 @@ public class ProcessKeystoreGenerator {
 
 			// Import openshift server certs to truststore
 			processCall(caDir, "/bin/sh", "-c", "echo \"Q\" | openssl s_client -connect " + TestConfiguration.masterUrl().replaceFirst("https://", "") + " -showcerts 2>/dev/null > serversOpenSslResponse");
-			processCall(caDir, "/bin/sh", "-c", "csplit -f serverCert -s serversOpenSslResponse '/^-----BEGIN CERTIFICATE-----$/' '{*}'");
+			String splitCmd = System.getProperty("os.name").toLowerCase().startsWith("mac") ? "gcsplit" : "csplit";
+			processCall(caDir, "/bin/sh", "-c",  splitCmd + " -f serverCert -s serversOpenSslResponse '/^-----BEGIN CERTIFICATE-----$/' '{*}'");
 
 			processCall(caDir, "/bin/sh", "-c", "find . -type f -not -name \"serverCert00\" -name \"serverCert[0-9][0-9]\" -exec openssl x509 -in {} -out {}.pem \\;");
 			processCall(caDir, "/bin/sh", "-c", "find . -type f -name \"serverCert[0-9][0-9].pem\" -exec keytool -import -noprompt -keystore truststore -file {} -alias {} -storepass password \\;");
