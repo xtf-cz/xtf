@@ -149,9 +149,18 @@ public class XTFKeyStore {
 		}
 	}
 
+	@Deprecated
 	public void addCertificateFromBase64String(final String certificate) {
 		try {
 			keystore.setCertificateEntry("maven", CertificateFactory.getInstance("X.509").generateCertificate(new ByteArrayInputStream(certificate.getBytes())));
+		} catch (KeyStoreException | CertificateException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	public void addCertificateFromBase64String(final String alias, final String certificate) {
+		try {
+			keystore.setCertificateEntry(alias, CertificateFactory.getInstance("X.509").generateCertificate(new ByteArrayInputStream(certificate.getBytes())));
 		} catch (KeyStoreException | CertificateException e) {
 			throw new IllegalStateException(e);
 		}
