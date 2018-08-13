@@ -21,6 +21,8 @@ public class OpenShifts {
 	private static OpenShift masterUtil;
 	private static OpenShiftBinary openShiftBinary;
 
+	private static String openShiftBinaryPath;
+
 	public static OpenShift admin() {
 		if(adminUtil == null) {
 			adminUtil = OpenShifts.admin(OpenShiftConfig.namespace());
@@ -47,29 +49,34 @@ public class OpenShifts {
 		}
 	}
 
+	public static String getBinaryPath() {
+		if(openShiftBinaryPath == null) {
+			if (OpenShiftConfig.binaryPath() != null) {
+				openShiftBinaryPath = OpenShiftConfig.binaryPath();
+			} else if (OpenShiftConfig.version() != null) {
+				openShiftBinaryPath = OpenShifts.downloadOpenShiftBinary(OpenShiftConfig.version());
+			} else {
+				openShiftBinaryPath = OpenShifts.downloadOpenShiftBinary(OpenShifts.getVersion());
+			}
+		}
+		return openShiftBinaryPath;
+	}
+
 	public static OpenShiftBinary masterBinary() {
 		return masterBinary(OpenShiftConfig.namespace());
 	}
 
 	public static OpenShiftBinary masterBinary(String namespace) {
 		if(openShiftBinary == null) {
-			String path;
-			if (OpenShiftConfig.binaryPath() != null) {
-				path = OpenShiftConfig.binaryPath();
-			} else if (OpenShiftConfig.version() != null) {
-				path = OpenShifts.downloadOpenShiftBinary(OpenShiftConfig.version());
-			} else {
-				path = OpenShifts.downloadOpenShiftBinary(OpenShifts.getVersion());
-			}
-
-			if (OpenShiftConfig.token() == null) {
-				openShiftBinary = new OpenShiftBinary(path, OpenShiftConfig.url(), OpenShiftConfig.masterUsername(), OpenShiftConfig.masterPassword());
-			} else {
-				openShiftBinary = new OpenShiftBinary(path, OpenShiftConfig.url(), OpenShiftConfig.token());
-			}
+			openShiftBinary = new OpenShiftBinary(OpenShifts.getBinaryPath());
 		}
 
-		openShiftBinary.login();
+		if (OpenShiftConfig.token() == null) {
+			openShiftBinary.login(OpenShiftConfig.url(), OpenShiftConfig.masterUsername(), OpenShiftConfig.masterPassword());
+		} else {
+			openShiftBinary.login(OpenShiftConfig.url(), OpenShiftConfig.token());
+		}
+
 		openShiftBinary.project(namespace);
 
 		return openShiftBinary;
