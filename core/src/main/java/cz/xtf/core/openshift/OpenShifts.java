@@ -1,10 +1,25 @@
 package cz.xtf.core.openshift;
 
 import cz.xtf.core.config.OpenShiftConfig;
+import cz.xtf.core.http.Https;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
+import org.jboss.dmr.ModelNode;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Paths;
+import java.util.Arrays;
+
+@Slf4j
 public class OpenShifts {
+	private static final String CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v3/clients/";
+
 	private static OpenShift adminUtil;
 	private static OpenShift masterUtil;
+	private static OpenShiftBinary openShiftBinary;
 
 	public static OpenShift admin() {
 		if(adminUtil == null) {
@@ -29,6 +44,84 @@ public class OpenShifts {
 			return OpenShift.get(OpenShiftConfig.url(), namespace, OpenShiftConfig.masterUsername(), OpenShiftConfig.masterPassword());
 		} else {
 			return OpenShift.get(OpenShiftConfig.url(), namespace, OpenShiftConfig.token());
+		}
+	}
+
+	public static OpenShiftBinary masterBinary() {
+		return masterBinary(OpenShiftConfig.namespace());
+	}
+
+	public static OpenShiftBinary masterBinary(String namespace) {
+		if(openShiftBinary == null) {
+			String path;
+			if (OpenShiftConfig.binaryPath() != null) {
+				path = OpenShiftConfig.binaryPath();
+			} else if (OpenShiftConfig.version() != null) {
+				path = OpenShifts.downloadOpenShiftBinary(OpenShiftConfig.version());
+			} else {
+				path = OpenShifts.downloadOpenShiftBinary(OpenShifts.getVersion());
+			}
+
+			if (OpenShiftConfig.token() == null) {
+				openShiftBinary = new OpenShiftBinary(path, OpenShiftConfig.url(), OpenShiftConfig.masterUsername(), OpenShiftConfig.masterPassword());
+			} else {
+				openShiftBinary = new OpenShiftBinary(path, OpenShiftConfig.url(), OpenShiftConfig.token());
+			}
+		}
+
+		openShiftBinary.login();
+		openShiftBinary.project(namespace);
+
+		return openShiftBinary;
+	}
+
+	public static String getVersion() {
+		String content = Https.httpsGetContent(OpenShiftConfig.url() + "/version/openshift");
+		return ModelNode.fromJSONString(content).get("gitVersion").asString().replaceAll("^v(.*)", "$1");
+	}
+
+	private static String downloadOpenShiftBinary(String version) {
+		String systemType = SystemUtils.IS_OS_MAC ? "macosx" : "linux";
+		String clientLocation = String.format(CLIENTS_URL + "%s/%s/", version, systemType);
+
+		int code = Https.httpsGetCode(clientLocation);
+
+		if(code != 200) {
+			throw new IllegalStateException("Client binary for version " + version + " isn't available at " + clientLocation);
+		}
+
+		File workdir = new File(Paths.get("tmp/oc").toAbsolutePath().toString());
+		if (!workdir.mkdirs()) {
+			throw new IllegalStateException("Cannot mkdirs " + workdir);
+		}
+
+		// Download and extract client
+		File ocTarFile = new File(workdir, "oc.tar.gz");
+		File ocFile = new File(workdir, "oc");
+
+		try {
+			URL requestUrl = new URL(clientLocation + "oc.tar.gz");
+			FileUtils.copyURLToFile(requestUrl, ocTarFile, 20_000, 300_000);
+
+			executeCommand("tar", "-xf", ocTarFile.getPath(), "-C", workdir.getPath());
+			FileUtils.deleteQuietly(ocTarFile);
+
+			return ocFile.getAbsolutePath();
+		} catch (IOException | InterruptedException e) {
+			throw new IllegalStateException("Failed to download and extract oc binary from " + clientLocation + "oc.tar.gz", e);
+		}
+	}
+
+	private static void executeCommand(String... args) throws IOException, InterruptedException {
+		ProcessBuilder pb = new ProcessBuilder(args);
+
+		pb.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+		pb.redirectError(ProcessBuilder.Redirect.INHERIT);
+
+		int result = pb.start().waitFor();
+
+		if(result != 0) {
+			throw new IOException("Failed to execute: " + Arrays.toString(args));
 		}
 	}
 }
