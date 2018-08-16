@@ -45,7 +45,7 @@
 		<version.jackson>2.8.9</version.jackson>
 		<version.openstack4j>3.1.0</version.openstack4j>
 		<version.resteasy>3.1.4.Final</version.resteasy>
-		<version.openshift-client>3.1.12</version.openshift-client>
+		<version.openshift-client>4.0.3</version.openshift-client>
 		<version.commons-io>2.6</version.commons-io>
 		<version.commons-lang3>3.4</version.commons-lang3>
 		<version.reflections>0.9.10</version.reflections>
