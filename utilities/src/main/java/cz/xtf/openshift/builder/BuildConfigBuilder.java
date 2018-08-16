@@ -130,14 +130,13 @@ public class BuildConfigBuilder extends AbstractBuilder<BuildConfig, BuildConfig
 
 		if (StringUtils.isNotBlank(genericSecret)) {
 			triggers.add(new BuildTriggerPolicyBuilder()
-					.withType("Generic")
-					.withNewGeneric(true, genericSecret).build());
+					.withType("Generic").withNewGeneric().withAllowEnv(true).withSecret(genericSecret).endGeneric().build());
 		}
 
 		if (StringUtils.isNotBlank(githubSecret)) {
 			triggers.add(new BuildTriggerPolicyBuilder()
 					.withType("GitHub")
-					.withNewGithub(true, githubSecret).build());
+					.withNewGithub().withAllowEnv(true).withSecret(githubSecret).endGithub().build());
 		}
 
 		BuildSourceBuilder sourceBuilder = new BuildSourceBuilder();
