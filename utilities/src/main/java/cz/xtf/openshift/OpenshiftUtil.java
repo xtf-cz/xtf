@@ -1013,7 +1013,7 @@ public class OpenshiftUtil implements AutoCloseable {
 
 	public void startRedeployment(String deploymentName) {
 		OpenShiftNode.master().executeCommand(
-				String.format("sudo oc deploy %s -n %s --latest=true",
+				String.format("sudo oc rollout latest %s -n %s",
 						deploymentName, getContext().getNamespace()));
 	}
 
