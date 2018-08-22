@@ -433,7 +433,7 @@ public class OpenShiftUtil implements AutoCloseable {
 	 * @return Map of environment variables
 	 */
 	public Map<String, String> getDeploymentConfigEnvVars(String name) {
-		return getDeploymentConfig(name).getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().stream().collect(Collectors.toMap(EnvVar::getName, EnvVar::getValue));
+		return getDeploymentConfig(name).getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().stream().collect(Collectors.toMap(EnvVar::getName, (envVar) -> {return envVar.getValue() != null ? envVar.getValue() : "";}));
 	}
 
 	public DeploymentConfig updateDeploymentconfig(DeploymentConfig deploymentConfig) {
