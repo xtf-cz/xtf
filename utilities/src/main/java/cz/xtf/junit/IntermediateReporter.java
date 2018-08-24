@@ -142,7 +142,7 @@ public class IntermediateReporter extends RunListener {
 		}
 
 		KnownIssue knownIssue = failure.getDescription().getAnnotation(KnownIssue.class);
-		if (knownIssue == null) {
+		if (knownIssue == null && failure.getDescription().getTestClass() != null) {
 			knownIssue = failure.getDescription().getTestClass().getAnnotation(KnownIssue.class);
 		}
 
