@@ -157,15 +157,13 @@ public class OpenshiftApplication {
 					final int labelDc2 = Integer.parseInt(dc2.getMetadata().getLabels().get(DeploymentConfigBuilder.SYNCHRONOUS_LABEL));
 					return labelDc1 - labelDc2;
 				}).map(x -> {
-					final String deploymentId = x.getMetadata().getLabels().get(DeploymentConfigBuilder.SYNCHRONOUS_LABEL);
+					final String syncId = x.getMetadata().getLabels().get(DeploymentConfigBuilder.SYNCHRONOUS_LABEL);
 					final DeploymentConfig dc = openshift.createDeploymentConfig(x);
 					try {
-						LOGGER.info("Waiting for a startup of pod with syncId '{}'", deploymentId);
-						WaitUtil.waitFor(WaitUtil.isAPodReady(DeploymentConfigBuilder.SYNCHRONOUS_LABEL, deploymentId));
-						// Let's wait few more seconds for pods that are ready but not fully ready
-						TimeUnit.SECONDS.sleep(20);
+						LOGGER.info("Waiting for a startup of pod with deploymentconfig '{}' ({} {})", dc.getMetadata().getName(), DeploymentConfigBuilder.SYNCHRONOUS_LABEL, syncId);
+						WaitUtil.waitFor(WaitUtil.isAPodReady("deploymentconfig", dc.getMetadata().getName()));
 					} catch (Exception e) {
-						throw new IllegalStateException("Timeout while waiting for dpeloyment of " + dc.getMetadata().getName());
+						throw new IllegalStateException("Timeout while waiting for deployment of " + dc.getMetadata().getName());
 					}
 					return dc;
 				}).collect(Collectors.toList());
