@@ -162,8 +162,6 @@ public class OpenshiftApplication {
 					try {
 						LOGGER.info("Waiting for a startup of pod with deploymentconfig '{}' ({} {})", dc.getMetadata().getName(), DeploymentConfigBuilder.SYNCHRONOUS_LABEL, syncId);
 						WaitUtil.waitFor(WaitUtil.isAPodReady("deploymentconfig", dc.getMetadata().getName()));
-						// Let's wait few more seconds for pods that are ready but not fully ready
-						TimeUnit.SECONDS.sleep(20);
 					} catch (Exception e) {
 						throw new IllegalStateException("Timeout while waiting for deployment of " + dc.getMetadata().getName());
 					}
