@@ -19,6 +19,7 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String IMAGE_EWS_PREFIX = "org.apache.tomcat";
 	public static final String IMAGE_TOMCAT7 = IMAGE_EWS_PREFIX + "7";
 	public static final String IMAGE_TOMCAT8 = IMAGE_EWS_PREFIX + "8";
+	public static final String IMAGE_TOMCAT9 = IMAGE_EWS_PREFIX + "9";
 	public static final String IMAGE_AMQ = "xtf.amq";
 	public static final String IMAGE_AMQ7 = "xtf.amq.7";
 	public static final String IMAGE_POSTGRES = "org.postgresql";
@@ -155,6 +156,10 @@ public class TestConfiguration extends XTFConfiguration {
 
 	public static String imageTomcat8() {
 		return getProperty(IMAGE_TOMCAT8);
+	}
+
+	public static String imageTomcat9() {
+		return getProperty(IMAGE_TOMCAT9);
 	}
 
 	public static String imageAmq() {

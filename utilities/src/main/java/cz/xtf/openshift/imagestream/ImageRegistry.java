@@ -90,6 +90,10 @@ public class ImageRegistry {
 		return normalize(TestConfiguration.imageTomcat8());
 	}
 
+	public String tomcat9() {
+		return normalize(TestConfiguration.imageTomcat9());
+	}
+
 	public String amq() {
 		return normalize(TestConfiguration.imageAmq());
 	}
