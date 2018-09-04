@@ -59,15 +59,19 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class OpenShift extends DefaultOpenShiftClient {
 	private static String routeSuffix;
+	// Null-proofing getLabels
+	private final Predicate<HasMetadata> KEEP_LABEL_FILTER = (r) -> Optional.ofNullable(r.getMetadata().getLabels()).orElse(Collections.emptyMap()).containsKey("xtf.cz/keep");
 
 	public static OpenShift get(String masterUrl, String namespace, String username, String password) {
 		OpenShiftConfig openShiftConfig = new OpenShiftConfigBuilder()
@@ -317,7 +321,9 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return List of secrets that aren't considered default.
 	 */
 	public List<Secret> getUserSecrets() {
-		return getSecrets().stream().filter(s -> !s.getType().startsWith("kubernetes.io/")).collect(Collectors.toList());
+		return getSecrets().stream().filter(s -> !s.getType().startsWith("kubernetes.io/"))
+				.filter(KEEP_LABEL_FILTER.negate())
+				.collect(Collectors.toList());
 	}
 
 	public boolean deleteSecret(Secret secret) {
@@ -585,7 +591,9 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return List of service accounts that aren't considered default.
 	 */
 	public List<ServiceAccount> getUserServiceAccounts() {
-		return getServiceAccounts().stream().filter(sa -> !sa.getMetadata().getName().matches("builder|default|deployer")).collect(Collectors.toList());
+		return getServiceAccounts().stream().filter(sa -> !sa.getMetadata().getName().matches("builder|default|deployer"))
+				.filter(KEEP_LABEL_FILTER.negate())
+				.collect(Collectors.toList());
 	}
 
 	public boolean deleteServiceAccount(ServiceAccount serviceAccount) {
@@ -622,7 +630,10 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return List of role bindings that aren't considered default.
 	 */
 	public List<RoleBinding> getUserRoleBindings() {
-		return getRoleBindings().stream().filter(rb -> !rb.getMetadata().getName().matches("admin|system:deployers|system:image-builders|system:image-pullers")).collect(Collectors.toList());
+		return getRoleBindings().stream()
+				.filter(rb -> !rb.getMetadata().getName().matches("admin|system:deployers|system:image-builders|system:image-pullers"))
+				.filter(KEEP_LABEL_FILTER.negate())
+				.collect(Collectors.toList());
 	}
 
 	public boolean deleteRoleBinding(RoleBinding roleBinding) {

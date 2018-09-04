@@ -10,11 +10,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import cz.xtf.wait.SimpleWaiter;
@@ -68,6 +70,8 @@ public class OpenShiftUtil implements AutoCloseable {
 	private final NamespacedOpenShiftClient client;
 	private final OpenShiftWaiters waiters;
 	private final String namespace;
+
+	public static final String KEEP_LABEL = "xtf.cz/keep";
 
 	public OpenShiftUtil(OpenShiftConfig openShiftConfig) {
 		if (openShiftConfig.getNamespace() == null) {
@@ -346,7 +350,9 @@ public class OpenShiftUtil implements AutoCloseable {
 	 * @return List of secrets that aren't considered default.
 	 */
 	public List<Secret> getUserSecrets() {
-		return getSecrets().stream().filter(s -> !s.getType().startsWith("kubernetes.io/")).collect(Collectors.toList());
+		return client.secrets().withoutLabel(KEEP_LABEL).list().getItems().stream()
+				.filter(s -> !s.getType().startsWith("kubernetes.io/"))
+				.collect(Collectors.toList());
 	}
 
 	public boolean deleteSecret(Secret secret) {
@@ -590,7 +596,9 @@ public class OpenShiftUtil implements AutoCloseable {
 	 * @return List of service accounts that aren't considered default.
 	 */
 	public List<ServiceAccount> getUserServiceAccounts() {
-		return getServiceAccounts().stream().filter(sa -> !sa.getMetadata().getName().matches("builder|default|deployer")).collect(Collectors.toList());
+		return client.serviceAccounts().withoutLabel(KEEP_LABEL).list().getItems().stream()
+				.filter(sa -> !sa.getMetadata().getName().matches("builder|default|deployer"))
+				.collect(Collectors.toList());
 	}
 
 	public boolean deleteServiceAccount(ServiceAccount serviceAccount) {
@@ -627,7 +635,9 @@ public class OpenShiftUtil implements AutoCloseable {
 	 * @return List of role bindings that aren't considered default.
 	 */
 	public List<RoleBinding> getUserRoleBindings() {
-		return getRoleBindings().stream().filter(rb -> !rb.getMetadata().getName().matches("admin|system:deployers|system:image-builders|system:image-pullers")).collect(Collectors.toList());
+		return client.roleBindings().withoutLabel(KEEP_LABEL).list().getItems().stream()
+				.filter(rb -> !rb.getMetadata().getName().matches("admin|system:deployers|system:image-builders|system:image-pullers"))
+				.collect(Collectors.toList());
 	}
 
 	public boolean deleteRoleBinding(RoleBinding roleBinding) {
