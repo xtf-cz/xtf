@@ -59,19 +59,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class OpenShift extends DefaultOpenShiftClient {
 	private static String routeSuffix;
-	// Null-proofing getLabels
-	private final Predicate<HasMetadata> KEEP_LABEL_FILTER = (r) -> Optional.ofNullable(r.getMetadata().getLabels()).orElse(Collections.emptyMap()).containsKey("xtf.cz/keep");
+
+	public static final String KEEP_LABEL = "xtf.cz/keep";
 
 	public static OpenShift get(String masterUrl, String namespace, String username, String password) {
 		OpenShiftConfig openShiftConfig = new OpenShiftConfigBuilder()
@@ -321,8 +319,8 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return List of secrets that aren't considered default.
 	 */
 	public List<Secret> getUserSecrets() {
-		return getSecrets().stream().filter(s -> !s.getType().startsWith("kubernetes.io/"))
-				.filter(KEEP_LABEL_FILTER.negate())
+		return secrets().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().stream()
+				.filter(s -> !s.getType().startsWith("kubernetes.io/"))
 				.collect(Collectors.toList());
 	}
 
@@ -591,8 +589,8 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return List of service accounts that aren't considered default.
 	 */
 	public List<ServiceAccount> getUserServiceAccounts() {
-		return getServiceAccounts().stream().filter(sa -> !sa.getMetadata().getName().matches("builder|default|deployer"))
-				.filter(KEEP_LABEL_FILTER.negate())
+		return serviceAccounts().withoutLabel(KEEP_LABEL).list().getItems().stream()
+				.filter(sa -> !sa.getMetadata().getName().matches("builder|default|deployer"))
 				.collect(Collectors.toList());
 	}
 
@@ -630,9 +628,8 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return List of role bindings that aren't considered default.
 	 */
 	public List<RoleBinding> getUserRoleBindings() {
-		return getRoleBindings().stream()
+		return roleBindings().withoutLabel(KEEP_LABEL).list().getItems().stream()
 				.filter(rb -> !rb.getMetadata().getName().matches("admin|system:deployers|system:image-builders|system:image-pullers"))
-				.filter(KEEP_LABEL_FILTER.negate())
 				.collect(Collectors.toList());
 	}
 
@@ -882,25 +879,25 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 */
 	public Waiter clean() {
 		// keep the order for deletion to prevent K8s creating resources again
-		extensions().deployments().delete();
-		apps().statefulSets().delete();
-		extensions().jobs().delete();
-		getDeploymentConfigs().forEach(this::deleteDeploymentConfig);
-		getReplicationControllers().forEach(this::deleteReplicationController);
-		buildConfigs().delete();
-		imageStreams().delete();
-		endpoints().delete();
-		services().delete();
-		builds().delete();
-		routes().delete();
-		pods().withGracePeriod(0).delete();
-		persistentVolumeClaims().delete();
-		autoscaling().horizontalPodAutoscalers().delete();
-		configMaps().delete();
+		apps().deployments().withoutLabel(KEEP_LABEL).delete();
+		apps().statefulSets().withoutLabel(KEEP_LABEL).delete();
+		batch().jobs().withoutLabel(KEEP_LABEL).delete();
+		deploymentConfigs().withoutLabel(KEEP_LABEL).delete();
+		replicationControllers().withoutLabel(KEEP_LABEL).delete();
+		buildConfigs().withoutLabel(KEEP_LABEL).delete();
+		imageStreams().withoutLabel(KEEP_LABEL).delete();
+		endpoints().withoutLabel(KEEP_LABEL).delete();
+		services().withoutLabel(KEEP_LABEL).delete();
+		builds().withoutLabel(KEEP_LABEL).delete();
+		routes().withoutLabel(KEEP_LABEL).delete();
+		pods().withoutLabel(KEEP_LABEL).withGracePeriod(0).delete();
+		persistentVolumeClaims().withoutLabel(KEEP_LABEL).delete();
+		autoscaling().horizontalPodAutoscalers().withoutLabel(KEEP_LABEL).delete();
+		configMaps().withoutLabel(KEEP_LABEL).delete();
 		getUserSecrets().forEach(this::deleteSecret);
 		getUserServiceAccounts().forEach(this::deleteServiceAccount);
 		getUserRoleBindings().forEach(this::deleteRoleBinding);
-		roles().delete();
+		roles().withoutLabel(KEEP_LABEL).delete();
 
 		return waiters.isProjectClean();
 	}
