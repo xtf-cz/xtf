@@ -72,6 +72,9 @@ public class XTFConfiguration {
 	private static final String TEMPLATE_REPO = "xtf.config.template.repo";
 	private static final String TEMPLATE_BRANCH = "xtf.config.template.branch";
 
+	private static final String OREG_AUTH = "xtf.config.oreg.auth";
+	private static final String OREG_REGISTRY = "xtf.config.oreg.registry";
+
 	private static final String OPENSTACK_URL = "xtf.config.openstack.url";
 	private static final String OPENSTACK_TENANT = "xtf.config.openstack.tenant";
 	private static final String OPENSTACK_OPEN_SECURITY_GROUP = "xtf.config.openstack.security.group.open";
@@ -172,6 +175,14 @@ public class XTFConfiguration {
 		}
 
 		return result;
+	}
+
+	public static String oregAuth() {
+		return get().readValue(OREG_AUTH);
+	}
+
+	public static String oregRegistry() {
+		return get().readValue(OREG_REGISTRY);
 	}
 
 	public static String proxyHost() {
@@ -627,6 +638,12 @@ public class XTFConfiguration {
 					break;
 				case "FUSE_DISABLE_JOLOKIA":
 					props.setProperty(FUSE_DISABLE_JOLOKIA, entry.getValue());
+					break;
+				case "OREG_AUTH":
+					props.setProperty(OREG_AUTH, entry.getValue());
+					break;
+				case "OREG_REGISTRY":
+					props.setProperty(OREG_REGISTRY, entry.getValue());
 					break;
 				case "OPENSTACK_URL":
 					props.setProperty(OPENSTACK_URL, entry.getValue());
