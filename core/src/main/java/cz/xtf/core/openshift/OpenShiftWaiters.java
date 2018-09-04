@@ -59,21 +59,21 @@ public class OpenShiftWaiters {
 	public Waiter isProjectClean() {
 		BooleanSupplier bs = () -> {
 			List<Boolean> cleanedResources = new ArrayList<>();
-			cleanedResources.add(openShift.extensions().deployments().list().getItems().isEmpty());
-			cleanedResources.add(openShift.extensions().jobs().list().getItems().isEmpty());
-			cleanedResources.add(openShift.getDeploymentConfigs().isEmpty());
-			cleanedResources.add(openShift.apps().statefulSets().list().getItems().isEmpty());
-			cleanedResources.add(openShift.replicationControllers().list().getItems().isEmpty());
-			cleanedResources.add(openShift.getBuildConfigs().isEmpty());
-			cleanedResources.add(openShift.getImageStreams().isEmpty());
-			cleanedResources.add(openShift.getEndpoints().isEmpty());
-			cleanedResources.add(openShift.getServices().isEmpty());
-			cleanedResources.add(openShift.getBuilds().isEmpty());
-			cleanedResources.add(openShift.getRoutes().isEmpty());
-			cleanedResources.add(openShift.getPods().isEmpty());
-			cleanedResources.add(openShift.getPersistentVolumeClaims().isEmpty());
-			cleanedResources.add(openShift.getHorizontalPodAutoscalers().isEmpty());
-			cleanedResources.add(openShift.getConfigMaps().isEmpty());
+			cleanedResources.add(openShift.apps().deployments().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.batch().jobs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.deploymentConfigs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.apps().statefulSets().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.replicationControllers().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.buildConfigs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.imageStreams().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.endpoints().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.services().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.builds().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.routes().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.pods().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.persistentVolumeClaims().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.autoscaling().horizontalPodAutoscalers().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
+			cleanedResources.add(openShift.configMaps().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
 			cleanedResources.add(openShift.getUserSecrets().isEmpty());
 			cleanedResources.add(openShift.getUserServiceAccounts().isEmpty());
 			cleanedResources.add(openShift.getUserRoleBindings().isEmpty());

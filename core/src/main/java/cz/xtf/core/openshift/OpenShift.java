@@ -69,6 +69,8 @@ import java.util.stream.Collectors;
 public class OpenShift extends DefaultOpenShiftClient {
 	private static String routeSuffix;
 
+	public static final String KEEP_LABEL = "xtf.cz/keep";
+
 	public static OpenShift get(String masterUrl, String namespace, String username, String password) {
 		OpenShiftConfig openShiftConfig = new OpenShiftConfigBuilder()
 				.withMasterUrl(masterUrl)
@@ -317,7 +319,9 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return List of secrets that aren't considered default.
 	 */
 	public List<Secret> getUserSecrets() {
-		return getSecrets().stream().filter(s -> !s.getType().startsWith("kubernetes.io/")).collect(Collectors.toList());
+		return secrets().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().stream()
+				.filter(s -> !s.getType().startsWith("kubernetes.io/"))
+				.collect(Collectors.toList());
 	}
 
 	public boolean deleteSecret(Secret secret) {
@@ -585,7 +589,9 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return List of service accounts that aren't considered default.
 	 */
 	public List<ServiceAccount> getUserServiceAccounts() {
-		return getServiceAccounts().stream().filter(sa -> !sa.getMetadata().getName().matches("builder|default|deployer")).collect(Collectors.toList());
+		return serviceAccounts().withoutLabel(KEEP_LABEL).list().getItems().stream()
+				.filter(sa -> !sa.getMetadata().getName().matches("builder|default|deployer"))
+				.collect(Collectors.toList());
 	}
 
 	public boolean deleteServiceAccount(ServiceAccount serviceAccount) {
@@ -622,7 +628,9 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return List of role bindings that aren't considered default.
 	 */
 	public List<RoleBinding> getUserRoleBindings() {
-		return getRoleBindings().stream().filter(rb -> !rb.getMetadata().getName().matches("admin|system:deployers|system:image-builders|system:image-pullers")).collect(Collectors.toList());
+		return roleBindings().withoutLabel(KEEP_LABEL).list().getItems().stream()
+				.filter(rb -> !rb.getMetadata().getName().matches("admin|system:deployers|system:image-builders|system:image-pullers"))
+				.collect(Collectors.toList());
 	}
 
 	public boolean deleteRoleBinding(RoleBinding roleBinding) {
@@ -871,25 +879,25 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 */
 	public Waiter clean() {
 		// keep the order for deletion to prevent K8s creating resources again
-		extensions().deployments().delete();
-		apps().statefulSets().delete();
-		extensions().jobs().delete();
-		getDeploymentConfigs().forEach(this::deleteDeploymentConfig);
-		getReplicationControllers().forEach(this::deleteReplicationController);
-		buildConfigs().delete();
-		imageStreams().delete();
-		endpoints().delete();
-		services().delete();
-		builds().delete();
-		routes().delete();
-		pods().withGracePeriod(0).delete();
-		persistentVolumeClaims().delete();
-		autoscaling().horizontalPodAutoscalers().delete();
-		configMaps().delete();
+		apps().deployments().withoutLabel(KEEP_LABEL).delete();
+		apps().statefulSets().withoutLabel(KEEP_LABEL).delete();
+		batch().jobs().withoutLabel(KEEP_LABEL).delete();
+		deploymentConfigs().withoutLabel(KEEP_LABEL).delete();
+		replicationControllers().withoutLabel(KEEP_LABEL).delete();
+		buildConfigs().withoutLabel(KEEP_LABEL).delete();
+		imageStreams().withoutLabel(KEEP_LABEL).delete();
+		endpoints().withoutLabel(KEEP_LABEL).delete();
+		services().withoutLabel(KEEP_LABEL).delete();
+		builds().withoutLabel(KEEP_LABEL).delete();
+		routes().withoutLabel(KEEP_LABEL).delete();
+		pods().withoutLabel(KEEP_LABEL).withGracePeriod(0).delete();
+		persistentVolumeClaims().withoutLabel(KEEP_LABEL).delete();
+		autoscaling().horizontalPodAutoscalers().withoutLabel(KEEP_LABEL).delete();
+		configMaps().withoutLabel(KEEP_LABEL).delete();
 		getUserSecrets().forEach(this::deleteSecret);
 		getUserServiceAccounts().forEach(this::deleteServiceAccount);
 		getUserRoleBindings().forEach(this::deleteRoleBinding);
-		roles().delete();
+		roles().withoutLabel(KEEP_LABEL).delete();
 
 		return waiters.isProjectClean();
 	}
