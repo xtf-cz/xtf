@@ -16,6 +16,7 @@ import java.util.concurrent.TimeoutException;
 import static cz.xtf.TestConfiguration.masterNamespace;
 import static cz.xtf.TestConfiguration.masterPassword;
 import static cz.xtf.TestConfiguration.masterUsername;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
@@ -77,6 +78,8 @@ public class ProjectHandler {
 		}
 		// restore original context
 		openshift.setOpenShiftContext(originalContext);
+
+		OpenShiftUtils.master().createORegSecret();
 
 		log.info("action=create-project status=FINISH project={} recreate=true", project);
 	}

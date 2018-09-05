@@ -7,7 +7,7 @@ public enum SecretType {
 
 	OPAQUE("Opaque"),
 	SERVICE_ACCOUNT("kubernetes.io/service-account-token"),
-	DOCKERCFG("kubernetes.io/dockercfg");
+	DOCKERCFG("kubernetes.io/dockerconfigjson");
 
 	private final String text;
 

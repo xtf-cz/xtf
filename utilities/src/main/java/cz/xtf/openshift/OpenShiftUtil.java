@@ -10,15 +10,16 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import cz.xtf.TestConfiguration;
+import cz.xtf.openshift.builder.SecretBuilder;
+import cz.xtf.openshift.builder.secret.SecretType;
 import cz.xtf.wait.SimpleWaiter;
 import cz.xtf.wait.Waiters;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -29,6 +30,7 @@ import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
@@ -357,6 +359,37 @@ public class OpenShiftUtil implements AutoCloseable {
 
 	public boolean deleteSecret(Secret secret) {
 		return client.secrets().delete(secret);
+	}
+
+	/**
+	 * Creates the secret needed for an authenticated external registry (e.g. registry.redhat.io ) and adds it to the default and builder service accounts
+	 * Uses the TestConfiguration.oregRegistry and TestConfiguration.oregAuth properties
+	 * @return
+	 */
+	public Secret createORegSecret() {
+		if (TestConfiguration.oregRegistry() != null && !TestConfiguration.oregRegistry().trim().isEmpty()) {
+
+			final String secretName = TestConfiguration.oregRegistry();
+
+			Secret oregSecret = getSecret(secretName);
+			if (oregSecret != null) {
+				deleteSecret(oregSecret);
+			}
+
+			Secret dockerCfg = new SecretBuilder(secretName)
+					.setType(SecretType.DOCKERCFG)
+					.addData(".dockerconfigjson", ("{\"auths\":{\"" + TestConfiguration.oregRegistry() + "\":{\"auth\":\"" + TestConfiguration.oregAuth() + "\"}}}").getBytes())
+					.build();
+			dockerCfg.getMetadata().setLabels(Collections.singletonMap(KEEP_LABEL, "keep"));
+			dockerCfg = createSecret(dockerCfg);
+
+			client().serviceAccounts().withName("builder").edit().addToSecrets(new ObjectReferenceBuilder().withKind("Secret").withName(secretName).build()).done();
+			client().serviceAccounts().withName("default").edit().addToSecrets(new ObjectReferenceBuilder().withKind("Secret").withName(secretName).build()).addToImagePullSecrets(new LocalObjectReference(secretName)).done();
+
+			return dockerCfg;
+		}
+
+		return null;
 	}
 
 	// Services

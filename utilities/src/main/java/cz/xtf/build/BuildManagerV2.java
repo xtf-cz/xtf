@@ -42,6 +42,7 @@ public class BuildManagerV2 {
 		if (!TestConfiguration.buildNamespace().equals(TestConfiguration.masterNamespace())) {
 			if (master.getProject(buildNamespace) == null) {
 				master.createProjectRequest();
+				master.createORegSecret();
 			}
 
 			master.addRoleToGroup("system:image-puller", "system:authenticated");
