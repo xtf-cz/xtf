@@ -6,7 +6,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 public class ResourceParsers {
 
 	public static boolean isPodReady(Pod pod) {
-		return pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady);
+		return pod.getStatus().getContainerStatuses().size() > 0 && pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady);
 	}
 
 	public static boolean isPodRunning(Pod pod) {
@@ -18,7 +18,7 @@ public class ResourceParsers {
 	}
 
 	public static boolean hasPodRestartedAtLeastNTimes(Pod pod, int n) {
-		return pod.getStatus().getContainerStatuses().stream().anyMatch(x -> x.getRestartCount() >= n);
+		return pod.getStatus().getContainerStatuses().size() > 0 && pod.getStatus().getContainerStatuses().stream().anyMatch(x -> x.getRestartCount() >= n);
 	}
 
 	private ResourceParsers() {
