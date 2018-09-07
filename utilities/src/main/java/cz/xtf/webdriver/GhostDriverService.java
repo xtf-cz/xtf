@@ -127,7 +127,7 @@ public class GhostDriverService implements Service {
 	public synchronized void close() {
 		if (ghostDriverPod != null) {
 
-			Predicate<HasMetadata> isPhantomJs = resource -> "phantomjs".equals(resource.getMetadata().getLabels().get("name"));
+			Predicate<HasMetadata> isPhantomJs = resource -> "phantomjs".equals(resource.getMetadata().getLabels() != null ? resource.getMetadata().getLabels().get("name") : null);
 
 			OpenshiftUtil.getInstance().getPods().stream().filter(isPhantomJs).forEach(OpenshiftUtil.getInstance()::deletePod);
 			//FIXME OpenshiftUtil.getInstance().getRoutes().stream().filter(isPhantomJs).forEach(OpenshiftUtil.getInstance()::deleteResource);
