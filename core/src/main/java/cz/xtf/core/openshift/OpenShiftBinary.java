@@ -9,31 +9,17 @@ import java.util.Arrays;
 @Slf4j
 public class OpenShiftBinary {
 	private final String path;
-	private final String url;
-	private final String token;
-	private final String username;
-	private final String password;
 
-	public OpenShiftBinary(String path, String url, String token) {
+	public OpenShiftBinary(String path) {
 		this.path = path;
-		this.url = url;
-		this.token = token;
-		this.username = null;
-		this.password = null;
 	}
 
-	public OpenShiftBinary(String path, String url, String username, String password) {
-		this.path = path;
-		this.url = url;
-		this.token = null;
-		this.username = username;
-		this.password = password;
+	public void login(String url, String token) {
+		this.execute("login", url, "--insecure-skip-tls-verify=true", "--token=" + token);
 	}
 
-	// OC specialized methods
-	public void login() {
-		if (token != null) this.execute("login", url, "--insecure-skip-tls-verify=true", "--token=" + token);
-		else this.execute("login", url, "--insecure-skip-tls-verify=true", "-u", username, "-p", password);
+	public void login(String url, String username, String password) {
+		this.execute("login", url, "--insecure-skip-tls-verify=true", "-u", username, "-p", password);
 	}
 
 	public void project(String projectName) {
