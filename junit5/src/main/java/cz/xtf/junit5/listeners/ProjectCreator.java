@@ -1,9 +1,9 @@
-package cz.xtf.junit.listeners;
+package cz.xtf.junit5.listeners;
 
 import cz.xtf.core.config.OpenShiftConfig;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.openshift.OpenShifts;
-import cz.xtf.junit.config.JUnitConfig;
+import cz.xtf.junit5.config.JUnitConfig;
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 
