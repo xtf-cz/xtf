@@ -1,4 +1,4 @@
-package cz.xtf.junit.listeners;
+package cz.xtf.junit5.listeners;
 
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.launcher.TestExecutionListener;
@@ -55,6 +55,7 @@ public class TestResultReporter implements TestExecutionListener {
 					testResultWriter.recordFailedTest(testId, className, methodName, testExecutionResult.getThrowable().orElseThrow(() -> new IllegalStateException("Failed test didn't throw anything!")));
 					break;
 				case ABORTED:
+					testResultWriter.recordSkippedTest(testId, className, methodName, testExecutionResult.getThrowable().orElse(new IllegalStateException()).getMessage());
 				default:
 					break;
 			}

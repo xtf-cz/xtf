@@ -1,4 +1,4 @@
-package cz.xtf.junit.config;
+package cz.xtf.junit5.config;
 
 import cz.xtf.core.config.XTFConfig;
 
