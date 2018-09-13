@@ -335,6 +335,9 @@ public class TestConfiguration extends XTFConfiguration {
 				case "IMAGE_AMQ7":
 					props.setProperty(IMAGE_AMQ7, entry.getValue());
 					break;
+				case "IMAGE_AMQ7_CONTROLLER":
+					props.setProperty(IMAGE_AMQ7_CONTROLLER, entry.getValue());
+					break;
 				case "IMAGE_POSTGRES":
 					props.setProperty(IMAGE_POSTGRES, entry.getValue());
 					break;
