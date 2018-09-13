@@ -22,6 +22,7 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String IMAGE_TOMCAT9 = IMAGE_EWS_PREFIX + "9";
 	public static final String IMAGE_AMQ = "xtf.amq";
 	public static final String IMAGE_AMQ7 = "xtf.amq.7";
+	public static final String IMAGE_AMQ7_CONTROLLER = "xtf.amq.7.controller";
 	public static final String IMAGE_POSTGRES = "org.postgresql";
 	public static final String IMAGE_DERBY = "org.apache.derby";
 	public static final String IMAGE_MYSQL = "com.mysql";
@@ -168,6 +169,10 @@ public class TestConfiguration extends XTFConfiguration {
 
 	public static String imageAmq7() {
 		return getProperty(IMAGE_AMQ7);
+	}
+
+	public static String imageAmq7Controller() {
+		return getProperty(IMAGE_AMQ7_CONTROLLER);
 	}
 
 	public static String imagePostgres() {
