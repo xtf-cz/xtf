@@ -102,6 +102,10 @@ public class ImageRegistry {
 		return normalize(TestConfiguration.imageAmq7());
 	}
 
+	public String amq7Controller() {
+		return normalize(TestConfiguration.imageAmq7Controller());
+	}
+
 	public String postgresql() {
 		return normalize(TestConfiguration.imagePostgres());
 	}
