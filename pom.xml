@@ -12,6 +12,7 @@
 		<module>core</module>
 		<module>junit5</module>
 		<module>http-client</module>
+		<module>product</module>
 		<module>test-helpers</module>
 		<module>utilities</module>
 	</modules>

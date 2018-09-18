@@ -1,5 +1,6 @@
 package cz.xtf.core.image;
 
+import cz.xtf.core.config.XTFConfig;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamBuilder;
 import io.fabric8.openshift.api.model.TagReference;
@@ -11,6 +12,34 @@ import java.util.List;
 
 @Getter
 public class Image {
+
+	public static Image get(String id) {
+		String imageUrl = XTFConfig.get("xtf." + id + ".image");
+		return imageUrl == null ? null : Image.from(imageUrl);
+	}
+
+	public static Image resolve(String id) {
+		Image image = Image.get(id);
+		if (image != null) return image;
+
+		String subid = XTFConfig.get("xtf." + id + ".subid");
+
+		image = Image.get(id + "." + subid);
+		if (image == null) throw new UnknownImageException("Unable to get image using " + id + " or " + subid);
+
+		String customReg = XTFConfig.get("xtf." + id + ".reg");
+		String customRegId = XTFConfig.get("xtf." + id + ".regid");
+		String customUser = XTFConfig.get("xtf." + id + ".user");
+		String customTag = XTFConfig.get("xtf." + id + ".tag");
+
+		String reg = customRegId != null ? XTFConfig.get("xtf.registry." + customRegId) : customReg;
+		reg = reg != null ? reg : image.getRegistry();
+		String user = customUser != null ? customUser : image.getUser();
+		String tag = customTag != null ? customTag : image.getTag();
+
+		return new Image(reg, user, image.getRepo(), tag);
+	}
+
 	public static Image from(String imageUrl) {
 		final String[] slashTokens = imageUrl.split("/");
 		final String repoTag;
@@ -21,10 +50,23 @@ public class Image {
 		final String tag;
 
 		switch (slashTokens.length) {
-			case 1:registry = ""; user= ""; repoTag = slashTokens[0];break;
-			case 2:registry = ""; user = slashTokens[0]; repoTag = slashTokens[1];break;
-			case 3:registry = slashTokens[0]; user = slashTokens[1]; repoTag = slashTokens[2]; break;
-			default: throw new IllegalArgumentException("image '" + imageUrl + "' should have one or two '/' characters");
+			case 1:
+				registry = "";
+				user = "";
+				repoTag = slashTokens[0];
+				break;
+			case 2:
+				registry = "";
+				user = slashTokens[0];
+				repoTag = slashTokens[1];
+				break;
+			case 3:
+				registry = slashTokens[0];
+				user = slashTokens[1];
+				repoTag = slashTokens[2];
+				break;
+			default:
+				throw new IllegalArgumentException("image '" + imageUrl + "' should have one or two '/' characters");
 		}
 
 		final String[] tokens = repoTag.split(":");
@@ -37,7 +79,8 @@ public class Image {
 				repo = tokens[0];
 				tag = tokens[1];
 				break;
-			default: throw new IllegalArgumentException("repoTag '" + repoTag + "' should have zero or two ':' characters");
+			default:
+				throw new IllegalArgumentException("repoTag '" + repoTag + "' should have zero or two ':' characters");
 		}
 		return new Image(registry, user, repo, tag);
 	}
