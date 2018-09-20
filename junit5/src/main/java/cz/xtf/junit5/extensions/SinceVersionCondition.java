@@ -16,10 +16,10 @@ public class SinceVersionCondition implements ExecutionCondition {
 			Image image = Image.resolve(sinceVersion.image());
 			if (image.getRepo().equals(sinceVersion.name())) {
 				if (image.isVersionAtLeast(sinceVersion.since())) {
-					ConditionEvaluationResult.enabled("Image tag is equal or bigger then expected. Tested feature should be available.");
+					return ConditionEvaluationResult.enabled("Image tag is equal or bigger then expected. Tested feature should be available.");
 				} else {
 					String jiraInfo = sinceVersion.jira().equals("") ? "" : " See " + sinceVersion.jira() + " for more info.";
-					ConditionEvaluationResult.disabled("Image tag didn't met target tag. Tested feature isn't expected to be present." + jiraInfo);
+					return ConditionEvaluationResult.disabled("Image tag didn't met target tag. Tested feature isn't expected to be present." + jiraInfo);
 				}
 			} else {
 				return ConditionEvaluationResult.enabled("Expected image repo name didn't matched actual. Image is expected to contain tested feature.");
