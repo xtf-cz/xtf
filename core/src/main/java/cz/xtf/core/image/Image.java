@@ -118,4 +118,19 @@ public class Image {
 		}
 		return new ImageStreamBuilder().withNewMetadata().withName(name).addToAnnotations("openshift.io/image.insecureRepository", "true").and().withNewSpec().withTags(tagRefs).endSpec().build();
 	}
+
+	public boolean isVersionAtLeast(String version) {
+		String majorTag = this.getMajorTag();
+		if (getMajorTag().matches("[0-9]+\\.[0-9]+")) {
+			int imageMajor = Integer.valueOf(majorTag.split("\\.")[0]);
+			int imageMinor = Integer.valueOf(majorTag.split("\\.")[1]);
+
+			int targetMajor = Integer.valueOf(version.split("\\.")[0]);
+			int targetMinor = Integer.valueOf(version.split("\\.")[1]);
+
+			return (imageMajor >= targetMajor && imageMinor >= targetMinor);
+		} else {
+			return true;
+		}
+	}
 }
