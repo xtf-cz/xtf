@@ -58,7 +58,7 @@ public final class XTFConfig {
 		Properties properties = new Properties();
 
 		if(Files.isReadable(path)) {
-			try (InputStream is = Files.newInputStream(testPropertiesPath)) {
+			try (InputStream is = Files.newInputStream(path)) {
 				properties.load(is);
 			} catch (final IOException ex) {
 				log.warn("Unable to read properties from '{}'", path, ex);
