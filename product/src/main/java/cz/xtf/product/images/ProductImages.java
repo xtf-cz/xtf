@@ -2,7 +2,7 @@ package cz.xtf.product.images;
 
 import cz.xtf.core.image.Image;
 
-public class Images {
+public class ProductImages {
 
 	public static Image amq() {
 		return Image.resolve("amq");
@@ -40,6 +40,6 @@ public class Images {
 		return Image.resolve("sso");
 	}
 
-	private Images() {
+	private ProductImages() {
 	}
 }

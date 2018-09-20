@@ -211,14 +211,17 @@ public class ImageRegistry {
 	}
 
 	public static boolean isVersionAtLeast(final BigDecimal version, final String image) {
-		final String imageTag = new Image(image).getImageTag();
+		final String tVersion = version.toString();
+		final String majorTag = new Image(image).getImageTag().split("-")[0];
+		if(majorTag.matches("[0-9]+\\.[0-9]+")) {
+			int imageMajor = Integer.valueOf(majorTag.split("\\.")[0]);
+			int imageMinor = Integer.valueOf(majorTag.split("\\.")[1]);
 
-		final String[] split = imageTag.split("-");
+			int targetMajor = Integer.valueOf(tVersion.split("\\.")[0]);
+			int targetMinor = Integer.valueOf(tVersion.split("\\.")[1]);
 
-		try {
-			return new BigDecimal(split[0]).compareTo(version) >= 0;
-		} catch (final NumberFormatException x) {
-			// no tag, or latest, we default to being always the greatest version
+			return (imageMajor >= targetMajor && imageMinor >= targetMinor);
+		} else {
 			return true;
 		}
 	}
