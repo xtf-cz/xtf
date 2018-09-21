@@ -1,0 +1,40 @@
+package cz.xtf.junit5.extensions;
+
+import cz.xtf.core.image.Image;
+import cz.xtf.junit5.annotations.SkipFor;
+import cz.xtf.junit5.annotations.SkipFors;
+import org.junit.jupiter.api.extension.ConditionEvaluationResult;
+import org.junit.jupiter.api.extension.ExecutionCondition;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.platform.commons.support.AnnotationSupport;
+
+public class SkipForCondition implements ExecutionCondition {
+
+	@Override
+	public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+		SkipFor skipFor = AnnotationSupport.findAnnotation(context.getElement(), SkipFor.class).orElse(null);
+		SkipFors skipFors = AnnotationSupport.findAnnotation(context.getElement(), SkipFors.class).orElse(null);
+
+		if (skipFor != null) {
+			return this.resolve(skipFor);
+		} else if (skipFors != null) {
+			for (SkipFor sf : skipFors.value()) {
+				ConditionEvaluationResult cer = this.resolve(sf);
+				if (cer.isDisabled()) return cer;
+			}
+			return  ConditionEvaluationResult.enabled("Feature is expected to be available.");
+		}
+
+		return ConditionEvaluationResult.enabled("SkipFor(s) annotation isn't present on target.");
+	}
+
+	private ConditionEvaluationResult resolve(SkipFor skipFor) {
+		Image image = Image.resolve(skipFor.image());
+		if (image.getRepo().equals(skipFor.name())) {
+			String reason = skipFor.reason().equals("") ? "" : " (" + skipFor.reason() + ")";
+			return ConditionEvaluationResult.disabled("Tested feature isn't expected to be available in '" + image.getRepo() + "' image." + reason);
+		} else {
+			return ConditionEvaluationResult.enabled("Image '" + image.getRepo() + "' is expected to contain tested feature.");
+		}
+	}
+}
