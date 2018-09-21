@@ -1,6 +1,6 @@
 package cz.xtf.junit5.annotations;
 
-import cz.xtf.junit5.extensions.SinceVersionCondition;
+import cz.xtf.junit5.extensions.SkipForCondition;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.lang.annotation.ElementType;
@@ -11,15 +11,13 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
-@Repeatable(SinceVersions.class)
-@ExtendWith(SinceVersionCondition.class)
-public @interface SinceVersion {
+@Repeatable(SkipFors.class)
+@ExtendWith(SkipForCondition.class)
+public @interface SkipFor {
 
 	String name();
 
 	String image();
 
-	String since();
-
-	String jira() default "";
+	String reason() default "";
 }
