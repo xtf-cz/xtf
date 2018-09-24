@@ -2,7 +2,8 @@ package cz.xtf.manipulation;
 
 import cz.xtf.TestConfiguration;
 import cz.xtf.UsageRecorder;
-import cz.xtf.openshift.OpenshiftUtil;
+import cz.xtf.openshift.OpenShiftUtil;
+import cz.xtf.openshift.OpenShiftUtils;
 import cz.xtf.openshift.builder.ImageStreamBuilder;
 import cz.xtf.openshift.imagestream.ImageStreamRequest;
 import io.fabric8.openshift.api.model.ImageStream;
@@ -50,7 +51,7 @@ public final class ImageStreamProcessor {
 	public static void createImageStream(String name, String fromImage, String... customTags) {
 		UsageRecorder.recordImage(name, fromImage);
 
-		final OpenshiftUtil openshift = OpenshiftUtil.getInstance();
+		final OpenShiftUtil openshift = OpenShiftUtils.admin(IS_NAMESPACE);
 		final ImageStreamBuilder isBuilder = new ImageStreamBuilder(name).insecure();
 		for (final String tag : customTags) {
 			isBuilder.addTag(tag, fromImage);
@@ -58,8 +59,8 @@ public final class ImageStreamProcessor {
 		final ImageStream is = isBuilder.build();
 
 		log.info("action=create-image-stream status=START name={} image={} tags={}", name, fromImage, customTags);
-		openshift.deleteImageStream(is, IS_NAMESPACE);
-		openshift.createImageStream(is, IS_NAMESPACE);
+		openshift.deleteImageStream(is);
+		openshift.createImageStream(is);
 		log.info("action=create-image-stream status=FINISH name={} image={} tags={}", name, fromImage, customTags);
 	}
 }
