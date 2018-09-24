@@ -1,5 +1,6 @@
 package cz.xtf.manipulation;
 
+import cz.xtf.TestConfiguration;
 import cz.xtf.UsageRecorder;
 import cz.xtf.openshift.OpenshiftUtil;
 import cz.xtf.openshift.builder.ImageStreamBuilder;
@@ -15,7 +16,7 @@ import java.util.List;
 @Slf4j
 public final class ImageStreamProcessor {
 
-	public static final String IS_NAMESPACE = "openshift";
+	public static final String IS_NAMESPACE = TestConfiguration.imageStreamNamespace();
 
 	private ImageStreamProcessor() {
 		// util class, do not initialize
@@ -57,8 +58,8 @@ public final class ImageStreamProcessor {
 		final ImageStream is = isBuilder.build();
 
 		log.info("action=create-image-stream status=START name={} image={} tags={}", name, fromImage, customTags);
-		openshift.withAdminUser(client -> client.inNamespace(IS_NAMESPACE).imageStreams().withName(name).delete());
-		openshift.withAdminUser(client -> client.inNamespace(IS_NAMESPACE).imageStreams().create(is));
+		openshift.deleteImageStream(is, IS_NAMESPACE);
+		openshift.createImageStream(is, IS_NAMESPACE);
 		log.info("action=create-image-stream status=FINISH name={} image={} tags={}", name, fromImage, customTags);
 	}
 }
