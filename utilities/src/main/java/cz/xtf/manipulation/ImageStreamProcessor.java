@@ -51,7 +51,7 @@ public final class ImageStreamProcessor {
 	public static void createImageStream(String name, String fromImage, String... customTags) {
 		UsageRecorder.recordImage(name, fromImage);
 
-		final OpenShiftUtil openshift = OpenShiftUtils.admin(IS_NAMESPACE);
+		final OpenShiftUtil openshift = TestConfiguration.openshiftOnline() ? OpenShiftUtils.master(IS_NAMESPACE) : OpenShiftUtils.admin(IS_NAMESPACE);
 		final ImageStreamBuilder isBuilder = new ImageStreamBuilder(name).insecure();
 		for (final String tag : customTags) {
 			isBuilder.addTag(tag, fromImage);
