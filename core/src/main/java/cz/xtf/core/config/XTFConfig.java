@@ -15,10 +15,10 @@ import java.util.stream.Collectors;
  * Loads properties stored in several different ways. Possible options, with top to down overriding are: </br>
  *
  * <ul>
- *	<li><i>global-test.properties</i> on project root path</li>
- *	<li><i>test.properties</i> on project root path - meant to be user specific, unshared</li>
- *	<li><i>environment variables</i> in System.getEnv()</li>
- *	<li><i>system properties</i> in System.getProperties()</li>
+ * <li><i>global-test.properties</i> on project root path</li>
+ * <li><i>test.properties</i> on project root path - meant to be user specific, unshared</li>
+ * <li><i>environment variables</i> in System.getEnv()</li>
+ * <li><i>system properties</i> in System.getProperties()</li>
  * </ul>
  */
 @Slf4j
@@ -38,6 +38,9 @@ public final class XTFConfig {
 		properties.putAll(XTFConfig.getPropertiesFromPath(testPropertiesPath));
 		properties.putAll(System.getenv().entrySet().stream().collect(Collectors.toMap(e -> e.getKey().replaceAll("_", ".").toLowerCase(), Map.Entry::getValue)));
 		properties.putAll(System.getProperties());
+
+		// Set new values based on old properties if new are not set
+		BackwardCompatibility.updateProperties();
 	}
 
 	public static String get(String property) {
@@ -48,16 +51,20 @@ public final class XTFConfig {
 		return properties.getProperty(property, fallbackValue);
 	}
 
+	static void setProperty(String property, String value) {
+		properties.setProperty(property, value);
+	}
+
 	private static Path getProjectRoot() {
 		Path dir = Paths.get("").toAbsolutePath();
-		while(dir.getParent().resolve("pom.xml").toFile().exists()) dir = dir.getParent();
+		while (dir.getParent().resolve("pom.xml").toFile().exists()) dir = dir.getParent();
 		return dir;
 	}
 
 	private static Properties getPropertiesFromPath(Path path) {
 		Properties properties = new Properties();
 
-		if(Files.isReadable(path)) {
+		if (Files.isReadable(path)) {
 			try (InputStream is = Files.newInputStream(path)) {
 				properties.load(is);
 			} catch (final IOException ex) {
