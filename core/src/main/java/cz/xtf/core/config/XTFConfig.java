@@ -36,7 +36,7 @@ public final class XTFConfig {
 
 		properties.putAll(XTFConfig.getPropertiesFromPath(globalPropertiesPath));
 		properties.putAll(XTFConfig.getPropertiesFromPath(testPropertiesPath));
-		properties.putAll(System.getenv().entrySet().stream().collect(Collectors.toMap(e -> e.getKey().replaceAll("_", ".").toLowerCase(), Map.Entry::getValue)));
+		properties.putAll(System.getenv().entrySet().stream().collect(Collectors.toMap(e -> "xtf." + e.getKey().replaceAll("_", ".").toLowerCase(), Map.Entry::getValue)));
 		properties.putAll(System.getProperties());
 
 		// Set new values based on old properties if new are not set

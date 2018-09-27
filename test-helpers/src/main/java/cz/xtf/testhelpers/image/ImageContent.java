@@ -7,6 +7,7 @@ import cz.xtf.core.openshift.helpers.ResourceParsers;
 import cz.xtf.core.waiting.SimpleWaiter;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodSpec;
@@ -37,20 +38,37 @@ public class ImageContent {
 		return ImageContent.prepare(openShift, imageUrl, "test-pod", null);
 	}
 
+	public static ImageContent prepare(OpenShift openShift, String imageUrl, Map<String, String> envs) {
+		return ImageContent.prepare(openShift, imageUrl, "test-pod", null, envs);
+	}
+
+	public static ImageContent prepare(OpenShift openShift, String imageUrl, List<String> command) {
+		return ImageContent.prepare(openShift, imageUrl, "test-pod", command, Collections.emptyMap());
+	}
+
 	public static ImageContent prepare(OpenShift openShift, String imageUrl, String name, List<String> command) {
-		final Pod pod = ImageContent.getPod(imageUrl, name, command);
+		return ImageContent.prepare(openShift, imageUrl, name, command, Collections.emptyMap());
+	}
+
+	public static ImageContent prepare(OpenShift openShift, String imageUrl, String name, List<String> command, Map<String, String> envs) {
+		final Pod pod = ImageContent.getPod(imageUrl, name, command, envs);
 
 		openShift.createPod(pod);
 
 		BooleanSupplier bs = () -> ResourceParsers.isPodRunning(openShift.getPod(name));
-		new SimpleWaiter(bs, "Waiting for '" + name + "' pod to be running").timeout(WaitingConfig.timeout()).waitForOrAssertFail("'" + name + "' pod didn't started in time!");
+		new SimpleWaiter(bs, "Waiting for '" + name + "' pod to be running").timeout(WaitingConfig.timeout()).waitFor();
 
+		return ImageContent.prepare(openShift, pod);
+	}
+
+	public static ImageContent prepare(OpenShift openShift, Pod pod) {
 		return new ImageContent(new PodShell(openShift, pod));
 	}
 
-	private static Pod getPod(String imageUrl, String name, List<String> command) {
+	private static Pod getPod(String imageUrl, String name, List<String> command, Map<String, String> envs) {
 		Container container = new ContainerBuilder().withName(name).withImage(imageUrl).build();
 		if(command != null) container.setCommand(command);
+		container.setEnv(envs.entrySet().stream().map(e -> new EnvVar(e.getKey(), e.getValue(), null)).collect(Collectors.toList()));
 
 		PodSpec podSpec = new PodSpec();
 		podSpec.setContainers(Collections.singletonList(container));
@@ -76,7 +94,7 @@ public class ImageContent {
 	}
 
 	public Map<String, String> runtimeEnvVars() {
-		shell.execute("env").waitForOrAssertFail();
+		shell.execute("env").waitFor();
 		return shell.getOutputAsMap("=");
 	}
 
@@ -86,12 +104,12 @@ public class ImageContent {
 
 	public List<String> listDirContent(String path, boolean hidden) {
 		String flag = hidden ? "-a1 " : "-1 ";
-		shell.executeWithBash("ls " + flag + path).waitForOrAssertFail();
+		shell.executeWithBash("ls " + flag + path).waitFor();
 		return shell.getOutputAsList();
 	}
 
 	public List<String> listZipFilesInDir(String path) {
-		shell.executeWithBash("ls -R1 ~ " + path + " | grep '\\.zip'").waitForOrAssertFail();
+		shell.executeWithBash("ls -R1 ~ " + path + " | grep '\\.zip'").waitFor();
 		return shell.getOutputAsList();
 	}
 
@@ -99,23 +117,23 @@ public class ImageContent {
 		final String md5sumScriptPath = "/tmp/recursive-md5sum.sh";
 
 		if(!md5sumScriptInstalled) {
-			shell.executeWithBash("echo \"cd \\$1\" >> " + md5sumScriptPath).waitForOrAssertFail();
-			shell.executeWithBash("echo \"for i in \\$(find . -type f)\" >> " + md5sumScriptPath).waitForOrAssertFail();
-			shell.executeWithBash("echo \"do\" >> " + md5sumScriptPath).waitForOrAssertFail();
-			shell.executeWithBash("echo \"  md5sum \\$i\" >> " + md5sumScriptPath).waitForOrAssertFail();
-			shell.executeWithBash("echo \"done\" >> " + md5sumScriptPath).waitForOrAssertFail();
+			shell.executeWithBash("echo \"cd \\$1\" >> " + md5sumScriptPath).waitFor();
+			shell.executeWithBash("echo \"for i in \\$(find . -type f)\" >> " + md5sumScriptPath).waitFor();
+			shell.executeWithBash("echo \"do\" >> " + md5sumScriptPath).waitFor();
+			shell.executeWithBash("echo \"  md5sum \\$i\" >> " + md5sumScriptPath).waitFor();
+			shell.executeWithBash("echo \"done\" >> " + md5sumScriptPath).waitFor();
 
-			shell.executeWithBash("chmod 777 " + md5sumScriptPath).waitForOrAssertFail();
+			shell.executeWithBash("chmod 777 " + md5sumScriptPath).waitFor();
 
 			md5sumScriptInstalled = true;
 		}
 
-		shell.execute("bash", "-c", md5sumScriptPath + " " + path).waitForOrAssertFail();
+		shell.execute("bash", "-c", md5sumScriptPath + " " + path).waitFor();
 		return shell.getOutputAsList();
 	}
 
 	public String javaVersion() {
-		shell.execute("java", "-version").waitForOrAssertFail();
+		shell.execute("java", "-version").waitFor();
 		return shell.getError().replaceAll("\n", "").replaceAll("openjdk version \"([0-9]\\.[0-9]\\.[0-9]).*", "$1");
 	}
 
@@ -123,20 +141,20 @@ public class ImageContent {
 		final String mavenScriptPath = "/tmp/maven-version.sh";
 
 		if(!mavenScriptInstalled) {
-			shell.executeWithBash("echo . /opt/rh/rh-maven35/enable >> " + mavenScriptPath).waitForOrAssertFail();
-			shell.executeWithBash("echo mvn --version >> " + mavenScriptPath).waitForOrAssertFail();
+			shell.executeWithBash("echo . /opt/rh/rh-maven35/enable >> " + mavenScriptPath).waitFor();
+			shell.executeWithBash("echo mvn --version >> " + mavenScriptPath).waitFor();
 
-			shell.executeWithBash("chmod 777 " + mavenScriptPath).waitForOrAssertFail();
+			shell.executeWithBash("chmod 777 " + mavenScriptPath).waitFor();
 
 			mavenScriptInstalled = true;
 		}
 
-		shell.executeWithBash(mavenScriptPath).waitForOrAssertFail();
+		shell.executeWithBash(mavenScriptPath).waitFor();
 		return shell.getOutput().replaceAll("\n", "").replaceAll(".*Apache Maven ([0-9]\\.[0-9]\\.[0-9]) .*", "$1");
 	}
 
 	public List<RpmPackage> rpms() {
-		shell.executeWithBash("rpm -qa --info").waitForOrAssertFail();
+		shell.executeWithBash("rpm -qa --info").waitFor();
 		return Stream.of(shell.getOutput().split("(?=Name {8}: )")).map(packageInfo -> {
 			Map<String, String> map = new HashMap<>();
 

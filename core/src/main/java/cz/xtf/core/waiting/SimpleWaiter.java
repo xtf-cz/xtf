@@ -1,7 +1,6 @@
 package cz.xtf.core.waiting;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
 
 public class SimpleWaiter implements Waiter {
@@ -72,7 +71,7 @@ public class SimpleWaiter implements Waiter {
 	}
 
 	@Override
-	public boolean waitFor() throws TimeoutException {
+	public boolean waitFor() {
 		long startTime = System.currentTimeMillis();
 		long endTime = startTime + timeout;
 
@@ -90,10 +89,10 @@ public class SimpleWaiter implements Waiter {
 			try {
 				Thread.sleep(interval);
 			} catch (InterruptedException e) {
-				throw new TimeoutException("Thread has been interrupted!");
+				throw new WaiterException("Thread has been interrupted!");
 			}
 		}
 		logPoint.logEnd(reason + " (Time out)", System.currentTimeMillis() - startTime);
-		throw new TimeoutException();
+		throw new WaiterException(reason);
 	}
 }

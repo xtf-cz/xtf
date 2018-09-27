@@ -10,6 +10,6 @@ public class CleanBeforeEachCallback implements BeforeEachCallback {
 
 	@Override
 	public void beforeEach(ExtensionContext context) {
-		openShift.clean().waitForOrAssertFail();
+		openShift.clean().waitFor();
 	}
 }

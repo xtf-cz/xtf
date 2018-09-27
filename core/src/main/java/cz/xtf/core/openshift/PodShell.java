@@ -72,7 +72,7 @@ public class PodShell {
 
 		getOutputAsList(entryDelimiter).forEach(entry -> {
 			String[] parsedEntry = StringUtils.split(entry, keyValueDelimiter, 2);
-			map.put(parsedEntry[0], parsedEntry[1]);
+			map.put(parsedEntry[0], parsedEntry.length > 1 ? parsedEntry[1] : null);
 		});
 
 		return map;
