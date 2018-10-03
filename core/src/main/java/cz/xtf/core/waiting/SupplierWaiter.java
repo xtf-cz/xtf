@@ -1,7 +1,6 @@
 package cz.xtf.core.waiting;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -10,11 +9,11 @@ public class SupplierWaiter<X> implements Waiter {
 	private Function<X, Boolean> successCondition;
 	private Function<X, Boolean> failureCondition;
 
-	private long timeout = 60_000L;
-	private long interval = 1_000L;
+	private long timeout;
+	private long interval;
 
-	private String reason = null;
-	private LogPoint logPoint = LogPoint.NONE;
+	private String reason;
+	private LogPoint logPoint;
 
 	public SupplierWaiter(Supplier<X> supplier, Function<X, Boolean> successCondition) {
 		this(supplier, successCondition, x -> false);
@@ -86,7 +85,7 @@ public class SupplierWaiter<X> implements Waiter {
 	}
 
 	@Override
-	public boolean waitFor() throws TimeoutException {
+	public boolean waitFor() {
 		long startTime = System.currentTimeMillis();
 		long endTime = startTime + timeout;
 
@@ -106,10 +105,10 @@ public class SupplierWaiter<X> implements Waiter {
 			try {
 				Thread.sleep(interval);
 			} catch (InterruptedException e) {
-				throw new TimeoutException("Thread has been interrupted!");
+				throw new WaiterException("Thread has been interrupted!");
 			}
 		}
 		logPoint.logEnd(reason + "(Timeout)", timeout);
-		throw new TimeoutException(reason);
+		throw new WaiterException(reason);
 	}
 }

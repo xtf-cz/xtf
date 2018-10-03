@@ -61,7 +61,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
@@ -145,7 +144,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 *
 	 * @see OpenShift#recreateProject(String)
 	 */
-	public ProjectRequest recreateProject() throws TimeoutException {
+	public ProjectRequest recreateProject() {
 		return recreateProject(new ProjectRequestBuilder().withNewMetadata().withName(getNamespace()).endMetadata().build());
 	}
 
@@ -155,7 +154,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @param name name of a project to be created
 	 * @return ProjectRequest instatnce
 	 */
-	public ProjectRequest recreateProject(String name) throws TimeoutException {
+	public ProjectRequest recreateProject(String name) {
 		return recreateProject(new ProjectRequestBuilder().withNewMetadata().withName(name).endMetadata().build());
 	}
 
@@ -164,7 +163,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 *
 	 * @return ProjectRequest instatnce
 	 */
-	public ProjectRequest recreateProject(ProjectRequest projectRequest) throws TimeoutException {
+	public ProjectRequest recreateProject(ProjectRequest projectRequest) {
 		boolean deleted = deleteProject(projectRequest.getMetadata().getName());
 		if (deleted) {
 			BooleanSupplier bs = () -> getProject(projectRequest.getMetadata().getName()) == null;
@@ -228,6 +227,10 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	public Reader getPodLogReader(Pod pod) {
 		return pods().withName(pod.getMetadata().getName()).getLogReader();
+	}
+
+	public Observable<String> observePodLog(String dcName) {
+		return observePodLog(getAnyPod(dcName));
 	}
 
 	public Observable<String> observePodLog(Pod pod) {

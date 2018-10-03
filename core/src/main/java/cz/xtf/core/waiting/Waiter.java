@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * An object that waits on condition to be met.
@@ -72,9 +71,8 @@ public interface Waiter {
 	 * Waits till condition is met.
 	 *
 	 * @return true if wanted condition was met, false if unwanted state condition was met
-	 * @throws TimeoutException in case that neither wanted nor unwanted condition have been met or thread has been interrupted
 	 */
-	boolean waitFor() throws TimeoutException;
+	boolean waitFor();
 
 	/**
 	 * Waits till condition is met. This method calls {@link Waiter#waitFor} and false result or declared exception is rethrown as AssertionError.
@@ -97,7 +95,7 @@ public interface Waiter {
 	default void waitForOrAssertFail(String failMessage) {
 		try {
 			if(!waitFor()) throw new AssertionError(failMessage);
-		} catch (TimeoutException e) {
+		} catch (WaiterException e) {
 			throw new AssertionError("Waiter has timed out (" + e.getMessage() + ")!");
 		}
 	}
