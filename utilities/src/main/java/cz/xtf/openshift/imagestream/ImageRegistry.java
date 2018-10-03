@@ -191,6 +191,10 @@ public class ImageRegistry {
 		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_TCP_PROXY));
 	}
 
+	public String oracleDriver() {
+		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_ORACLE_DRIVER));
+	}
+
 	public String midlewareManagerService() {
 		return normalize(TestConfiguration.get().readValue(TestConfiguration.IMAGE_MM_SERVICE));
 	}

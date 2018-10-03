@@ -42,6 +42,7 @@ public class TestConfiguration extends XTFConfiguration {
 	public static final String IMAGE_ZIPKIN = "io.zipkin.java";
 	public static final String IMAGE_SQUID = "org.squid-cache";
 	public static final String IMAGE_TCP_PROXY = "xtf.tcp-proxy";
+	public static final String IMAGE_ORACLE_DRIVER = "xtf.oracle-driver";
 	public static final String IMAGE_MM_SERVICE = "org.hawkular.service";
 	public static final String IMAGE_MM_DATASTORE = "org.hawkular.datastore";
 
@@ -249,6 +250,10 @@ public class TestConfiguration extends XTFConfiguration {
 
 	public static String imageTcpProxy() {
 		return getProperty(IMAGE_TCP_PROXY);
+	}
+
+	public static String imageOracleDriver() {
+		return getProperty(IMAGE_ORACLE_DRIVER);
 	}
 
 	public static String imageMmService() {
