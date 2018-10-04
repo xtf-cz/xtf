@@ -126,7 +126,7 @@ public class Https {
 			connection.disconnect();
 			return code;
 		} catch (IOException e) {
-			throw new HttpsException();
+			throw new HttpsException(e);
 		}
 	}
 
@@ -139,7 +139,7 @@ public class Https {
 			connection.disconnect();
 			return content;
 		} catch (IOException e) {
-			throw new HttpsException();
+			throw new HttpsException(e);
 		}
 	}
 

@@ -23,16 +23,20 @@ public class OpenShiftWaiters {
 		this.openShift = openShift;
 	}
 
+	public Waiter hasBuildCompleted(String buildConfigName) {
+		return hasBuildCompleted(openShift.getLatestBuild(buildConfigName));
+	}
+
 	/**
 	 * Creates waiter for build completion with preconfigured timeout 10 minutes,
 	 * 5 seconds interval check and both logging points.
 	 *
-	 * @param buildName name of build to be waited upon.
+	 * @param build to be waited upon.
 	 * @return Waiter instance
 	 */
-	public Waiter hasBuildCompleted(String buildName) {
-		Supplier<String> supplier = () -> openShift.getBuild(buildName).getStatus().getPhase();
-		String reason = "Waiting for completion of build " + buildName;
+	public Waiter hasBuildCompleted(Build build) {
+		Supplier<String> supplier = () -> openShift.getBuild(build.getMetadata().getName()).getStatus().getPhase();
+		String reason = "Waiting for completion of build " + build.getMetadata().getName();
 
 		return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES, 10, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
 	}
