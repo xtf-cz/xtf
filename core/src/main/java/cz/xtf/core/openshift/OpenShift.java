@@ -221,6 +221,10 @@ public class OpenShift extends DefaultOpenShiftClient {
 		return pods().withName(name).get();
 	}
 
+	public String getPodLog(String deploymentConfigName) {
+		return getPodLog(this.getAnyPod(deploymentConfigName));
+	}
+
 	public String getPodLog(Pod pod) {
 		return pods().withName(pod.getMetadata().getName()).getLog();
 	}

@@ -119,7 +119,7 @@ public class BinaryBuild implements ManagedBuild {
 
 	@Override
 	public Waiter hasCompleted(OpenShift openShift) {
-		return openShift.waiters().hasBuildCompleted(openShift.getLatestBuild(id).getMetadata().getName());
+		return openShift.waiters().hasBuildCompleted(id);
 	}
 
 	private ImageStream createIsDefinition() {
