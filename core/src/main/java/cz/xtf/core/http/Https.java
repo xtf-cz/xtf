@@ -36,18 +36,30 @@ public class Https {
 	public static Waiter doesUrlReturnCode(String url, int expectedCode, int failCode) {
 		Supplier<Integer> getCode = () -> {
 			try {
-				if(url.startsWith("https")) {
-					return Https.httpsGetCode(url);
-				} else {
-					return Https.httpGetCode(url);
-				}
+				return Https.getCode(url);
 			} catch (HttpsException e) {
-				log.warn("Attempt to retrieve http code from {} has failed", url, e);
-				return -1;
+				log.warn("Attempt to retrieve http code from {} has failed. ({})", url, e.getMessage());
+				return -2;
 			}
 		};
 
-		return new SupplierWaiter<>(getCode, x -> x == expectedCode, x -> x == failCode || x == -1);
+		return new SupplierWaiter<>(getCode, x -> x == expectedCode, x -> x == failCode);
+	}
+
+	public static int getCode(String url) {
+		if(url.startsWith("https")) {
+			return Https.httpsGetCode(url);
+		} else {
+			return Https.httpGetCode(url);
+		}
+	}
+
+	public static String getContent(String url) {
+		if(url.startsWith("https")) {
+			return Https.httpsGetContent(url);
+		} else {
+			return Https.httpGetContent(url);
+		}
 	}
 
 	public static int httpGetCode(String url) {

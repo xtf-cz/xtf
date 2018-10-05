@@ -150,7 +150,7 @@ public class Http {
 		}
 	}
 
-	private CloseableHttpClient build() throws IOException {
+	private CloseableHttpClient build() {
 		HttpClientBuilder builder = HttpClients.custom();
 
 		if (sslsf != null) {
