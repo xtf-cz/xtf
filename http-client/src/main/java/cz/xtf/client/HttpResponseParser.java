@@ -16,14 +16,14 @@ public class HttpResponseParser {
 	HttpResponseParser(HttpResponse httpResponse) throws IOException {
 		this.code = httpResponse.getStatusLine().getStatusCode();
 		this.headers = Arrays.asList(httpResponse.getAllHeaders());
-		this.response = httpResponse.getEntity() == null ? null : EntityUtils.toString(httpResponse.getEntity());
+		this.response = httpResponse.getEntity() == null ? null : EntityUtils.toString(httpResponse.getEntity()).trim();
 	}
 
 	public int code() {
 		return code;
 	}
 
-	public String response() throws IOException {
+	public String response() {
 		return response;
 	}
 
