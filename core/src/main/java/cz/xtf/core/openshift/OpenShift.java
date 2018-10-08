@@ -886,6 +886,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 */
 	public Waiter clean() {
 		// keep the order for deletion to prevent K8s creating resources again
+		templates().withoutLabel(KEEP_LABEL).delete();
 		apps().deployments().withoutLabel(KEEP_LABEL).delete();
 		apps().statefulSets().withoutLabel(KEEP_LABEL).delete();
 		batch().jobs().withoutLabel(KEEP_LABEL).delete();
