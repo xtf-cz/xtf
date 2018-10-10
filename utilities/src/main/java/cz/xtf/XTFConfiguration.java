@@ -479,6 +479,10 @@ public class XTFConfiguration {
 				return PingProtocol.DNSPING;
 			case "kubeping":
 				return PingProtocol.KUBEPING;
+			case "dnsping_upstream":
+				return PingProtocol.DNSPING_UPSTREAM;
+			case "kubeping_upstream":
+				return PingProtocol.KUBEPING_UPSTREAM;
 			default:
 				throw new IllegalStateException(PING_PROTOCOL + " can only be 'dnsping' or 'kubeping'");
 		}
@@ -766,7 +770,9 @@ public class XTFConfiguration {
 
 	public enum PingProtocol {
 		DNSPING,
-		KUBEPING
+		KUBEPING,
+		DNSPING_UPSTREAM,
+		KUBEPING_UPSTREAM
 	}
 
 	protected Properties getXTFProperties(){
