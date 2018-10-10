@@ -233,4 +233,18 @@ public class OpenShiftWaiters {
 	private static Waiter areNoPodsPresent(Supplier<List<Pod>> podSupplier) {
 		return new SupplierWaiter<>(podSupplier, List::isEmpty, TimeUnit.MILLISECONDS, WaitingConfig.timeout());
 	}
+
+	public Waiter havePodsBeenRestarted(String key, String value) {
+		return havePodsBeenRestartedAtLeastNTimes(1, key, value);
+	}
+
+	public Waiter havePodsBeenRestartedAtLeastNTimes(int times, String key, String value) {
+		Supplier<List<Pod>> ps = () -> openShift.getLabeledPods(key, value);
+		String reason = "Waiting for any pods with label " + key + "=" + value + " having a restart count >= " + times + ".";
+		return havePodsBeenRestartedAtLeastNTimes(times, ps).reason(reason);
+	}
+
+	private static Waiter havePodsBeenRestartedAtLeastNTimes(int times, Supplier<List<Pod>> podSupplier) {
+		return new SupplierWaiter<>(podSupplier, ResourceFunctions.haveAnyPodRestartedAtLeastNTimes(times), TimeUnit.MILLISECONDS, WaitingConfig.timeout());
+	}
 }
