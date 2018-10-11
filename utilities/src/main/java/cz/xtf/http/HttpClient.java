@@ -56,9 +56,8 @@ import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -75,7 +74,7 @@ public class HttpClient {
 	private String password;
 	private CloseableHttpClient httpClient;
 	private boolean disableRedirect = false;
-	private final Map<String, String> cookies = new HashMap<>();
+	private final List<BasicClientCookie> cookies = new LinkedList<>();
 	private KeystoreType keystoreType = JKS;
 
 	@FunctionalInterface
@@ -175,9 +174,17 @@ public class HttpClient {
 		request.addHeader(name, value);
 		return this;
 	}
-	
+
 	public HttpClient cookie(final String name, final String value) {
-		cookies.put(name, value);
+		BasicClientCookie cookie = new BasicClientCookie(name, value);
+		cookies.add(cookie);
+		return this;
+	}
+	
+	public HttpClient cookie(final String domain, final String name, final String value) {
+		BasicClientCookie cookie = new BasicClientCookie(name, value);
+		cookie.setDomain(domain);
+		cookies.add(cookie);
 		return this;
 	}
 
@@ -351,7 +358,7 @@ public class HttpClient {
 		}
 		if (!cookies.isEmpty()) {
 			final CookieStore cookieStore = new BasicCookieStore();
-			cookies.entrySet().stream().map(x -> new BasicClientCookie(x.getKey(), x.getValue())).forEach(cookieStore::addCookie);
+			cookies.forEach(cookieStore::addCookie);
 			builder.setDefaultCookieStore(cookieStore);
 		}
 		return builder.build();
