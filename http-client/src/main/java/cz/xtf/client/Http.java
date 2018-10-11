@@ -17,6 +17,7 @@ import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.conn.ssl.TrustAllStrategy;
+import org.apache.http.cookie.ClientCookie;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -36,8 +37,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collection;
+import java.util.LinkedList;
 
 public class Http {
 
@@ -59,7 +60,7 @@ public class Http {
 
 	private final URL url;
 	private final HttpUriRequest request;
-	private final Map<String, String> cookies;
+	private final Collection<ClientCookie> cookies;
 	private final HttpWaiters waiters;
 
 	private SSLConnectionSocketFactory sslsf;
@@ -71,7 +72,7 @@ public class Http {
 	private Http(String url, HttpUriRequest request) throws MalformedURLException {
 		this.url = new URL(url);
 		this.request = request;
-		this.cookies = new HashMap<>();
+		this.cookies = new LinkedList<>();
 
 		this.preemptiveAuth = false;
 		this.disableRedirect = false;
@@ -129,7 +130,14 @@ public class Http {
 	}
 
 	public Http cookie(String name, String value) {
-		cookies.put(name, value);
+		cookies.add(new BasicClientCookie(name, value));
+		return this;
+	}
+
+	public Http cookie(String domain, String name, String value) {
+		BasicClientCookie cookie = new BasicClientCookie(name, value);
+		cookie.setDomain(domain);
+		cookies.add(cookie);
 		return this;
 	}
 
@@ -178,7 +186,7 @@ public class Http {
 
 		if (!cookies.isEmpty()) {
 			CookieStore cookieStore = new BasicCookieStore();
-			cookies.entrySet().stream().map(x -> new BasicClientCookie(x.getKey(), x.getValue())).forEach(cookieStore::addCookie);
+			cookies.forEach(cookieStore::addCookie);
 			builder.setDefaultCookieStore(cookieStore);
 		}
 
