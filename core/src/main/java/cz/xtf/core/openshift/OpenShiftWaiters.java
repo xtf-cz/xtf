@@ -164,6 +164,10 @@ public class OpenShiftWaiters {
 		return areExactlyNPodsReady(n, openShift::getPods).reason("Waiting for exactly " + n + " pods to be ready.");
 	}
 
+	public Waiter areExactlyNPodsReady(int n, String dcName) {
+		return areExactlyNPodsReady(n, "deploymentconfig", dcName);
+	}
+
 	/**
 	 * Creates a waiter that checks that exactly n pods is ready in project.
 	 * Uses default timeout. Tolerates any container restarts.
@@ -195,6 +199,10 @@ public class OpenShiftWaiters {
 		return areExactlyNPodsRunning(n, openShift::getPods).reason("Waiting for exactly " + n + " pods to be running.");
 	}
 
+	public Waiter areExactlyNPodsRunning(int n, String dcName) {
+		return areExactlyNPodsRunning(n, "deploymentconfig", dcName);
+	}
+
 	/**
 	 * Creates a waiter that checks that exactly n pods is running in project.
 	 * Uses default timeout. Tolerates any container restarts.
@@ -213,6 +221,10 @@ public class OpenShiftWaiters {
 
 	private Waiter areExactlyNPodsRunning(int n, Supplier<List<Pod>> podSupplier) {
 		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsRunning(n), TimeUnit.MILLISECONDS, WaitingConfig.timeout());
+	}
+
+	public Waiter areNoPodsPresent(String dcName) {
+		return areNoPodsPresent("deploymentconfig", dcName);
 	}
 
 	/**
@@ -234,8 +246,16 @@ public class OpenShiftWaiters {
 		return new SupplierWaiter<>(podSupplier, List::isEmpty, TimeUnit.MILLISECONDS, WaitingConfig.timeout());
 	}
 
+	public Waiter havePodsBeenRestarted(String dcName) {
+		return havePodsBeenRestarted("deploymentconfig", dcName);
+	}
+
 	public Waiter havePodsBeenRestarted(String key, String value) {
 		return havePodsBeenRestartedAtLeastNTimes(1, key, value);
+	}
+
+	public Waiter havePodsBeenRestartedAtLeastNTimes(int times, String dcName) {
+		return havePodsBeenRestartedAtLeastNTimes(times, "deploymentconfig", dcName);
 	}
 
 	public Waiter havePodsBeenRestartedAtLeastNTimes(int times, String key, String value) {
