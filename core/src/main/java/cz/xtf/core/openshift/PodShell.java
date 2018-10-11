@@ -1,18 +1,13 @@
 package cz.xtf.core.openshift;
 
 import cz.xtf.core.waiting.SimpleWaiter;
-import cz.xtf.core.waiting.Waiter;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -21,8 +16,8 @@ public class PodShell {
 	private final OpenShift openShift;
 	private final String podName;
 
-	private ByteArrayOutputStream baosOutput;
-	private ByteArrayOutputStream baosError;
+	private final ByteArrayOutputStream baosOutput;
+	private final ByteArrayOutputStream baosError;
 
 	public PodShell(OpenShift openShift, String dcName) {
 		this(openShift, openShift.getAnyPod(dcName));
@@ -36,50 +31,22 @@ public class PodShell {
 		this.baosError = new ByteArrayOutputStream();
 	}
 
-	public Waiter executeWithBash(String command) {
+	public PodShellOutput executeWithBash(String command) {
 		return execute("bash", "-c", command);
 	}
 
-	public Waiter execute(String... commands) {
+	public PodShellOutput execute(String... commands) {
 		baosOutput.reset();
 		baosError.reset();
 
 		StateExecListener execListener = new StateExecListener();
+		SimpleWaiter simpleWaiter = new SimpleWaiter(execListener::hasExecutionFinished).timeout(TimeUnit.MINUTES, 1).reason("Waiting for " + Arrays.toString(commands) + " execution in '" + podName + "' pod.");
 
 		openShift.pods().withName(podName).writingOutput(baosOutput).writingError(baosError).usingListener(execListener).exec(commands);
 
-		return new SimpleWaiter(execListener::hasExecutionFinished, TimeUnit.MINUTES, 1, "Waiting for" + Arrays.toString(commands) + " execution in '" + podName + "' pod.");
-	}
+		simpleWaiter.waitFor();
 
-	public String getOutput() {
-		return baosOutput.toString();
-	}
-
-	public List<String> getOutputAsList() {
-		return getOutputAsList("\n");
-	}
-
-	public List<String> getOutputAsList(String delimiter) {
-		return Arrays.asList(StringUtils.split(getOutput(), delimiter));
-	}
-
-	public Map<String, String> getOutputAsMap(String keyValueDelimiter) {
-		return getOutputAsMap(keyValueDelimiter, "\n");
-	}
-
-	public Map<String, String> getOutputAsMap(String keyValueDelimiter, String entryDelimiter) {
-		Map<String, String> map = new HashMap<>();
-
-		getOutputAsList(entryDelimiter).forEach(entry -> {
-			String[] parsedEntry = StringUtils.split(entry, keyValueDelimiter, 2);
-			map.put(parsedEntry[0], parsedEntry.length > 1 ? parsedEntry[1] : null);
-		});
-
-		return map;
-	}
-
-	public String getError() {
-		return baosError.toString();
+		return new PodShellOutput(baosOutput.toString().trim(), baosError.toString().trim());
 	}
 
 	public class StateExecListener implements ExecListener {

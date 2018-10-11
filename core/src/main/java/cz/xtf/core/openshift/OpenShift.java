@@ -873,6 +873,15 @@ public class OpenShift extends DefaultOpenShiftClient {
 		return pods().withName(pod.getMetadata().getName()).portForward(remotePort, localPort);
 	}
 
+	// PodShell
+	public PodShell podShell(String dcName) {
+		return podShell(getAnyPod(dcName));
+	}
+
+	public PodShell podShell(Pod pod) {
+		return new PodShell(this, pod);
+	}
+
 	// Clean up function
 	/**
 	 * Deletes all* resources in namespace. Doesn't wait till all are deleted. <br/>
