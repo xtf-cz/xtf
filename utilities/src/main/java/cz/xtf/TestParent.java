@@ -84,8 +84,15 @@ public abstract class TestParent {
 
 	@Before
 	public void skipIfSinceVersionAnnotation() {
+
+		String methodName = name.getMethodName();
+		if (methodName.contains("[")) {
+			// Parametrized test, we extract just the test method name:
+			methodName = methodName.substring(0, methodName.indexOf("["));
+		}
+
 		for (final Method method : this.getClass().getMethods()) {
-			if (method.getName().equals(name.getMethodName())) {
+			if (method.getName().equals(methodName)) {
 				final SinceVersion[] sinceVersions = method.getAnnotationsByType(SinceVersion.class);
 				for (final SinceVersion sinceVersion : sinceVersions) {
 					try {
