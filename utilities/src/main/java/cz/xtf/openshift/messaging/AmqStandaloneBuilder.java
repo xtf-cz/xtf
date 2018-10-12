@@ -1,20 +1,8 @@
 package cz.xtf.openshift.messaging;
 
-import cz.xtf.openshift.builder.PVCBuilder;
-import cz.xtf.openshift.builder.PortBuilder;
-import cz.xtf.openshift.builder.RouteBuilder;
-import cz.xtf.openshift.imagestream.ImageRegistry;
 import org.apache.commons.lang3.StringUtils;
 
 import org.assertj.core.api.Assertions;
-
-import cz.xtf.TestConfiguration;
-import cz.xtf.openshift.ActiveMQTransport;
-import cz.xtf.openshift.OpenshiftUtil;
-import cz.xtf.openshift.builder.ApplicationBuilder;
-import cz.xtf.openshift.builder.ServiceBuilder;
-import cz.xtf.openshift.builder.pod.ContainerBuilder;
-import cz.xtf.wait.WaitUtil;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -24,6 +12,20 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+
+import cz.xtf.TestConfiguration;
+import cz.xtf.git.GitProject;
+import cz.xtf.openshift.ActiveMQTransport;
+import cz.xtf.openshift.OpenshiftApplication;
+import cz.xtf.openshift.OpenshiftUtil;
+import cz.xtf.openshift.builder.ApplicationBuilder;
+import cz.xtf.openshift.builder.PVCBuilder;
+import cz.xtf.openshift.builder.PortBuilder;
+import cz.xtf.openshift.builder.RouteBuilder;
+import cz.xtf.openshift.builder.ServiceBuilder;
+import cz.xtf.openshift.builder.pod.ContainerBuilder;
+import cz.xtf.openshift.imagestream.ImageRegistry;
+import cz.xtf.wait.WaitUtil;
 
 /**
  * @author David Simansky | dsimansk@redhat.com
@@ -39,6 +41,7 @@ public class AmqStandaloneBuilder {
 	private String suffix = "";
 	private boolean enableNodePort = false;
 	private boolean enableDrainer = false;
+	private boolean customBuild = false;
 	private String claimName;
 	private long deployTimeout = 5 * 60 * 1000L;
 
@@ -53,11 +56,6 @@ public class AmqStandaloneBuilder {
 			this.podName = appName + "-pod";
 		}
 		this.appBuilder = new ApplicationBuilder(this.appName);
-		appBuilder.deploymentConfig(this.appName, this.podName, false)
-				.onConfigurationChange()
-				.podTemplate()
-				.container(this.appName)
-				.fromImage(AMQ_IMAGE);
 
 		transports = new HashSet<>();
 		containerBuilderFuncs = new LinkedList<>();
@@ -133,6 +131,19 @@ public class AmqStandaloneBuilder {
 		return this;
 	}
 
+	public AmqStandaloneBuilder withCustomBuild(GitProject gitProject, String appName, String imageUrl) {
+		this.customBuild = true;
+		this.appBuilder.imageStream().addLabel("name", appName);
+		this.appBuilder.buildConfig().docker().fromDockerImage(imageUrl);
+		this.appBuilder.buildConfig().gitSource(gitProject.getHttpUrl());
+		this.appBuilder.buildConfig().setOutput(appName + "-image");
+
+		this.appBuilder.deploymentConfig(this.appName, this.podName, false)
+				.onConfigurationChange().podTemplate().container(this.appName).fromImage(appName + "-image");
+
+		return this;
+	}
+
 	public AmqStandaloneBuilder deploy() {
 		//build services&routes
 		if (transports.isEmpty()) {
@@ -170,8 +181,19 @@ public class AmqStandaloneBuilder {
 			cbf.accept(appBuilder.deploymentConfig(this.appName).podTemplate().container(this.appName));
 		}
 
-		appBuilder.buildApplication().deployWithoutBuild();
-
+		if (customBuild) {
+			// custom build: appName + "-image"
+			OpenshiftApplication application = new OpenshiftApplication(appBuilder);
+			application.deploy();
+		} else {
+			// by default set AMQ_IMAGE
+			appBuilder.deploymentConfig(this.appName, this.podName, false)
+					.onConfigurationChange()
+					.podTemplate()
+					.container(this.appName)
+					.fromImage(AMQ_IMAGE);
+			this.appBuilder.buildApplication().deployWithoutBuild();
+		}
 		if (enableDrainer) {
 			String drainerName = this.appName + "-drainer";
 			ApplicationBuilder drainerBuilder = new ApplicationBuilder(drainerName);
@@ -186,7 +208,7 @@ public class AmqStandaloneBuilder {
 					.envVar("AMQ_MESH_SERVICE_NAME", "amq-mesh")
 					.envVar("AMQ_MESH_DISCOVERY_TYPE", "kube")
 					.envVar("AMQ_MESH_SERVICE_NAMESPACE", OpenshiftUtil.getInstance().getContext().getNamespace());
-					
+
 			drainerBuilder.deploymentConfig(drainerName).podTemplate().container(drainerName)
 					.addVolumeMount("store", "/opt/amq/data", false)
 					.pod()
