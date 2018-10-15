@@ -56,6 +56,8 @@ public class AmqStandaloneBuilder {
 			this.podName = appName + "-pod";
 		}
 		this.appBuilder = new ApplicationBuilder(this.appName);
+		// init desired DC, reference by this.appName later in the code
+		this.appBuilder.deploymentConfig(this.appName, this.podName, false);
 
 		transports = new HashSet<>();
 		containerBuilderFuncs = new LinkedList<>();
@@ -138,7 +140,7 @@ public class AmqStandaloneBuilder {
 		this.appBuilder.buildConfig().gitSource(gitProject.getHttpUrl());
 		this.appBuilder.buildConfig().setOutput(appName + "-image");
 
-		this.appBuilder.deploymentConfig(this.appName, this.podName, false)
+		this.appBuilder.deploymentConfig(this.appName)
 				.onConfigurationChange().podTemplate().container(this.appName).fromImage(appName + "-image");
 
 		return this;
@@ -187,7 +189,7 @@ public class AmqStandaloneBuilder {
 			application.deploy();
 		} else {
 			// by default set AMQ_IMAGE
-			appBuilder.deploymentConfig(this.appName, this.podName, false)
+			appBuilder.deploymentConfig(this.appName)
 					.onConfigurationChange()
 					.podTemplate()
 					.container(this.appName)
