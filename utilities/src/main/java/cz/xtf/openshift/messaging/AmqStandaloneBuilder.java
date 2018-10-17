@@ -136,12 +136,12 @@ public class AmqStandaloneBuilder {
 	public AmqStandaloneBuilder withCustomBuild(GitProject gitProject, String appName, String imageUrl) {
 		this.customBuild = true;
 		this.appBuilder.imageStream().addLabel("name", appName);
-		this.appBuilder.buildConfig().docker().fromDockerImage(imageUrl);
+		this.appBuilder.buildConfig().sti().fromDockerImage(imageUrl);
 		this.appBuilder.buildConfig().gitSource(gitProject.getHttpUrl());
 		this.appBuilder.buildConfig().setOutput(appName + "-image");
 
 		this.appBuilder.deploymentConfig(this.appName)
-				.onConfigurationChange().podTemplate().container(this.appName).fromImage(appName + "-image");
+				.onImageChange().podTemplate().container(this.appName).fromImage(appName + "-image");
 
 		return this;
 	}
