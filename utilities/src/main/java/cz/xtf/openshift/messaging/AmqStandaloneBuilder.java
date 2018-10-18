@@ -133,10 +133,14 @@ public class AmqStandaloneBuilder {
 		return this;
 	}
 
-	public AmqStandaloneBuilder withCustomBuild(GitProject gitProject, String appName, String imageUrl) {
+	public AmqStandaloneBuilder withCustomBuild(boolean useSti, GitProject gitProject, String appName, String imageUrl) {
 		this.customBuild = true;
 		this.appBuilder.imageStream().addLabel("name", appName);
-		this.appBuilder.buildConfig().sti().fromDockerImage(imageUrl);
+		if (useSti) {
+			appBuilder.buildConfig().sti().fromDockerImage(imageUrl);
+		} else {
+			appBuilder.buildConfig().docker().fromDockerImage(imageUrl);
+		}
 		this.appBuilder.buildConfig().gitSource(gitProject.getHttpUrl());
 		this.appBuilder.buildConfig().setOutput(appName + "-image");
 
