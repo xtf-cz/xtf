@@ -93,7 +93,7 @@ public class FisUtils {
 			//copy application from test/resources
 			IOUtils.copy(appPath, tmpPath);
 			//copy parent pom with directory from test/resources
-			String parentPom = "parent-fis-" + (parentName.equals("spring-boot") ? "sb" : "karaf");
+			String parentPom = "parent-fis-" + (parentName.equals("spring-boot") ? "sb" : parentName);
 			if (!IOUtils.TMP_DIRECTORY.resolve(parentPom).toFile().exists()) {
 				//don't overwrite if exists already
 				IOUtils.copy(appPath.getParent().resolve(parentPom), Files.createDirectory(IOUtils.TMP_DIRECTORY.resolve(parentPom)));
