@@ -6,19 +6,19 @@ XTF is framework designed to easy up aspects of testing in OpenShift environment
 Core concepts of XTF framework used by other modules.
 
 #### Configuration
-While framework itself doesn't require any configuration it can easy up some repetative settings in tests. Setup of XTF can be done in 4 days ways with priority from top to down:
+While framework itself doesn't require any configuration it can easy up some repetative settings in tests. Setup of XTF can be done in 4 ways with priority from top to down:
 
 * System properties 
 * Environment variables
 * test.properties file in root of the project designed to contain user specific setup
 * global-test.properties file in root of the project designed to contain shared setup
 
-The mapping between system properties and environemnt variables is done by lower casing environment variable, replacing `_` with `.` and adding `xtf.` before the result.
+The mapping between system properties and environment variables is done by lower casing environment variable, replacing `_` with `.` and adding `xtf.` before the result.
 
 Example: `OPENSHIFT_MASTER_URL` is mapped to `xtf.openshift.master.url`.
 
 #### OpenShift
-[OpenShift](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/openshift/OpenShift.java) class is entry point for communicating with OpenShift. It extends `OpenShiftNamespaceClient` from Fabric8 client as is meant to be used withing one namespace where tests are executed.
+[OpenShift](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/openshift/OpenShift.java) class is entry point for communicating with OpenShift. It extends `OpenShiftNamespaceClient` from Fabric8 client as is meant to be used within one namespace where tests are executed.
 
 `OpenShift` class extends upstream version with several shortcust. Eg. using deploymentconfig name only for retrieving any `Pod` or its log. This is usefull in test cases where we know that we have only one pod created by dc or we don't care which one will we get. The class itself also provides access to OpenShift specific `Waiters`.
 
@@ -32,18 +32,18 @@ XTF provides two different implementations ([SimpleWaiter](https://github.com/xt
 
 `OpenShifts.master().waiters().isDcReady("my-deployment").waitFor();`
 
-`Https.doesUrlReturnsOK("http://my-app.okd.com").timeOut(TimeUnit.MINUTES, 10).waitFor();`
+`Https.doesUrlReturnsOK("http://example.com").timeOut(TimeUnit.MINUTES, 10).waitFor();`
 
 #### BuildManager
-[BuildManager](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/bm/BuildManager.java) cachces test builds in one namespace so they can be reused. After first time specified ManagedBuild successeds only the reference is returned but build is already present.
+[BuildManager](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/bm/BuildManager.java) cachces test builds in one namespace so they can be reused. After first time specified ManagedBuild succeds only the reference is returned but build is already present.
 
-`BuildManager bm = new BuildManagers.get();`
+```
+BuildManager bm = new BuildManagers.get();
+ManagedBuild mb = new BinaryBuild("my-builder-image", Paths.resolve("/resources/apps/my-test-app"));
+ManagedBuildReference = bm.deploy(mb);
 
-`ManagedBuild mb = new BinaryBuild("my-builder-image", Paths.resolve("/resources/apps/my-test-app"));`
-
-`ManagedBuildReference = bm.deploy(mb);`
-
-`bm.hasBuildCompleted().waitFor();`
+bm.hasBuildCompleted().waitFor();
+```
 
 #### Image
 Wrapper class for url specified images. It's puprose is to parse them or turn them into ImageStream objects.
