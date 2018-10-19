@@ -11,6 +11,7 @@ import java.util.Arrays;
 /**
  * Class for MSA profile filters.
  */
+@Deprecated
 public class MsaProfileFilter implements ExclusionTestClassFilter {
 	public static final String MSA_PROVIDER_PROPERTY = "xtf.msa.provider";
 	protected final String msaProvider;
