@@ -6,6 +6,7 @@ import cz.xtf.openshift.OpenShiftUtil;
 import cz.xtf.openshift.OpenShiftUtils;
 import cz.xtf.openshift.builder.ImageStreamBuilder;
 import cz.xtf.openshift.imagestream.ImageStreamRequest;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.ImageStream;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,11 +53,6 @@ public final class ImageStreamProcessor {
 		UsageRecorder.recordImage(name, fromImage);
 
 		final OpenShiftUtil openshift = TestConfiguration.openshiftOnline() ? OpenShiftUtils.master(IS_NAMESPACE) : OpenShiftUtils.admin(IS_NAMESPACE);
-		if (!"openshift".equals(IS_NAMESPACE)) {
-			log.info("action=create-project status=START namespace={}", IS_NAMESPACE);
-			openshift.createProjectRequest(IS_NAMESPACE);
-			log.info("action=create-project status=FINISH namespace={}", IS_NAMESPACE);
-		}
 		final ImageStreamBuilder isBuilder = new ImageStreamBuilder(name).insecure();
 		for (final String tag : customTags) {
 			isBuilder.addTag(tag, fromImage);

@@ -1,5 +1,8 @@
 package cz.xtf.junit;
 
+import static cz.xtf.manipulation.ImageStreamProcessor.IS_NAMESPACE;
+
+import cz.xtf.TestConfiguration;
 import cz.xtf.build.BuildDefinition;
 import cz.xtf.build.BuildManagerV2;
 import cz.xtf.build.XTFBuild;
@@ -10,6 +13,8 @@ import cz.xtf.manipulation.ImageStreamProcessor;
 import cz.xtf.manipulation.LogCleaner;
 import cz.xtf.manipulation.ProjectHandler;
 import cz.xtf.manipulation.Recorder;
+import cz.xtf.openshift.OpenShiftUtil;
+import cz.xtf.openshift.OpenShiftUtils;
 import cz.xtf.openshift.imagestream.ImageStreamRequest;
 
 import cz.xtf.junit.filter.*;
@@ -193,11 +198,23 @@ public class XTFTestSuite extends ParentRunner<Runner> {
 	}
 
 	private static void createImageStreams() {
+		createImageStreamsProject();
 		final List<Class<?>> tcs = TEST_CLASSES_CACHE.get(suiteClass);
 		final Set<ImageStreamRequest> requests = SuiteUtils.getImageStreamRequests(suiteClass, tcs);
 		if (requests.size() > 0) {
 			requests.forEach(ImageStreamProcessor::createImageStream);
 			Waiters.sleep(1_000L,"Waiting for ImageStreams creation.");
+		}
+	}
+
+	private static void createImageStreamsProject() {
+		final OpenShiftUtil openshift = TestConfiguration.openshiftOnline() ? OpenShiftUtils.master(IS_NAMESPACE) : OpenShiftUtils.admin(IS_NAMESPACE);
+		if (!"openshift".equals(IS_NAMESPACE)) {
+			if (openshift.getProject(IS_NAMESPACE) == null) {
+				log.info("action=create-project status=START namespace={}", IS_NAMESPACE);
+				openshift.createProjectRequest(IS_NAMESPACE);
+				log.info("action=create-project status=FINISH namespace={}", IS_NAMESPACE);
+			}
 		}
 	}
 
