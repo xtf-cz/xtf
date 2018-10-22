@@ -334,6 +334,9 @@ public class TestConfiguration extends XTFConfiguration {
 				case "IMAGE_TOMCAT8":
 					props.setProperty(IMAGE_TOMCAT8, entry.getValue());
 					break;
+				case "IMAGE_TOMCAT9":
+					props.setProperty(IMAGE_TOMCAT9, entry.getValue());
+					break;
 				case "IMAGE_AMQ":
 					props.setProperty(IMAGE_AMQ, entry.getValue());
 					break;
