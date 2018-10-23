@@ -1004,7 +1004,7 @@ public class OpenshiftUtil implements AutoCloseable {
 	private void updateEnviromentVariable(final String resource, final String variableName,
 			final String variableValue, boolean overwrite) {
 		String overWriteString = overwrite ? "--overwrite" : "";
-		String cmd = String.format("sudo oc env -n %s %s %s=%s %s",
+		String cmd = String.format("sudo oc set env -n %s %s %s=%s %s",
 				getContext().getNamespace(), resource,
 				variableName, variableValue, overWriteString);
 		LOGGER.info(String.format("Executing command '%s'", cmd));
