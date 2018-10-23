@@ -3,6 +3,7 @@ package cz.xtf.build;
 import java.util.HashMap;
 import java.util.Map;
 
+import cz.xtf.openshift.builder.buildconfig.ImageSource;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,6 +20,9 @@ public abstract class BuildDefinition {
 	private String appName;
 	private String builderImage;
 	private Map<String, String> envProperties;
+
+	@Setter
+	private ImageSource imageSource;
 
 	@Setter
 	private boolean forcePull = true;
