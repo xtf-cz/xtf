@@ -44,6 +44,9 @@ public class AmqStandaloneBuilder {
 	private boolean customBuild = false;
 	private String claimName;
 	private long deployTimeout = 5 * 60 * 1000L;
+	private String meshDiscoveryType;
+	private String meshServiceName;
+	private String meshServiceNamespace;
 
 	public AmqStandaloneBuilder(String appName) {
 		this(appName, null);
@@ -55,6 +58,9 @@ public class AmqStandaloneBuilder {
 		if (StringUtils.isBlank(podName)) {
 			this.podName = appName + "-pod";
 		}
+		this.meshDiscoveryType = "kube";
+		this.meshServiceName = "amq-mesh";
+		this.meshServiceNamespace = TestConfiguration.masterNamespace();
 		this.appBuilder = new ApplicationBuilder(this.appName);
 		// init desired DC, reference by this.appName later in the code
 		this.appBuilder.deploymentConfig(this.appName, this.podName, false);
@@ -97,14 +103,20 @@ public class AmqStandaloneBuilder {
 		return this;
 	}
 
-	public AmqStandaloneBuilder withDefaultMeshConf() {
+	public AmqStandaloneBuilder withMeshConf(String discoveryType, String serviceName, String serviceNamespace) {
+		this.meshDiscoveryType = discoveryType;
+		this.meshServiceName = serviceName;
+		this.meshServiceNamespace = serviceNamespace;
 		container(cb ->
-				cb.envVar("AMQ_MESH_SERVICE_NAME", "amq-mesh")
-						.envVar("AMQ_MESH_DISCOVERY_TYPE", "kube")
-						.envVar("AMQ_MESH_SERVICE_NAMESPACE", OpenshiftUtil.getInstance().getContext().getNamespace())
-						.pod()
-						.addLabel("topology", "mesh"));
-		return this;
+				cb.envVar("AMQ_MESH_DISCOVERY_TYPE", discoveryType)
+						.envVar("AMQ_MESH_SERVICE_NAME", serviceName)
+						.envVar("AMQ_MESH_SERVICE_NAMESPACE", serviceNamespace)
+						.pod().addLabel("topology", "mesh"));
+        	 return this;
+        }
+
+	public AmqStandaloneBuilder withDefaultMeshConf() {
+		return withMeshConf("kube", "amq-mesh", OpenshiftUtil.getInstance().getContext().getNamespace());
 	}
 
 	public AmqStandaloneBuilder withResourcesSuffix(String suffix) {
@@ -211,9 +223,9 @@ public class AmqStandaloneBuilder {
 					.fromImage(AMQ_IMAGE);
 
 			drainerBuilder.deploymentConfig(drainerName).podTemplate().container(drainerName)
-					.envVar("AMQ_MESH_SERVICE_NAME", "amq-mesh")
-					.envVar("AMQ_MESH_DISCOVERY_TYPE", "kube")
-					.envVar("AMQ_MESH_SERVICE_NAMESPACE", OpenshiftUtil.getInstance().getContext().getNamespace());
+					.envVar("AMQ_MESH_DISCOVERY_TYPE", meshDiscoveryType)
+					.envVar("AMQ_MESH_SERVICE_NAME", meshServiceName)
+					.envVar("AMQ_MESH_SERVICE_NAMESPACE", meshServiceNamespace);
 
 			drainerBuilder.deploymentConfig(drainerName).podTemplate().container(drainerName)
 					.addVolumeMount("store", "/opt/amq/data", false)
