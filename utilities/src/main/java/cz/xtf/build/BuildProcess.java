@@ -92,6 +92,10 @@ public abstract class BuildProcess {
 			definition.getEnvProperties().forEach(sbs::addEnvVariable);
 		}
 
+		if (definition.getImageSource() != null) {
+			bcb.imageSource(definition.getImageSource());
+		}
+
 		if (TestConfiguration.mavenProxyEnabled()) {
 			sbs.addEnvVariable("MAVEN_MIRROR_URL", TestConfiguration.mavenProxyURL());
 		}
