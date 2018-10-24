@@ -71,34 +71,10 @@ public interface Waiter {
 	 * Waits till condition is met.
 	 *
 	 * @return true if wanted condition was met, false if unwanted state condition was met
+	 *
+	 * @throws WaiterException in case of timeout
 	 */
 	boolean waitFor();
-
-	/**
-	 * Waits till condition is met. This method calls {@link Waiter#waitFor} and false result or declared exception is rethrown as AssertionError.
-	 *
-	 * @see Waiter#waitFor
-	 *
-	 * @throws AssertionError in case that {@link Waiter#waitFor} returns false or throws declared exception
-	 */
-	default void waitForOrAssertFail() {
-		waitForOrAssertFail("Waiter met failure condition.");
-	}
-
-	/**
-	 * Waits till condition is met. This method calls {@link Waiter#waitFor} and false result or declared exception is rethrown as AssertionError.
-	 *
-	 * @see Waiter#waitFor
-	 *
-	 * @throws AssertionError in case that {@link Waiter#waitFor} returns false or throws declared exception
-	 */
-	default void waitForOrAssertFail(String failMessage) {
-		try {
-			if(!waitFor()) throw new AssertionError(failMessage);
-		} catch (WaiterException e) {
-			throw new AssertionError("Waiter has timed out (" + e.getMessage() + ")!");
-		}
-	}
 
 	/**
 	 * Object for configurable conditional logging of waiting.
