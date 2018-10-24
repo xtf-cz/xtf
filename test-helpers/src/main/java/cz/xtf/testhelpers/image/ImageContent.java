@@ -94,8 +94,7 @@ public class ImageContent {
 	}
 
 	public Map<String, String> runtimeEnvVars() {
-		shell.execute("env").waitFor();
-		return shell.getOutputAsMap("=");
+		return shell.execute("env").getOutputAsMap("=");
 	}
 
 	public List<String> listDirContent(String path) {
@@ -104,58 +103,52 @@ public class ImageContent {
 
 	public List<String> listDirContent(String path, boolean hidden) {
 		String flag = hidden ? "-a1 " : "-1 ";
-		shell.executeWithBash("ls " + flag + path).waitFor();
-		return shell.getOutputAsList();
+		return shell.executeWithBash("ls " + flag + path).getOutputAsList();
 	}
 
 	public List<String> listZipFilesInDir(String path) {
-		shell.executeWithBash("ls -R1 ~ " + path + " | grep '\\.zip'").waitFor();
-		return shell.getOutputAsList();
+		return shell.executeWithBash("ls -R1 ~ " + path + " | grep '\\.zip'").getOutputAsList();
 	}
 
 	public List<String> listFilesMd5sumInDir(String path) {
 		final String md5sumScriptPath = "/tmp/recursive-md5sum.sh";
 
 		if(!md5sumScriptInstalled) {
-			shell.executeWithBash("echo \"cd \\$1\" >> " + md5sumScriptPath).waitFor();
-			shell.executeWithBash("echo \"for i in \\$(find . -type f)\" >> " + md5sumScriptPath).waitFor();
-			shell.executeWithBash("echo \"do\" >> " + md5sumScriptPath).waitFor();
-			shell.executeWithBash("echo \"  md5sum \\$i\" >> " + md5sumScriptPath).waitFor();
-			shell.executeWithBash("echo \"done\" >> " + md5sumScriptPath).waitFor();
+			shell.executeWithBash("echo \"cd \\$1\" >> " + md5sumScriptPath);
+			shell.executeWithBash("echo \"for i in \\$(find . -type f)\" >> " + md5sumScriptPath);
+			shell.executeWithBash("echo \"do\" >> " + md5sumScriptPath);
+			shell.executeWithBash("echo \"  md5sum \\$i\" >> " + md5sumScriptPath);
+			shell.executeWithBash("echo \"done\" >> " + md5sumScriptPath);
 
-			shell.executeWithBash("chmod 777 " + md5sumScriptPath).waitFor();
+			shell.executeWithBash("chmod 777 " + md5sumScriptPath);
 
 			md5sumScriptInstalled = true;
 		}
 
-		shell.execute("bash", "-c", md5sumScriptPath + " " + path).waitFor();
-		return shell.getOutputAsList();
+		return shell.executeWithBash(md5sumScriptPath + " " + path).getOutputAsList();
 	}
 
 	public String javaVersion() {
-		shell.execute("java", "-version").waitFor();
-		return shell.getError().replaceAll("\n", "").replaceAll("openjdk version \"([0-9]\\.[0-9]\\.[0-9]).*", "$1");
+		return shell.execute("java", "-version").getError().replaceAll("\n", "").replaceAll("openjdk version \"([0-9]\\.[0-9]\\.[0-9]).*", "$1");
 	}
 
 	public String mavenVersion() {
 		final String mavenScriptPath = "/tmp/maven-version.sh";
 
 		if(!mavenScriptInstalled) {
-			shell.executeWithBash("echo . /opt/rh/rh-maven35/enable >> " + mavenScriptPath).waitFor();
-			shell.executeWithBash("echo mvn --version >> " + mavenScriptPath).waitFor();
+			shell.executeWithBash("echo . /opt/rh/rh-maven35/enable >> " + mavenScriptPath);
+			shell.executeWithBash("echo mvn --version >> " + mavenScriptPath);
 
-			shell.executeWithBash("chmod 777 " + mavenScriptPath).waitFor();
+			shell.executeWithBash("chmod 777 " + mavenScriptPath);
 
 			mavenScriptInstalled = true;
 		}
 
-		shell.executeWithBash(mavenScriptPath).waitFor();
-		return shell.getOutput().replaceAll("\n", "").replaceAll(".*Apache Maven ([0-9]\\.[0-9]\\.[0-9]) .*", "$1");
+		return shell.executeWithBash(mavenScriptPath).getOutput().replaceAll("\n", "").replaceAll(".*Apache Maven ([0-9]\\.[0-9]\\.[0-9]) .*", "$1");
 	}
 
 	public List<RpmPackage> rpms() {
-		shell.executeWithBash("rpm -qa --info").waitFor();
-		return Stream.of(shell.getOutput().split("(?=Name {8}: )")).map(packageInfo -> {
+		return Stream.of(shell.executeWithBash("rpm -qa --info").getOutput().split("(?=Name {8}: )")).map(packageInfo -> {
 			Map<String, String> map = new HashMap<>();
 
 			for(String infoLine : packageInfo.split("\n")) {
