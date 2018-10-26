@@ -94,6 +94,14 @@ public class ImageStreamBuilder extends AbstractBuilder<ImageStream, ImageStream
 	}
 
 	public ImageStreamBuilder addTag(String tag, String sourceUrl, boolean insecure) {
+		return addTag(tag, sourceUrl, insecure, TagReferencePolicyType.SOURCE);
+	}
+
+	public ImageStreamBuilder addTag(String tag, String sourceUrl, TagReferencePolicyType referencePolicyType) {
+		return addTag(tag, sourceUrl, insecure, referencePolicyType);
+	}
+
+	public ImageStreamBuilder addTag(String tag, String sourceUrl, boolean insecure, TagReferencePolicyType referencePolicyType) {
 		TagReferenceBuilder trb = new TagReferenceBuilder()
 				.withName(tag);
 
@@ -104,6 +112,7 @@ public class ImageStreamBuilder extends AbstractBuilder<ImageStream, ImageStream
 					.withKind("DockerImage")
 					.withName(sourceUrl)
 					.endFrom();
+			trb.withNewReferencePolicy(referencePolicyType.toString());
 		}
 
 		tagReferences.add(trb.build());
@@ -129,5 +138,14 @@ public class ImageStreamBuilder extends AbstractBuilder<ImageStream, ImageStream
 	@Override
 	protected ImageStreamBuilder getThis() {
 		return this;
+	}
+
+	public enum TagReferencePolicyType {
+		LOCAL, SOURCE;
+
+		@Override
+		public String toString() {
+			return name().charAt(0) + (name().length() > 1 ? name().substring(1).toLowerCase() : "");
+		}
 	}
 }
