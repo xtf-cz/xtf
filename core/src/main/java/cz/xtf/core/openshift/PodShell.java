@@ -1,6 +1,7 @@
 package cz.xtf.core.openshift;
 
 import cz.xtf.core.waiting.SimpleWaiter;
+import cz.xtf.core.waiting.WaiterException;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import lombok.extern.slf4j.Slf4j;
@@ -40,11 +41,15 @@ public class PodShell {
 		baosError.reset();
 
 		StateExecListener execListener = new StateExecListener();
-		SimpleWaiter simpleWaiter = new SimpleWaiter(execListener::hasExecutionFinished).timeout(TimeUnit.MINUTES, 1).reason("Waiting for " + Arrays.toString(commands) + " execution in '" + podName + "' pod.");
 
 		openShift.pods().withName(podName).writingOutput(baosOutput).writingError(baosError).usingListener(execListener).exec(commands);
 
-		simpleWaiter.waitFor();
+		new SimpleWaiter(execListener::hasExecutionFinished).timeout(TimeUnit.MINUTES, 1).reason("Waiting for " + Arrays.toString(commands) + " execution in '" + podName + "' pod.").waitFor();
+		try {
+			new SimpleWaiter(() -> baosOutput.size() > 0 || baosError.size() > 0).timeout(TimeUnit.SECONDS, 10).waitFor();
+		} catch (WaiterException e) {
+			log.warn("Output from PodShell's execution didn't appear in 10 seconds after channel close.");
+		}
 
 		return new PodShellOutput(baosOutput.toString().trim(), baosError.toString().trim());
 	}
