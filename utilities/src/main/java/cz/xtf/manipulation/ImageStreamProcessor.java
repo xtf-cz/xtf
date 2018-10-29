@@ -55,7 +55,7 @@ public final class ImageStreamProcessor {
 		final OpenShiftUtil openshift = TestConfiguration.openshiftOnline() ? OpenShiftUtils.master(IS_NAMESPACE) : OpenShiftUtils.admin(IS_NAMESPACE);
 		final ImageStreamBuilder isBuilder = new ImageStreamBuilder(name).insecure();
 		for (final String tag : customTags) {
-			isBuilder.addTag(tag, fromImage);
+			isBuilder.addTag(tag, fromImage, ImageStreamBuilder.TagReferencePolicyType.LOCAL);
 		}
 		final ImageStream is = isBuilder.build();
 
