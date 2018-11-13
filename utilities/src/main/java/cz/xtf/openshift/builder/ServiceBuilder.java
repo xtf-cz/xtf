@@ -21,6 +21,7 @@ public class ServiceBuilder extends AbstractBuilder<Service, ServiceBuilder> {
 	private String clusterIP = null;
 	private List<ServicePort> servicePorts = new ArrayList<>();
 	private boolean isNodePort = false;
+	private boolean isPublishNotReadyAddresses = false;
 
 	public ServiceBuilder(String id) {
 		this(null, id);
@@ -90,6 +91,11 @@ public class ServiceBuilder extends AbstractBuilder<Service, ServiceBuilder> {
 		return this;
 	}
 
+	public ServiceBuilder withPublishNotReadyAddresses() {
+		this.isPublishNotReadyAddresses = true;
+		return this;
+	}
+
 	@Override
 	public Service build() {
 		ServiceSpecBuilder spec = new ServiceSpecBuilder();
@@ -110,6 +116,10 @@ public class ServiceBuilder extends AbstractBuilder<Service, ServiceBuilder> {
 		spec.withSessionAffinity(sessionAffinity.toString());
 
 		spec.withSelector(selectors);
+
+		if (isPublishNotReadyAddresses) {
+			spec.withPublishNotReadyAddresses(isPublishNotReadyAddresses);
+		}
 
 		if (clusterIP != null) {
 			spec.withClusterIP(clusterIP);
