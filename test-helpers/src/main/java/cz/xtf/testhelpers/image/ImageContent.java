@@ -129,7 +129,7 @@ public class ImageContent {
 	}
 
 	public String javaVersion() {
-		return shell.execute("java", "-version").getError().replaceAll("\n", "").replaceAll("openjdk version \"([0-9]\\.[0-9]\\.[0-9]).*", "$1");
+		return shell.execute("java", "-version").getOutput().replaceAll("\n", "").replaceAll("openjdk version \"([0-9]\\.[0-9]\\.[0-9]).*", "$1");
 	}
 
 	public String mavenVersion() {
