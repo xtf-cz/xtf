@@ -11,6 +11,7 @@ class BackwardCompatibility {
 		BackwardCompatibility.setIfAbsentAndNotNull(OpenShiftConfig.OPENSHIFT_MASTER_PASSWORD, masterPassword());
 		BackwardCompatibility.setIfAbsentAndNotNull(OpenShiftConfig.OPENSHIFT_ADMIN_USERNAME, adminUsername());
 		BackwardCompatibility.setIfAbsentAndNotNull(OpenShiftConfig.OPENSHIFT_ADMIN_PASSWORD, adminPassword());
+		BackwardCompatibility.setIfAbsentAndNotNull(OpenShiftConfig.OPENSHIFT_ROUTE_DOMAIN, routeDomain());
 	}
 
 	private static void setIfAbsentAndNotNull(String property, String value) {
@@ -71,5 +72,14 @@ class BackwardCompatibility {
 		String password2 = System.getenv().get("ADMIN_PASSWORD");
 
 		return password1 != null ? password1 : password2;
+	}
+
+	private static String routeDomain() {
+		String configDomain = XTFConfig.get("xtf.config.domain");
+		String configRouteDomain = XTFConfig.get("xtf.config.route_domain");
+		String systemEnvDomain = System.getenv().get("DOMAIN");
+
+		return configDomain != null ? "apps." + configDomain : (systemEnvDomain != null ? "apps." + systemEnvDomain : configRouteDomain);
+
 	}
 }

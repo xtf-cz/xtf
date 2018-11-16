@@ -10,6 +10,7 @@ public final class OpenShiftConfig {
 	public static final String OPENSHIFT_ADMIN_PASSWORD = "xtf.openshift.admin.password";
 	public static final String OPENSHIFT_MASTER_USERNAME = "xtf.openshift.master.username";
 	public static final String OPENSHIFT_MASTER_PASSWORD = "xtf.openshift.master.password";
+	public static final String OPENSHIFT_ROUTE_DOMAIN = "xtf.openshift.route_domain";
 
 	public static String url() {
 		return XTFConfig.get(OPENSHIFT_URL);
@@ -45,5 +46,9 @@ public final class OpenShiftConfig {
 
 	public static String masterPassword() {
 		return XTFConfig.get(OPENSHIFT_MASTER_PASSWORD);
+	}
+
+	public static String routeDomain() {
+		return XTFConfig.get(OPENSHIFT_ROUTE_DOMAIN);
 	}
 }
