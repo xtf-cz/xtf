@@ -20,7 +20,7 @@ Example: `OPENSHIFT_MASTER_URL` is mapped to `xtf.openshift.master.url`.
 #### OpenShift
 [OpenShift](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/openshift/OpenShift.java) class is entry point for communicating with OpenShift. It extends `OpenShiftNamespaceClient` from Fabric8 client as is meant to be used within one namespace where tests are executed.
 
-`OpenShift` class extends upstream version with several shortcust. Eg. using deploymentconfig name only for retrieving any `Pod` or its log. This is usefull in test cases where we know that we have only one pod created by dc or we don't care which one will we get. The class itself also provides access to OpenShift specific `Waiters`.
+`OpenShift` class extends upstream version with several shortcuts. Eg. using deploymentconfig name only for retrieving any `Pod` or its log. This is usefull in test cases where we know that we have only one pod created by dc or we don't care which one will we get. The class itself also provides access to OpenShift specific `Waiters`.
 
 ##### Configuration:
 Take a look at [OpenShiftConfig](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/config/OpenShiftConfig.java) class to see possible configurations. Enabling some them will allow you to instantiate as `OpenShift openShift = OpenShifts.master()`.
@@ -52,19 +52,7 @@ Wrapper class for url specified images. It's puprose is to parse them or turn th
 Every image that is set in `global-test.properties` using xtf.{imageId}.image can be accessed by using `Images.get(imageId)`.
 
 ### JUnit5
-JUnit5 module provides extensions for conditional test filtering, ruled OpenShift namespace cleaning and working with known issues. It also containes test listeners for automatic project creation and test execution logging. 
-
-This module assumes that user does have configured properties for OpenShift master url, namespace, username and password. It also assumes that user uses properties for specifiying images.
-
-##### @SinceVersion
-Marks that test for particular feature is available from specfied tag. Compares specified image version tag for particular image repo with one that is expected. Executed if tag is at least one that is expected.
-
-`@SinceVersion(image = imageId, name = imageRepo, since = "1.5")`
-
-##### @SkipFor
-Skips test if image repo matches the name if annotation.
-
-`@SkipFor(image = imageId, name = imageRepo)`
+JUnit5 module provides number of extensions and listeners designed to easy up OpenShift images test management. See [JUnit5](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/SimpleWaiter.java) for more informations. 
 
 ### Utilities
-Utilities contain former XTF version and is meant to be depracted. Classes within this module are now being refactored and moved in other modules. Yet won't be touched and deleted from utilities module itself.
+Utilities contain former XTF version and is meant to be deprecated. Classes within this module are now being refactored and moved in other modules. Yet won't be touched and deleted from utilities module itself.
