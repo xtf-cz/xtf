@@ -3,15 +3,20 @@ package cz.xtf.manipulation;
 import cz.xtf.TestConfiguration;
 import cz.xtf.openshift.OpenShiftBinaryClient;
 import cz.xtf.openshift.OpenShiftContext;
+import cz.xtf.openshift.OpenShiftUtil;
 import cz.xtf.openshift.OpenShiftUtils;
 import cz.xtf.openshift.OpenshiftUtil;
+import cz.xtf.wait.SimpleWaiter;
+import io.fabric8.openshift.api.model.Project;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BooleanSupplier;
 
 import static cz.xtf.TestConfiguration.masterNamespace;
 import static cz.xtf.TestConfiguration.masterPassword;
@@ -72,7 +77,14 @@ public class ProjectHandler {
 		// create project under admin context
 		openshift.setOpenShiftContext(OpenShiftContext.getContext(OpenShiftContext.ADMIN_CONTEXT_NAME));
 		try {
-			OpenShiftUtils.master().recreateProject(project);
+			final OpenShiftUtil master = OpenShiftUtils.master();
+			master.recreateProject(project);
+
+			BooleanSupplier bs = () -> {
+				Project projectObject = master.getProject(project);
+				return projectObject != null;
+			};
+			new SimpleWaiter(bs, TimeUnit.MINUTES, 3, "Waiting for project to exist").interval(TimeUnit.SECONDS, 10).execute();
 		} catch (TimeoutException e) {
 			log.warn("Failed to create {} project. Assuming it already exists.", project);
 		}
