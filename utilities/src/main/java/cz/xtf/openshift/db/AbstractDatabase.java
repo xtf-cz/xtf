@@ -229,6 +229,10 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
 		return this;
 	}
 
+	public boolean isObjectStore() {
+		return isObjectStore;
+	}
+
 	public AbstractDatabase external() {
 		external = true;
 		return this;
