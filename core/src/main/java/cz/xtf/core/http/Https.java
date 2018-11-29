@@ -80,7 +80,7 @@ public class Https {
 		return Https.getConnectionContent(connection);
 	}
 
-	private static HttpURLConnection getHttpConnection(URL url) {
+	public static HttpURLConnection getHttpConnection(URL url) {
 		try {
 			HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod("GET");
@@ -111,7 +111,7 @@ public class Https {
 		return Https.getConnectionContent(connection);
 	}
 
-	private static HttpsURLConnection getHttpsConnection(URL url) {
+	public static HttpsURLConnection getHttpsConnection(URL url) {
 		try {
 			SSLContext sslContext = SSLContext.getInstance("TLS");
 			sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
