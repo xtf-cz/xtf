@@ -21,7 +21,6 @@ import cz.xtf.junit.filter.*;
 import cz.xtf.wait.Waiters;
 import lombok.NonNull;
 import lombok.SneakyThrows;
-import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 
 import org.junit.AfterClass;
@@ -102,18 +101,22 @@ public class XTFTestSuite extends ParentRunner<Runner> {
 		testRunners = getRunners(suiteClass, builder);
 	}
 
-	@Synchronized
-	private static List<Runner> getRunners(@NonNull Class<?> suiteClass, @NonNull RunnerBuilder builder)
+	private List<Runner> getRunners(@NonNull Class<?> suiteClass, @NonNull RunnerBuilder builder)
 			throws InitializationError {
-
-		List<Runner> runners = RUNNERS_CACHE.get(suiteClass);
-		if (runners == null) {
-			final List<Class<?>> testClasses = resolveTestClasses(suiteClass);
-			runners = Collections.unmodifiableList(builder.runners(suiteClass, testClasses));
-			RUNNERS_CACHE.put(suiteClass, runners);
-			TEST_CLASSES_CACHE.put(suiteClass, testClasses);
+		synchronized (RUNNERS_CACHE) {
+			List<Runner> runners = RUNNERS_CACHE.get(suiteClass);
+			if (runners == null) {
+				final List<Class<?>> testClasses = resolveTestClasses(suiteClass);
+				runners = Collections.unmodifiableList(getRunners(builder, testClasses));
+				RUNNERS_CACHE.put(suiteClass, runners);
+				TEST_CLASSES_CACHE.put(suiteClass, testClasses);
+			}
+			return runners;
 		}
-		return runners;
+	}
+
+	protected List<Runner> getRunners(final RunnerBuilder builder, final List<Class<?>> testClasses) throws InitializationError {
+		return builder.runners(suiteClass, testClasses);
 	}
 
 	private static List<Class<?>> resolveTestClasses(Class<?> suiteClass) throws InitializationError {
