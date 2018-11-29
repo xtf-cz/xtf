@@ -100,13 +100,17 @@ public class GhostDriverService implements Service {
 			OpenshiftUtil.getInstance().createPod(ghostDriverPod);
 
 			hostName = RouteBuilder.createHostName("phantomjs");
-			RouteBuilder rb = new RouteBuilder("phantomjs");
-			rb
-					.addLabel("name", "phantomjs")
-					.forService("phantomjs")
-					.exposedAsHost(hostName);
 
-			OpenshiftUtil.getInstance().createRoute(rb.build());
+			Optional<Route> route = OpenshiftUtil.getInstance().getRoutes().stream().filter(pod -> pod.getMetadata().getName().startsWith("phantomjs")).findFirst();
+			if (!route.isPresent()) {
+				RouteBuilder rb = new RouteBuilder("phantomjs");
+				rb
+						.addLabel("name", "phantomjs")
+						.forService("phantomjs")
+						.exposedAsHost(hostName);
+
+				OpenshiftUtil.getInstance().createRoute(rb.build());
+			}
 
 			try {
 				WaitUtil.waitFor(WaitUtil.urlReturnsCode("http://" + hostName + "/status", 200), null, 1000L, PHANTOMJS_DEPLOY_TIMEOUT_SECONDS * 1000L);
