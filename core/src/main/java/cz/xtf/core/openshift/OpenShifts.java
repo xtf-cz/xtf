@@ -96,7 +96,7 @@ public class OpenShifts {
 		return ModelNode.fromJSONString(content).get("gitVersion").asString().replaceAll("^v(.*)", "$1");
 	}
 
-	public static String getToken() {
+	public static String getMasterToken() {
 		if(OpenShiftConfig.token() != null) {
 			return OpenShiftConfig.token();
 		} else {
