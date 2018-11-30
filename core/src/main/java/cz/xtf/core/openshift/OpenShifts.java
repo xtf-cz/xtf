@@ -4,14 +4,23 @@ import cz.xtf.core.config.OpenShiftConfig;
 import cz.xtf.core.http.Https;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
+
 import org.jboss.dmr.ModelNode;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 public class OpenShifts {
@@ -85,6 +94,35 @@ public class OpenShifts {
 	public static String getVersion() {
 		String content = Https.httpsGetContent(OpenShiftConfig.url() + "/version/openshift");
 		return ModelNode.fromJSONString(content).get("gitVersion").asString().replaceAll("^v(.*)", "$1");
+	}
+
+	public static String getMasterToken() {
+		if(OpenShiftConfig.token() != null) {
+			return OpenShiftConfig.token();
+		} else {
+			HttpsURLConnection connection = null;
+			try {
+				connection = Https.getHttpsConnection(new URL(OpenShiftConfig.url() + "/oauth/authorize?response_type=token&client_id=openshift-challenging-client"));
+				String encoded = Base64.getEncoder().encodeToString((OpenShiftConfig.masterUsername() + ":" + OpenShiftConfig.masterPassword()).getBytes(StandardCharsets.UTF_8));
+				connection.setRequestProperty("Authorization", "Basic " + encoded);
+				connection.setInstanceFollowRedirects(false);
+
+				connection.connect();
+				Map<String, List<String>> headers = connection.getHeaderFields();
+				connection.disconnect();
+
+				List<String> location = headers.get("Location");
+				if (location != null) {
+					Optional<String> acces_token = location.stream().filter(s -> s.contains("access_token")).findFirst();
+					return acces_token.map(s -> StringUtils.substringBetween(s, "#access_token=", "&")).orElse(null);
+				}
+			} catch (IOException ex) {
+				log.error("Unable to retrieve token from Location header: {} ", ex.getMessage());
+			} finally {
+				if (connection != null) connection.disconnect();
+			}
+			return null;
+		}
 	}
 
 	private static String downloadOpenShiftBinary(String version) {
