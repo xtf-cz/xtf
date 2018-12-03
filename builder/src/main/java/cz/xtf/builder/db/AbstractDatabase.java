@@ -110,7 +110,7 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
 		return vars;
 	}
 
-	public String getOpenShiftName() {
+	public String getDeploymentConfigName() {
 		if (openShiftName == null) {
 			openShiftName = dbName + "-" + getSymbolicName().toLowerCase();
 		}
@@ -131,7 +131,7 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
 	}
 
 	public void configureService(ApplicationBuilder appBuilder) {
-		final ServiceBuilder serviceBuilder = appBuilder.service(getOpenShiftName()).port(getPort()).addContainerSelector("deploymentconfig", getOpenShiftName());
+		final ServiceBuilder serviceBuilder = appBuilder.service(getDeploymentConfigName()).port(getPort()).addContainerSelector("deploymentconfig", getDeploymentConfigName());
 		if (external) {
 			serviceBuilder.withoutSelectors();
 		}
@@ -143,7 +143,7 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
 	}
 
 	public DeploymentConfigBuilder configureDeployment(ApplicationBuilder appBuilder, boolean synchronous) {
-		final DeploymentConfigBuilder builder = appBuilder.deploymentConfig(getOpenShiftName());
+		final DeploymentConfigBuilder builder = appBuilder.deploymentConfig(getDeploymentConfigName());
 		builder.podTemplate().container().fromImage(getImageName()).envVars(getImageVariables()).port(getPort());
 		if (synchronous) {
 			builder.onConfigurationChange();
@@ -174,7 +174,7 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
 			dbServiceMapping = dbServiceMapping.concat(",");
 		}
 		envConfig
-				.configEntry("DB_SERVICE_PREFIX_MAPPING", dbServiceMapping.concat(getOpenShiftName() + "=" + getEnvVarPrefix()))
+				.configEntry("DB_SERVICE_PREFIX_MAPPING", dbServiceMapping.concat(getDeploymentConfigName() + "=" + getEnvVarPrefix()))
 				.configEntry(getEnvVarName("USERNAME"), getUsername())
 				.configEntry(getEnvVarName("PASSWORD"), getPassword())
 				.configEntry(getEnvVarName("DATABASE"), getDbName());
