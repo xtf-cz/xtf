@@ -2,10 +2,9 @@ package cz.xtf.builder.db;
 
 import cz.xtf.builder.builders.pod.PersistentVolumeClaim;
 
-public abstract class DefaultStatefulAuxiliary implements OpenShiftAuxiliary {
+public abstract class DefaultStatefulAuxiliary extends DefaultAuxiliary {
 	protected final PersistentVolumeClaim persistentVolClaim;
 	protected final String dataDir;
-	private final String symbolicName;
 
 	protected StoragePartition storagePartition;
 	protected boolean isStateful = false;
@@ -15,7 +14,7 @@ public abstract class DefaultStatefulAuxiliary implements OpenShiftAuxiliary {
 	}
 
 	public DefaultStatefulAuxiliary(String symbolicName, String dataDir, PersistentVolumeClaim pvc) {
-		this.symbolicName = symbolicName.toLowerCase();
+		super(symbolicName);
 		this.dataDir = dataDir;
 		this.persistentVolClaim = pvc;
 	}
