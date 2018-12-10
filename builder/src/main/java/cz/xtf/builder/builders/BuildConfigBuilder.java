@@ -39,6 +39,7 @@ public class BuildConfigBuilder extends AbstractBuilder<BuildConfig, BuildConfig
 	private String secret;
 	private String secretDestinationDir;
 	private boolean binaryBuild;
+	private boolean configChangeTrigger;
 	
 	private BuildStrategy strategy;
 	private ImageSource imageSource;
@@ -105,6 +106,11 @@ public class BuildConfigBuilder extends AbstractBuilder<BuildConfig, BuildConfig
 		return this;
 	}
 
+	public BuildConfigBuilder onConfigurationChange() {
+		this.configChangeTrigger = true;
+		return this;
+	}
+
 	public BuildConfigBuilder withBinaryBuild() {
 		this.binaryBuild = true;
 		return this;
@@ -134,6 +140,11 @@ public class BuildConfigBuilder extends AbstractBuilder<BuildConfig, BuildConfig
 		if (StringUtils.isNotBlank(githubSecret)) {
 			triggers.add(new BuildTriggerPolicyBuilder()
 					.withType("GitHub").withNewGithub().withAllowEnv(true).withSecret(githubSecret).endGithub().build());
+		}
+
+		if (configChangeTrigger) {
+			triggers.add(new BuildTriggerPolicyBuilder()
+					.withType("ConfigChange").build());
 		}
 
 		BuildSourceBuilder sourceBuilder = new BuildSourceBuilder();

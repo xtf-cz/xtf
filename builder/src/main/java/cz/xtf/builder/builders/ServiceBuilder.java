@@ -30,20 +30,28 @@ public class ServiceBuilder extends AbstractBuilder<Service, ServiceBuilder> {
 	}
 
 	public ServiceBuilder port(int targetPort) {
-		return port(targetPort, targetPort, TransportProtocol.TCP);
+		return port(null, targetPort, targetPort, TransportProtocol.TCP);
 	}
 
 	public ServiceBuilder port(int targetPort, int port) {
-		return port(targetPort, port, TransportProtocol.TCP);
+		return port(null, targetPort, port, TransportProtocol.TCP);
 	}
 
-	public ServiceBuilder port(int targetPort, int port, TransportProtocol protocol) {
-		servicePorts.add(new ServicePort(targetPort, port, protocol));
+	public ServiceBuilder port(String name, int targetPort) {
+		return port(name, targetPort, targetPort, TransportProtocol.TCP);
+	}
+
+	public ServiceBuilder port(String name, int targetPort, int port) {
+		return port(name, targetPort, port, TransportProtocol.TCP);
+	}
+
+	public ServiceBuilder port(String name, int targetPort, int port, TransportProtocol protocol) {
+		servicePorts.add(new ServicePort(name, targetPort, port, protocol));
 		return this;
 	}
 
 	public ServiceBuilder ports(int... targetPorts) {
-		Arrays.stream(targetPorts).forEach(this::port);
+		Arrays.stream(targetPorts).forEach(p -> port("port-" + p, p));
 		return this;
 	}
 
@@ -86,12 +94,13 @@ public class ServiceBuilder extends AbstractBuilder<Service, ServiceBuilder> {
 	public Service build() {
 		ServiceSpecBuilder spec = new ServiceSpecBuilder();
 
-		servicePorts.forEach(sp -> {
+		servicePorts.forEach(sp ->
 			spec.addToPorts(new ServicePortBuilder()
+					.withName(sp.getName())
 					.withProtocol(sp.getTransportProtocol().uppercase())
 					.withPort(sp.getPort())
-					.withNewTargetPort(sp.getTargetPort()).build());
-		});
+					.withNewTargetPort(sp.getTargetPort()).build())
+		);
 
 		spec.withSessionAffinity(sessionAffinity.toString());
 
@@ -123,6 +132,7 @@ public class ServiceBuilder extends AbstractBuilder<Service, ServiceBuilder> {
 	@Getter
 	@AllArgsConstructor
 	private class ServicePort {
+		private String name;
 		private int port;
 		private int targetPort;
 		private TransportProtocol transportProtocol;
