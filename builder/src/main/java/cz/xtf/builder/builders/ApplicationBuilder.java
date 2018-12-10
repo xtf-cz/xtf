@@ -26,30 +26,25 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ApplicationBuilder {
 
-	public static ApplicationBuilder get(String name, String imageUrl) {
+	public static ApplicationBuilder fromImage(String name, String imageUrl) {
 		ApplicationBuilder appBuilder = new ApplicationBuilder(name);
 		appBuilder.deploymentConfig().onConfigurationChange().podTemplate().container().fromImage(imageUrl);
 
 		return appBuilder;
 	}
 
-	public static ApplicationBuilder webserver(String name, ManagedBuildReference mbr) {
+	public static ApplicationBuilder fromManagedBuild(String name, ManagedBuildReference mbr) {
 		ApplicationBuilder appBuilder = new ApplicationBuilder(name);
 		appBuilder.deploymentConfig().onConfigurationChange().podTemplate().container().fromImage(mbr.getNamespace(), mbr.getStreamName());
-		appBuilder.service().ports(8080, 8443, 8778);
-		appBuilder.route().forService(name);
 
 		return appBuilder;
 	}
 
-	public static ApplicationBuilder webserver(String name, String imageUrl, String gitRepo) {
+	public static ApplicationBuilder fromS2IBuild(String name, String imageUrl, String gitRepo) {
 		ApplicationBuilder appBuilder = new ApplicationBuilder(name);
 		appBuilder.buildConfig().onConfigurationChange().gitSource(gitRepo).setOutput(name).sti().forcePull(true).fromDockerImage(imageUrl);
 		appBuilder.imageStream();
 		appBuilder.deploymentConfig().onImageChange().onConfigurationChange().podTemplate().container().fromImage(name);
-
-		appBuilder.service().ports(8080, 8443, 8778);
-		appBuilder.route().forService(name);
 
 		return appBuilder;
 	}
