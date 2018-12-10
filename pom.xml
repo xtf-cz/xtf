@@ -10,6 +10,7 @@
 	<modules>
 		<module>core</module>
 		<module>builder</module>
+		<module>gitlab</module>
 		<module>junit5</module>
 		<module>http-client</module>
 		<module>product</module>
