@@ -44,9 +44,10 @@ public class ApplicationBuilder {
 
 	public static ApplicationBuilder webserver(String name, String imageUrl, String gitRepo) {
 		ApplicationBuilder appBuilder = new ApplicationBuilder(name);
-		appBuilder.buildConfig().gitSource(gitRepo).setOutput(name).sti().forcePull(true).fromDockerImage(imageUrl);
+		appBuilder.buildConfig().onConfigurationChange().gitSource(gitRepo).setOutput(name).sti().forcePull(true).fromDockerImage(imageUrl);
 		appBuilder.imageStream();
-		appBuilder.deploymentConfig().onConfigurationChange().podTemplate().container().fromImage(name);
+		appBuilder.deploymentConfig().onImageChange().onConfigurationChange().podTemplate().container().fromImage(name);
+
 		appBuilder.service().ports(8080, 8443, 8778);
 		appBuilder.route().forService(name);
 
