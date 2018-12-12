@@ -49,7 +49,29 @@ bm.hasBuildCompleted().waitFor();
 Wrapper class for url specified images. It's puprose is to parse them or turn them into ImageStream objects.
 
 ##### Specifying images
-Every image that is set in `global-test.properties` using xtf.{imageId}.image can be accessed by using `Images.get(imageId)`.
+Every image that is set in `global-test.properties` using xtf.{foo}.image can be accessed by using `Images.get(foo)`.
+
+#### Products
+Allows to hold some basic and custom properties related to tested product image in properties file. 
+Example considering maintenance of one image version:
+```
+xtf.foo.image=image.url/user/repo:tag
+xtf.foo.version=1.0.3
+```
+
+XTF also considers possibility of maintenance of several versions. In this case add subId to your properties and specify `xtf.foo.subid` to activate particular properties (in your 'pom.xml' profile for example). Most of the properties can be shared for product. While `image` properties will override version properties.
+
+Example considering maintenance of two image versions:
+```
+xtf.foo.image                               // Will override versions image property
+xtf.foo.templates.repo=git.repo.url         // Will be used as default if not specified in version property
+xtf.foo.v1.image=image.url/user/repoV1:tag1
+xtf.foo.v1.version=1.0.3
+xtf.foo.v2.image=image.url/user/repoV2:tag2
+xtf.foo.v2.version=1.0.3
+```
+
+Retrieving an instance with this metadata: `Produts.resolve("product");`
 
 ### JUnit5
 JUnit5 module provides number of extensions and listeners designed to easy up OpenShift images test management. See [JUnit5](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/SimpleWaiter.java) for more informations. 
