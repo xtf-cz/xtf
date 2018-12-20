@@ -61,6 +61,7 @@ public class XTFConfiguration {
 	private static final String FUSE_DISABLE_JOLOKIA = "xtf.config.fuse.disable.jolokia";
 	private static final String BUILD_NAMESPACE = "xtf.config.build.namespace";
 	private static final String IS_NAMESPACE = "xtf.config.is.namespace";
+	private static final String IS_TAG_REFERENCE_POLICY_TYPE = "xtf.config.is.tag.reference.policy.type";
 	private static final String FORCE_REBUILD = "xtf.config.build.force.rebuild";
 	private static final String BINARY_BUILD = "xtf.config.build.binary";
 	private static final String MAX_HTTP_TRIES = "util.http.maxtries";
@@ -433,6 +434,10 @@ public class XTFConfiguration {
 		return get().readValue(IS_NAMESPACE);
 	}
 
+	public static String imageStreamTagReferencePolicyType() {
+		return get().readValue(IS_TAG_REFERENCE_POLICY_TYPE);
+	}
+
 	public static boolean forceRebuild() {
 		return Boolean.parseBoolean(get().readValue(FORCE_REBUILD));
 	}
@@ -675,6 +680,9 @@ public class XTFConfiguration {
 				case "IS_NAMESPACE":
 					props.setProperty(IS_NAMESPACE, entry.getValue());
 					break;
+				case "IS_TAG_REFERENCE_POLICY_TYPE":
+					props.setProperty(IS_TAG_REFERENCE_POLICY_TYPE, entry.getValue());
+					break;
 				case "FORCE_REBUILD":
 					props.setProperty(FORCE_REBUILD, entry.getValue());
 					break;
@@ -734,6 +742,7 @@ public class XTFConfiguration {
 		props.setProperty(FUSE_DISABLE_JOLOKIA, "false");
 		props.setProperty(BUILD_NAMESPACE, "xtf-builds");
 		props.setProperty(IS_NAMESPACE, "openshift");
+		props.setProperty(IS_TAG_REFERENCE_POLICY_TYPE, "Local");
 		props.setProperty(FORCE_REBUILD, "false");
 		props.setProperty(BINARY_BUILD, "false");
 		props.setProperty(MAX_HTTP_TRIES, "90");
