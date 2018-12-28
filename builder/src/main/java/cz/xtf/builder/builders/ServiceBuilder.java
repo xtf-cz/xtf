@@ -4,7 +4,6 @@ import cz.xtf.builder.builders.route.TransportProtocol;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -130,12 +129,18 @@ public class ServiceBuilder extends AbstractBuilder<Service, ServiceBuilder> {
 	}
 
 	@Getter
-	@AllArgsConstructor
 	private class ServicePort {
 		private String name;
-		private int port;
 		private int targetPort;
+		private int port;
 		private TransportProtocol transportProtocol;
+
+		public ServicePort(String name, int targetPort, int port, TransportProtocol transportProtocol) {
+			this.name = name;
+			this.targetPort = targetPort;
+			this.port = port;
+			this.transportProtocol = transportProtocol;
+		}
 	}
 
 	private enum SessionAffinity {
