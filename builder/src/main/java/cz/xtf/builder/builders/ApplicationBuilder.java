@@ -35,7 +35,7 @@ public class ApplicationBuilder {
 
 	public static ApplicationBuilder fromManagedBuild(String name, ManagedBuildReference mbr) {
 		ApplicationBuilder appBuilder = new ApplicationBuilder(name);
-		appBuilder.deploymentConfig().onConfigurationChange().podTemplate().container().fromImage(mbr.getNamespace(), mbr.getStreamName());
+		appBuilder.deploymentConfig().onImageChange().onConfigurationChange().podTemplate().container().fromImage(mbr.getNamespace(), mbr.getStreamName());
 
 		return appBuilder;
 	}
