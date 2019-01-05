@@ -89,7 +89,7 @@ public class OpenShiftApplication {
 					if (dc.getSpec().getReplicas() > 0) {
 						try {
 							log.info("Waiting for a startup of pod with deploymentconfig '{}' ({} {})", dc.getMetadata().getName(), DeploymentConfigBuilder.SYNCHRONOUS_LABEL, syncId);
-							openShift.waiters().areExactlyNPodsReady(1, dc.getMetadata().getName()).waitFor();
+							openShift.waiters().areExactlyNPodsReady(dc.getSpec().getReplicas(), dc.getMetadata().getName()).waitFor();
 						} catch (Exception e) {
 							throw new IllegalStateException("Timeout while waiting for deployment of " + dc.getMetadata().getName());
 						}
