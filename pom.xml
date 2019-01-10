@@ -51,6 +51,8 @@
 		<version.openshift-client>4.1.0</version.openshift-client>
 		<version.commons-io>2.6</version.commons-io>
 		<version.commons-lang3>3.4</version.commons-lang3>
+		<version.commons-compress>1.18</version.commons-compress>
+		<version.commons-codec>1.11</version.commons-codec>
 		<version.reflections>0.9.10</version.reflections>
 		<version.slf4j-api>1.7.12</version.slf4j-api>
 		<version.jms-api>1.1-rev-1</version.jms-api>
@@ -144,6 +146,18 @@
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
 				<version>${version.commons-lang3}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-compress</artifactId>
+				<version>${version.commons-compress}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>commons-codec</groupId>
+				<artifactId>commons-codec</artifactId>
+				<version>${version.commons-codec}</version>
 			</dependency>
 
 			<dependency>

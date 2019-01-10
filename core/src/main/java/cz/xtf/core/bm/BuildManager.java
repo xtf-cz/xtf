@@ -32,6 +32,8 @@ public class BuildManager {
 			managedBuild.update(openShift);
 		}
 
+		log.info("Managed build '{}' is up to date.", managedBuild.getId());
+
 		return getBuildReference(managedBuild);
 	}
 
