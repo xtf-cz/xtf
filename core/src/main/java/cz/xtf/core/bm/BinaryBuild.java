@@ -43,7 +43,6 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.BuildConfigBuilder;
-import io.fabric8.openshift.api.model.BuildConfigSpec;
 import io.fabric8.openshift.api.model.BuildConfigSpecBuilder;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamBuilder;
@@ -51,14 +50,16 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BinaryBuild implements ManagedBuild {
+public abstract class BinaryBuild implements ManagedBuild {
 	private static final String CONTENT_HASH_LABEL_KEY = "xtf.bm/content-hash";
 
 	@Getter
 	private final String id;
-	private final String builderImage;
+
 	private final Path path;
-	private Map<String, String> envProperties;
+
+	private final String builderImage;
+	private final Map<String, String> envProperties;
 
 	private final ImageStream is;
 	private final BuildConfig bc;
@@ -115,6 +116,10 @@ public class BinaryBuild implements ManagedBuild {
 		return isPresence || bcPresence;
 	}
 
+	abstract List<EnvVar> getEnv(BuildConfig bc);
+
+	abstract void configureBuildStrategy(BuildConfigSpecBuilder builder, String builderImage, List<EnvVar> envs);
+
 	@Override
 	public boolean needsUpdate(OpenShift openShift) {
 		BuildConfig activeBc = openShift.buildConfigs().withName(id).get();
@@ -139,16 +144,17 @@ public class BinaryBuild implements ManagedBuild {
 			log.debug("Content hash differs? {}", needsUpdate);
 		}
 
-		// Check env match
+		// Check build strategy match
 		if (!needsUpdate) {
 			int thisCount = envProperties != null ? envProperties.size() : 0;
-			int themCount = activeBc.getSpec().getStrategy().getSourceStrategy().getEnv() != null ? activeBc.getSpec().getStrategy().getSourceStrategy().getEnv().size() : 0;
+			List<EnvVar> activeBcEnv = getEnv(activeBc);
+			int themCount = activeBcEnv != null ? activeBcEnv.size() : 0;
 			needsUpdate = thisCount != themCount;
 
 			log.debug("env count differs? {} != {} ? {}", thisCount, themCount, needsUpdate);
 
 			if (thisCount == themCount && thisCount > 0) {
-				for (EnvVar envVar : activeBc.getSpec().getStrategy().getSourceStrategy().getEnv()) {
+				for (EnvVar envVar : activeBcEnv) {
 					if (envVar.getValue() == null) {
 						if (envProperties.get(envVar.getName()) != null) {
 							needsUpdate = true;
@@ -164,6 +170,8 @@ public class BinaryBuild implements ManagedBuild {
 					}
 				}
 			}
+
+			log.debug("Build strategy differs? {}", needsUpdate);
 		}
 
 		return needsUpdate;
@@ -189,11 +197,14 @@ public class BinaryBuild implements ManagedBuild {
 		}
 
 		ObjectMeta metadata = new ObjectMetaBuilder().withName(id).withLabels(Collections.singletonMap(CONTENT_HASH_LABEL_KEY, getContentHash())).build();
-		BuildConfigSpec spec = new BuildConfigSpecBuilder()
+		BuildConfigSpecBuilder bcBuilder = new BuildConfigSpecBuilder();
+		bcBuilder
 				.withNewOutput().withNewTo().withKind("ImageStreamTag").withName(id + ":latest").endTo().endOutput()
-				.withNewSource().withType("Binary").endSource()
-				.withNewStrategy().withType("Source").withNewSourceStrategy().withEnv(envVarList).withForcePull(true).withNewFrom().withKind("DockerImage").withName(builderImage).endFrom().endSourceStrategy().endStrategy().build();
-		return new BuildConfigBuilder().withMetadata(metadata).withSpec(spec).build();
+				.withNewSource().withType("Binary").endSource();
+
+		configureBuildStrategy(bcBuilder, builderImage, envVarList);
+
+		return new BuildConfigBuilder().withMetadata(metadata).withSpec(bcBuilder.build()).build();
 	}
 
 	private String getContentHash() {
