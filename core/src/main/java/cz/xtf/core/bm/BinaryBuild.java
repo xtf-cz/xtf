@@ -50,14 +50,16 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BinaryBuild implements ManagedBuild {
+public abstract class BinaryBuild implements ManagedBuild {
 	private static final String CONTENT_HASH_LABEL_KEY = "xtf.bm/content-hash";
 
 	@Getter
 	private final String id;
-	private final String builderImage;
+
 	private final Path path;
-	private Map<String, String> envProperties;
+
+	private final String builderImage;
+	private final Map<String, String> envProperties;
 
 	private final ImageStream is;
 	private final BuildConfig bc;
@@ -114,6 +116,10 @@ public class BinaryBuild implements ManagedBuild {
 		return isPresence || bcPresence;
 	}
 
+	abstract List<EnvVar> getEnv(BuildConfig bc);
+
+	abstract void configureBuildStrategy(BuildConfigSpecBuilder builder, String builderImage, List<EnvVar> envs);
+
 	@Override
 	public boolean needsUpdate(OpenShift openShift) {
 		BuildConfig activeBc = openShift.buildConfigs().withName(id).get();
@@ -140,7 +146,30 @@ public class BinaryBuild implements ManagedBuild {
 
 		// Check build strategy match
 		if (!needsUpdate) {
-			needsUpdate = buildStrategyNeedsUpdate(activeBc);
+			int thisCount = envProperties != null ? envProperties.size() : 0;
+			List<EnvVar> activeBcEnv = getEnv(activeBc);
+			int themCount = activeBcEnv != null ? activeBcEnv.size() : 0;
+			needsUpdate = thisCount != themCount;
+
+			log.debug("env count differs? {} != {} ? {}", thisCount, themCount, needsUpdate);
+
+			if (thisCount == themCount && thisCount > 0) {
+				for (EnvVar envVar : activeBcEnv) {
+					if (envVar.getValue() == null) {
+						if (envProperties.get(envVar.getName()) != null) {
+							needsUpdate = true;
+
+							log.debug("env {} null in BC, but not in envProperties", envVar.getValue());
+							break;
+						}
+					} else if (!envVar.getValue().equals(envProperties.get(envVar.getName()))) {
+						needsUpdate = true;
+
+						log.debug("env {}={} in BC, but {} in envProperties", envVar.getName(), envVar.getValue(), envProperties.get(envVar.getName()));
+						break;
+					}
+				}
+			}
 
 			log.debug("Build strategy differs? {}", needsUpdate);
 		}
@@ -153,7 +182,12 @@ public class BinaryBuild implements ManagedBuild {
 		return openShift.waiters().hasBuildCompleted(id);
 	}
 
-	protected void configureBuildStrategy(BuildConfigSpecBuilder builder) {
+	private ImageStream createIsDefinition() {
+		ObjectMeta metadata = new ObjectMetaBuilder().withName(id).build();
+		return new ImageStreamBuilder().withMetadata(metadata).build();
+	}
+
+	private BuildConfig createBcDefinition() {
 		List<EnvVar> envVarList = new LinkedList<>();
 
 		if (envProperties != null) {
@@ -162,51 +196,13 @@ public class BinaryBuild implements ManagedBuild {
 			}
 		}
 
-		builder.withNewStrategy().withType("Source").withNewSourceStrategy().withEnv(envVarList).withForcePull(true).withNewFrom().withKind("DockerImage").withName(builderImage).endFrom().endSourceStrategy().endStrategy();
-	}
-
-	protected boolean buildStrategyNeedsUpdate(BuildConfig activeBc) {
-		// The only interesting thing to diff is the envs
-		int thisCount = envProperties != null ? envProperties.size() : 0;
-		int themCount = activeBc.getSpec().getStrategy().getSourceStrategy().getEnv() != null ? activeBc.getSpec().getStrategy().getSourceStrategy().getEnv().size() : 0;
-		boolean needsUpdate = thisCount != themCount;
-
-		log.debug("env count differs? {} != {} ? {}", thisCount, themCount, needsUpdate);
-
-		if (thisCount == themCount && thisCount > 0) {
-			for (EnvVar envVar : activeBc.getSpec().getStrategy().getSourceStrategy().getEnv()) {
-				if (envVar.getValue() == null) {
-					if (envProperties.get(envVar.getName()) != null) {
-						needsUpdate = true;
-
-						log.debug("env {} null in BC, but not in envProperties", envVar.getValue());
-						break;
-					}
-				} else if (!envVar.getValue().equals(envProperties.get(envVar.getName()))) {
-					needsUpdate = true;
-
-					log.debug("env {}={} in BC, but {} in envProperties", envVar.getName(), envVar.getValue(), envProperties.get(envVar.getName()));
-					break;
-				}
-			}
-		}
-
-		return needsUpdate;
-	}
-
-	private ImageStream createIsDefinition() {
-		ObjectMeta metadata = new ObjectMetaBuilder().withName(id).build();
-		return new ImageStreamBuilder().withMetadata(metadata).build();
-	}
-
-	private BuildConfig createBcDefinition() {
 		ObjectMeta metadata = new ObjectMetaBuilder().withName(id).withLabels(Collections.singletonMap(CONTENT_HASH_LABEL_KEY, getContentHash())).build();
 		BuildConfigSpecBuilder bcBuilder = new BuildConfigSpecBuilder();
 		bcBuilder
 				.withNewOutput().withNewTo().withKind("ImageStreamTag").withName(id + ":latest").endTo().endOutput()
 				.withNewSource().withType("Binary").endSource();
 
-		configureBuildStrategy(bcBuilder);
+		configureBuildStrategy(bcBuilder, builderImage, envVarList);
 
 		return new BuildConfigBuilder().withMetadata(metadata).withSpec(bcBuilder.build()).build();
 	}
