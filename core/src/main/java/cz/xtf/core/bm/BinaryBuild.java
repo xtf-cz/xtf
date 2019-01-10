@@ -174,12 +174,12 @@ public class BinaryBuild implements ManagedBuild {
 		return openShift.waiters().hasBuildCompleted(id);
 	}
 
-	private ImageStream createIsDefinition() {
+	protected ImageStream createIsDefinition() {
 		ObjectMeta metadata = new ObjectMetaBuilder().withName(id).build();
 		return new ImageStreamBuilder().withMetadata(metadata).build();
 	}
 
-	private BuildConfig createBcDefinition() {
+	protected BuildConfig createBcDefinition() {
 		List<EnvVar> envVarList = new LinkedList<>();
 
 		if (envProperties != null) {
