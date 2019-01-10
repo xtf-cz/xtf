@@ -43,7 +43,6 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.BuildConfigBuilder;
-import io.fabric8.openshift.api.model.BuildConfigSpec;
 import io.fabric8.openshift.api.model.BuildConfigSpecBuilder;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamBuilder;
@@ -139,31 +138,11 @@ public class BinaryBuild implements ManagedBuild {
 			log.debug("Content hash differs? {}", needsUpdate);
 		}
 
-		// Check env match
+		// Check build strategy match
 		if (!needsUpdate) {
-			int thisCount = envProperties != null ? envProperties.size() : 0;
-			int themCount = activeBc.getSpec().getStrategy().getSourceStrategy().getEnv() != null ? activeBc.getSpec().getStrategy().getSourceStrategy().getEnv().size() : 0;
-			needsUpdate = thisCount != themCount;
+			needsUpdate = buildStrategyNeedsUpdate(activeBc);
 
-			log.debug("env count differs? {} != {} ? {}", thisCount, themCount, needsUpdate);
-
-			if (thisCount == themCount && thisCount > 0) {
-				for (EnvVar envVar : activeBc.getSpec().getStrategy().getSourceStrategy().getEnv()) {
-					if (envVar.getValue() == null) {
-						if (envProperties.get(envVar.getName()) != null) {
-							needsUpdate = true;
-
-							log.debug("env {} null in BC, but not in envProperties", envVar.getValue());
-							break;
-						}
-					} else if (!envVar.getValue().equals(envProperties.get(envVar.getName()))) {
-						needsUpdate = true;
-
-						log.debug("env {}={} in BC, but {} in envProperties", envVar.getName(), envVar.getValue(), envProperties.get(envVar.getName()));
-						break;
-					}
-				}
-			}
+			log.debug("Build strategy differs? {}", needsUpdate);
 		}
 
 		return needsUpdate;
@@ -174,12 +153,7 @@ public class BinaryBuild implements ManagedBuild {
 		return openShift.waiters().hasBuildCompleted(id);
 	}
 
-	private ImageStream createIsDefinition() {
-		ObjectMeta metadata = new ObjectMetaBuilder().withName(id).build();
-		return new ImageStreamBuilder().withMetadata(metadata).build();
-	}
-
-	private BuildConfig createBcDefinition() {
+	protected void configureBuildStrategy(BuildConfigSpecBuilder builder) {
 		List<EnvVar> envVarList = new LinkedList<>();
 
 		if (envProperties != null) {
@@ -188,12 +162,53 @@ public class BinaryBuild implements ManagedBuild {
 			}
 		}
 
+		builder.withNewStrategy().withType("Source").withNewSourceStrategy().withEnv(envVarList).withForcePull(true).withNewFrom().withKind("DockerImage").withName(builderImage).endFrom().endSourceStrategy().endStrategy();
+	}
+
+	protected boolean buildStrategyNeedsUpdate(BuildConfig activeBc) {
+		// The only interesting thing to diff is the envs
+		int thisCount = envProperties != null ? envProperties.size() : 0;
+		int themCount = activeBc.getSpec().getStrategy().getSourceStrategy().getEnv() != null ? activeBc.getSpec().getStrategy().getSourceStrategy().getEnv().size() : 0;
+		boolean needsUpdate = thisCount != themCount;
+
+		log.debug("env count differs? {} != {} ? {}", thisCount, themCount, needsUpdate);
+
+		if (thisCount == themCount && thisCount > 0) {
+			for (EnvVar envVar : activeBc.getSpec().getStrategy().getSourceStrategy().getEnv()) {
+				if (envVar.getValue() == null) {
+					if (envProperties.get(envVar.getName()) != null) {
+						needsUpdate = true;
+
+						log.debug("env {} null in BC, but not in envProperties", envVar.getValue());
+						break;
+					}
+				} else if (!envVar.getValue().equals(envProperties.get(envVar.getName()))) {
+					needsUpdate = true;
+
+					log.debug("env {}={} in BC, but {} in envProperties", envVar.getName(), envVar.getValue(), envProperties.get(envVar.getName()));
+					break;
+				}
+			}
+		}
+
+		return needsUpdate;
+	}
+
+	private ImageStream createIsDefinition() {
+		ObjectMeta metadata = new ObjectMetaBuilder().withName(id).build();
+		return new ImageStreamBuilder().withMetadata(metadata).build();
+	}
+
+	private BuildConfig createBcDefinition() {
 		ObjectMeta metadata = new ObjectMetaBuilder().withName(id).withLabels(Collections.singletonMap(CONTENT_HASH_LABEL_KEY, getContentHash())).build();
-		BuildConfigSpec spec = new BuildConfigSpecBuilder()
+		BuildConfigSpecBuilder bcBuilder = new BuildConfigSpecBuilder();
+		bcBuilder
 				.withNewOutput().withNewTo().withKind("ImageStreamTag").withName(id + ":latest").endTo().endOutput()
-				.withNewSource().withType("Binary").endSource()
-				.withNewStrategy().withType("Source").withNewSourceStrategy().withEnv(envVarList).withForcePull(true).withNewFrom().withKind("DockerImage").withName(builderImage).endFrom().endSourceStrategy().endStrategy().build();
-		return new BuildConfigBuilder().withMetadata(metadata).withSpec(spec).build();
+				.withNewSource().withType("Binary").endSource();
+
+		configureBuildStrategy(bcBuilder);
+
+		return new BuildConfigBuilder().withMetadata(metadata).withSpec(bcBuilder.build()).build();
 	}
 
 	private String getContentHash() {
