@@ -30,9 +30,9 @@ public class BuildManager {
 		} else if (managedBuild.needsUpdate(openShift)) {
 			log.info("Managed build '{}' is not up to date... Building...", managedBuild.getId());
 			managedBuild.update(openShift);
+		} else {
+			log.info("Managed build '{}' is up to date.", managedBuild.getId());
 		}
-
-		log.info("Managed build '{}' is up to date.", managedBuild.getId());
 
 		return getBuildReference(managedBuild);
 	}
