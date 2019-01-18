@@ -76,9 +76,11 @@ public class OpenShift extends DefaultOpenShiftClient {
 				.withMasterUrl(masterUrl)
 				.withTrustCerts(true)
 				.withRequestTimeout(120_000)
+				.withConnectionTimeout(120_000)
 				.withNamespace(namespace)
 				.withUsername(username)
 				.withPassword(password)
+				.withBuildTimeout(10 * 60 * 1000)
 				.build();
 
 		return new OpenShift(openShiftConfig);
@@ -89,6 +91,8 @@ public class OpenShift extends DefaultOpenShiftClient {
 				.withMasterUrl(masterUrl)
 				.withTrustCerts(true)
 				.withRequestTimeout(120_000)
+				.withConnectionTimeout(120_000)
+				.withBuildTimeout(10 * 60 * 1000)
 				.withNamespace(namespace)
 				.withOauthToken(token)
 				.build();
