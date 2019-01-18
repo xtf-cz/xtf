@@ -1,6 +1,10 @@
 package cz.xtf.openshift;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -201,7 +205,7 @@ public class OpenShiftUtil implements AutoCloseable {
 				return false;
 			}
 		};
-		new SimpleWaiter(bs, TimeUnit.MINUTES, 3, "Waiting for successful project recreation").interval(TimeUnit.SECONDS, 10).execute();
+		new SimpleWaiter(bs, TimeUnit.MILLISECONDS, TestConfiguration.defaultWaitTimeout(), "Waiting for successful project recreation").interval(TimeUnit.SECONDS, 10).execute();
 
 		return pr.get();
 	}
@@ -364,6 +368,7 @@ public class OpenShiftUtil implements AutoCloseable {
 	/**
 	 * Creates the secret needed for an authenticated external registry (e.g. registry.redhat.io ) and adds it to the default and builder service accounts
 	 * Uses the TestConfiguration.oregRegistry and TestConfiguration.oregAuth properties
+	 *
 	 * @return
 	 */
 	public Secret createORegSecret() {
