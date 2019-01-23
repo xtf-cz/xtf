@@ -3,9 +3,11 @@ package cz.xtf.testhelpers.image;
 import com.google.gson.Gson;
 import cz.xtf.core.image.Image;
 import cz.xtf.core.openshift.OpenShift;
-import cz.xtf.core.waiting.Waiters;
+import cz.xtf.core.waiting.SimpleWaiter;
+import cz.xtf.core.waiting.Waiter;
 import io.fabric8.openshift.api.model.ImageStreamTag;
 import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
@@ -16,7 +18,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,10 +38,18 @@ public class ImageMetadata {
 	public static ImageMetadata prepare(OpenShift openShift, Image image) {
 		openShift.createImageStream(image.getImageStream());
 
-		Waiters.sleep(TimeUnit.SECONDS, 10, "Giving OpenShift instance time to download image metadata.");
-		ImageStreamTag isTag = openShift.imageStreamTags().withName(image.getRepo() + ":" + image.getMajorTag()).get();
+		Supplier<ImageStreamTag> imageStreamTagSupplier = () -> openShift.imageStreamTags().withName(image.getRepo() + ":" + image.getMajorTag()).get();
+		Waiter metadataWaiter = new SimpleWaiter(() -> {
+			ImageStreamTag isTag = imageStreamTagSupplier.get();
+			if (isTag != null && isTag.getImage() != null && isTag.getImage().getDockerImageMetadata() != null && isTag.getImage().getDockerImageMetadata().getAdditionalProperties() != null) {
+				return true;
+			}
+			return false;
+		}, "Giving OpenShift instance time to download image metadata.");
 
-		return new ImageMetadata(ModelNode.fromJSONString(new Gson().toJson(isTag.getImage().getDockerImageMetadata().getAdditionalProperties())));
+		metadataWaiter.waitFor();
+
+		return new ImageMetadata(ModelNode.fromJSONString(new Gson().toJson(imageStreamTagSupplier.get().getImage().getDockerImageMetadata().getAdditionalProperties())));
 	}
 
 	private final ModelNode metadata;
