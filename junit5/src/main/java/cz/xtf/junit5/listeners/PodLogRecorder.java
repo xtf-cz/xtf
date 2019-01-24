@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.openshift.OpenShifts;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -34,7 +35,9 @@ public class PodLogRecorder implements TestExecutionListener {
 				try {
 					openShift.storePodLog(pod, testPodLogDir, pod.getMetadata().getName() + ".log");
 				} catch (IOException e) {
-					log.warn("Exception storing pod logs", e);
+					log.warn("IOException storing pod logs", e);
+				} catch (KubernetesClientException e) {
+					log.warn("KubernetesClientException getting pod logs", e);
 				}
 			}
 		}
