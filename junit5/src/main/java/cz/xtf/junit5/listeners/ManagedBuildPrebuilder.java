@@ -43,10 +43,15 @@ public class ManagedBuildPrebuilder implements TestExecutionListener {
 		}
 
 		OpenShift openShift = OpenShifts.master();
-		BuildManager buildManager = BuildManagers.get();
 		List<Runnable> deferredWaits = new LinkedList<>();
+		BuildManager buildManager = null;
 
 		for (final BuildDefinition buildDefinition : buildsToBeBuilt) {
+			// lazy creation, so that we don't attempt to create a buildmanager namespace when no builds defined (e.g. OSO tests)
+			if (buildManager == null) {
+				buildManager = BuildManagers.get();
+			}
+
 			log.debug("Building {}", buildDefinition);
 			final ManagedBuild managedBuild = buildDefinition.getManagedBuild();
 
