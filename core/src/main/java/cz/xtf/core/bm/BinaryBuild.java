@@ -41,6 +41,7 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.BuildConfigBuilder;
 import io.fabric8.openshift.api.model.BuildConfigSpecBuilder;
@@ -172,6 +173,21 @@ public abstract class BinaryBuild implements ManagedBuild {
 			}
 
 			log.debug("Build strategy differs? {}", needsUpdate);
+		}
+
+		// Check build status, update if failed
+		if (!needsUpdate) {
+			if (activeBc.getStatus() == null || activeBc.getStatus().getLastVersion() == null) {
+				log.debug("No build last version");
+				needsUpdate = true;
+			}
+			else {
+				Build activeBuild = openShift.getBuild(id + "-" + activeBc.getStatus().getLastVersion());
+				if (activeBuild == null || activeBuild.getStatus() == null || "Failed".equals(activeBuild.getStatus().getPhase())) {
+					log.debug("Build failed");
+					needsUpdate = true;
+				}
+			}
 		}
 
 		return needsUpdate;
