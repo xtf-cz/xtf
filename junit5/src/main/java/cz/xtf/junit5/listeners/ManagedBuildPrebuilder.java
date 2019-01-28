@@ -18,6 +18,7 @@ import cz.xtf.core.bm.BuildManagers;
 import cz.xtf.core.bm.ManagedBuild;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.openshift.OpenShifts;
+import cz.xtf.core.waiting.Waiter;
 import cz.xtf.core.waiting.WaiterException;
 import cz.xtf.junit5.annotations.UsesBuild;
 import cz.xtf.junit5.config.JUnitConfig;
@@ -43,10 +44,11 @@ public class ManagedBuildPrebuilder implements TestExecutionListener {
 
 		OpenShift openShift = OpenShifts.master();
 		BuildManager buildManager = BuildManagers.get();
+		List<Runnable> deferredWaits = new LinkedList<>();
 
-		for (BuildDefinition buildDefinition : buildsToBeBuilt) {
+		for (final BuildDefinition buildDefinition : buildsToBeBuilt) {
 			log.debug("Building {}", buildDefinition);
-			ManagedBuild managedBuild = buildDefinition.getManagedBuild();
+			final ManagedBuild managedBuild = buildDefinition.getManagedBuild();
 
 			try {
 				buildManager.deploy(managedBuild);
@@ -57,16 +59,36 @@ public class ManagedBuildPrebuilder implements TestExecutionListener {
 				try {
 					managedBuild.delete(openShift);
 				} catch (KubernetesClientException y) {
-					log.error("Cannot delete managed build {}, ignoring...", managedBuild, y);
+					log.error("Cannot delete managed build {}, ignoring...", buildDefinition, y);
 				}
 			}
 
-			if (JUnitConfig.prebuilderSynchronized()) {
+			final Waiter buildCompleted = buildManager.hasBuildCompleted(managedBuild);
+			Runnable waitForBuild = () -> {
 				try {
-					buildManager.hasBuildCompleted(managedBuild).waitFor();
+					boolean status = buildCompleted.waitFor();
+					if (!status) {
+						log.warn("Build {} failed!", buildDefinition);
+					}
 				} catch (WaiterException x) {
 					log.warn("Timeout building {}", buildDefinition, x);
+				} catch (KubernetesClientException x) {
+					log.warn("KubernetesClientException waiting for {}", buildDefinition, x);
 				}
+			};
+
+			// If synchronized, we wait for each individual build
+			if (JUnitConfig.prebuilderSynchronized()) {
+				waitForBuild.run();
+			} else {
+				deferredWaits.add(waitForBuild);
+			}
+		}
+
+		// If not synchronized, we wait for the builds after all have been started
+		if (!JUnitConfig.prebuilderSynchronized()) {
+			for (Runnable deferredWait : deferredWaits) {
+				deferredWait.run();
 			}
 		}
 	}
