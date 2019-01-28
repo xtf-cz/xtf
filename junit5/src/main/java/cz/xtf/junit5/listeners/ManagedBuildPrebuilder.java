@@ -13,9 +13,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import cz.xtf.core.bm.BuildManager;
 import cz.xtf.core.bm.BuildManagers;
+import cz.xtf.core.bm.ManagedBuild;
+import cz.xtf.core.openshift.OpenShift;
+import cz.xtf.core.openshift.OpenShifts;
+import cz.xtf.core.waiting.WaiterException;
 import cz.xtf.junit5.annotations.UsesBuild;
+import cz.xtf.junit5.config.JUnitConfig;
 import cz.xtf.junit5.interfaces.BuildDefinition;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -34,9 +41,33 @@ public class ManagedBuildPrebuilder implements TestExecutionListener {
 			}
 		}
 
+		OpenShift openShift = OpenShifts.master();
+		BuildManager buildManager = BuildManagers.get();
+
 		for (BuildDefinition buildDefinition : buildsToBeBuilt) {
 			log.debug("Building {}", buildDefinition);
-			BuildManagers.get().deploy(buildDefinition.getManagedBuild());
+			ManagedBuild managedBuild = buildDefinition.getManagedBuild();
+
+			try {
+				buildManager.deploy(managedBuild);
+			} catch (KubernetesClientException x) {
+				// if the build failed, we need to treat the managed build as broken, better to delete it (so that the test itself can try again)
+				log.error("Error building {}", buildDefinition, x);
+
+				try {
+					managedBuild.delete(openShift);
+				} catch (KubernetesClientException y) {
+					log.error("Cannot delete managed build {}, ignoring...", managedBuild, y);
+				}
+			}
+
+			if (JUnitConfig.prebuilderSynchronized()) {
+				try {
+					buildManager.hasBuildCompleted(managedBuild).waitFor();
+				} catch (WaiterException x) {
+					log.warn("Timeout building {}", buildDefinition, x);
+				}
+			}
 		}
 	}
 

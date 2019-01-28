@@ -12,6 +12,7 @@ public class JUnitConfig {
 	private static final String CI_USERNAME = "xtf.junit.ci.username";
 	private static final String CI_PASSWORD = "xtf.junit.ci.password";
 	private static final String JENKINS_RERUN = "xtf.junit.jenkins.rerun";
+	private static final String PREBUILDER_SYNCHRONIZED = "xtf.junit.prebuilder.synchronized";
 
 	public static boolean cleanOpenShift() {
 		return Boolean.valueOf(XTFConfig.get(CLEAN_OPENSHIFT, "false"));
@@ -36,5 +37,9 @@ public class JUnitConfig {
 
 	public static String jenkinsRerun() {
 		return XTFConfig.get(JENKINS_RERUN);
+	}
+
+	public static boolean prebuilderSynchronized() {
+		return Boolean.parseBoolean(XTFConfig.get(PREBUILDER_SYNCHRONIZED, "false"));
 	}
 }
