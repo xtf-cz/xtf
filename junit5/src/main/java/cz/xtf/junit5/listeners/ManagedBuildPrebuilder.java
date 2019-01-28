@@ -13,9 +13,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import cz.xtf.core.bm.BuildManager;
 import cz.xtf.core.bm.BuildManagers;
+import cz.xtf.core.bm.ManagedBuild;
+import cz.xtf.core.openshift.OpenShift;
+import cz.xtf.core.openshift.OpenShifts;
+import cz.xtf.core.waiting.Waiter;
+import cz.xtf.core.waiting.WaiterException;
 import cz.xtf.junit5.annotations.UsesBuild;
+import cz.xtf.junit5.config.JUnitConfig;
 import cz.xtf.junit5.interfaces.BuildDefinition;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -34,9 +42,54 @@ public class ManagedBuildPrebuilder implements TestExecutionListener {
 			}
 		}
 
-		for (BuildDefinition buildDefinition : buildsToBeBuilt) {
+		OpenShift openShift = OpenShifts.master();
+		BuildManager buildManager = BuildManagers.get();
+		List<Runnable> deferredWaits = new LinkedList<>();
+
+		for (final BuildDefinition buildDefinition : buildsToBeBuilt) {
 			log.debug("Building {}", buildDefinition);
-			BuildManagers.get().deploy(buildDefinition.getManagedBuild());
+			final ManagedBuild managedBuild = buildDefinition.getManagedBuild();
+
+			try {
+				buildManager.deploy(managedBuild);
+			} catch (KubernetesClientException x) {
+				// if the build failed, we need to treat the managed build as broken, better to delete it (so that the test itself can try again)
+				log.error("Error building {}", buildDefinition, x);
+
+				try {
+					managedBuild.delete(openShift);
+				} catch (KubernetesClientException y) {
+					log.error("Cannot delete managed build {}, ignoring...", buildDefinition, y);
+				}
+			}
+
+			final Waiter buildCompleted = buildManager.hasBuildCompleted(managedBuild);
+			Runnable waitForBuild = () -> {
+				try {
+					boolean status = buildCompleted.waitFor();
+					if (!status) {
+						log.warn("Build {} failed!", buildDefinition);
+					}
+				} catch (WaiterException x) {
+					log.warn("Timeout building {}", buildDefinition, x);
+				} catch (KubernetesClientException x) {
+					log.warn("KubernetesClientException waiting for {}", buildDefinition, x);
+				}
+			};
+
+			// If synchronized, we wait for each individual build
+			if (JUnitConfig.prebuilderSynchronized()) {
+				waitForBuild.run();
+			} else {
+				deferredWaits.add(waitForBuild);
+			}
+		}
+
+		// If not synchronized, we wait for the builds after all have been started
+		if (!JUnitConfig.prebuilderSynchronized()) {
+			for (Runnable deferredWait : deferredWaits) {
+				deferredWait.run();
+			}
 		}
 	}
 
