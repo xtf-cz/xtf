@@ -96,6 +96,12 @@ public class OpenShiftNode {
 			Optional<NodeAddress> nodeAddress = admin().client().nodes().withName(host).get().getStatus().getAddresses().stream().filter(addr -> "ExternalIP".equals(addr.getType())).findFirst();
 			if (nodeAddress.isPresent()) {
 				host = nodeAddress.get().getAddress();
+			}else {
+				// sometimes the external address is hidden under InternalIP
+				nodeAddress = admin().client().nodes().withName(host).get().getStatus().getAddresses().stream().filter(addr -> "InternalIP".equals(addr.getType())).findFirst();
+				if (nodeAddress.isPresent()){
+					host = nodeAddress.get().getAddress();
+				}
 			}
 		}
 
