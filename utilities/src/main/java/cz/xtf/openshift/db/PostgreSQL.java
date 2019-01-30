@@ -71,6 +71,10 @@ public class PostgreSQL extends AbstractSQLDatabase {
 		vars.put("POSTGRESQL_MAX_CONNECTIONS", "100");
 		vars.put("POSTGRESQL_SHARED_BUFFERS", "16MB");
 		vars.put("POSTGRESQL_MAX_PREPARED_TRANSACTIONS", "90");
+		// Temporary workaround for https://github.com/sclorg/postgresql-container/issues/297
+		// Increase the "set_passwords.sh" timeout from the default 60s to 300s to give the
+		// PostgreSQL server chance properly to start under high OCP cluster load
+		vars.put("PGCTLTIMEOUT", "300");
 		return vars;
 	}
 
