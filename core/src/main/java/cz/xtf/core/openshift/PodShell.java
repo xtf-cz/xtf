@@ -46,7 +46,7 @@ public class PodShell {
 
 		new SimpleWaiter(execListener::hasExecutionFinished).timeout(TimeUnit.MINUTES, 1).reason("Waiting for " + Arrays.toString(commands) + " execution in '" + podName + "' pod.").waitFor();
 		try {
-			new SimpleWaiter(() -> baosOutput.size() > 0 || baosError.size() > 0).timeout(TimeUnit.SECONDS, 5).waitFor();
+			new SimpleWaiter(() -> baosOutput.size() > 0 || baosError.size() > 0).timeout(TimeUnit.SECONDS, 10).waitFor();
 		} catch (WaiterException e) {
 			log.warn("Output from PodShell's execution didn't appear in 10 seconds after channel close.");
 		}
