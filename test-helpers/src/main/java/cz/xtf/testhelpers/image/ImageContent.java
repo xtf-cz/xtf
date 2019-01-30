@@ -55,8 +55,12 @@ public class ImageContent {
 
 		openShift.createPod(pod);
 
-		BooleanSupplier bs = () -> ResourceParsers.isPodRunning(openShift.getPod(name));
-		new SimpleWaiter(bs, "Waiting for '" + name + "' pod to be running").timeout(WaitingConfig.timeout()).waitFor();
+		BooleanSupplier bs = () -> {
+			Pod p = openShift.getPod(name);
+			return p != null && ResourceParsers.isPodRunning(p) && ResourceParsers.isPodReady(p);
+		};
+
+		new SimpleWaiter(bs, "Waiting for '" + name + "' pod to be running and ready").timeout(WaitingConfig.timeout()).waitFor();
 
 		return ImageContent.prepare(openShift, pod);
 	}
