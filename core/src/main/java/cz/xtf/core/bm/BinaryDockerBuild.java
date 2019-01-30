@@ -21,6 +21,11 @@ public class BinaryDockerBuild extends BinaryBuild {
 	}
 
 	@Override
+	String getImage(BuildConfig bc) {
+		return bc.getSpec().getStrategy().getDockerStrategy().getFrom().getName();
+	}
+
+	@Override
 	List<EnvVar> getEnv(BuildConfig buildConfig) {
 		return buildConfig.getSpec().getStrategy().getDockerStrategy().getEnv();
 	}

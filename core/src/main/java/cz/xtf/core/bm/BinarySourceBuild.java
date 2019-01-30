@@ -21,6 +21,11 @@ public class BinarySourceBuild extends BinaryBuild {
 	}
 
 	@Override
+	String getImage(BuildConfig bc) {
+		return bc.getSpec().getStrategy().getSourceStrategy().getFrom().getName();
+	}
+
+	@Override
 	List<EnvVar> getEnv(BuildConfig buildConfig) {
 		return buildConfig.getSpec().getStrategy().getSourceStrategy().getEnv();
 	}

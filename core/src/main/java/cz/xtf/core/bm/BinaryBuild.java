@@ -121,6 +121,8 @@ public abstract class BinaryBuild implements ManagedBuild {
 
 	abstract void configureBuildStrategy(BuildConfigSpecBuilder builder, String builderImage, List<EnvVar> envs);
 
+	abstract String getImage(BuildConfig bc);
+
 	@Override
 	public boolean needsUpdate(OpenShift openShift) {
 		BuildConfig activeBc = openShift.buildConfigs().withName(id).get();
@@ -131,7 +133,7 @@ public abstract class BinaryBuild implements ManagedBuild {
 
 		// Check image match
 		if (!needsUpdate) {
-			String activeBuilderImage = activeBc.getSpec().getStrategy().getSourceStrategy().getFrom().getName();
+			String activeBuilderImage = getImage(activeBc);
 			needsUpdate = !builderImage.equals(activeBuilderImage);
 
 			log.debug("Builder image differs? {} != {} ? {} ", builderImage, activeBuilderImage, needsUpdate);
