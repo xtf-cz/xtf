@@ -30,7 +30,7 @@ public class BuildManagers {
 							if (admin.getResourceQuota("max-running-builds") == null) {
 								ResourceQuota rq = new ResourceQuotaBuilder()
 										.withNewMetadata().withName("max-running-builds").endMetadata()
-										.withNewSpec().addToHard("pods", new Quantity("5")).endSpec()
+										.withNewSpec().addToHard("pods", new Quantity(String.format("%d", BuildManagerConfig.maxRunningBuilds()))).endSpec()
 										.build();
 								admin.createResourceQuota(rq);
 							}

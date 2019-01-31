@@ -11,13 +11,17 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import cz.xtf.core.bm.BuildManager;
 import cz.xtf.core.bm.BuildManagers;
 import cz.xtf.core.bm.ManagedBuild;
 import cz.xtf.core.config.BuildManagerConfig;
+import cz.xtf.core.config.WaitingConfig;
+import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.openshift.OpenShifts;
+import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
 import cz.xtf.core.waiting.WaiterException;
 import cz.xtf.junit5.annotations.UsesBuild;
@@ -45,10 +49,29 @@ public class ManagedBuildPrebuilder implements TestExecutionListener {
 		List<Runnable> deferredWaits = new LinkedList<>();
 		BuildManager buildManager = null;
 
+		// Attempting to start builds when they cannot start due to running pod limits cause random timeouts,
+		// so we try to be nice and wait until there are available capacity in the build manager namespace.
+		final OpenShift buildManagerOpenShift = OpenShifts.master(BuildManagerConfig.namespace());
+		Waiter runningBuildsBelowCapacity = new SimpleWaiter(() ->
+			buildManagerOpenShift.getBuilds().stream()
+					.filter(build -> build.getStatus() != null && "Running".equals(build.getStatus().getPhase()))
+					.count() < BuildManagerConfig.maxRunningBuilds()
+		)
+				.timeout(TimeUnit.MILLISECONDS, WaitingConfig.timeout())
+				.reason("Waiting for a free capacity for running builds in " + BuildManagerConfig.namespace() + " namespace.");
+
 		for (final BuildDefinition buildDefinition : buildsToBeBuilt) {
 			// lazy creation, so that we don't attempt to create a buildmanager namespace when no builds defined (e.g. OSO tests)
 			if (buildManager == null) {
 				buildManager = BuildManagers.get();
+			}
+
+			try {
+				runningBuildsBelowCapacity.waitFor();
+			} catch (WaiterException x) {
+				log.warn("Timeout waiting for free capacity", x);
+			} catch (KubernetesClientException x) {
+				log.warn("KubernetesClientException waiting for free capacity in {} namespace", BuildManagerConfig.namespace(), x);
 			}
 
 			log.debug("Building {}", buildDefinition);
@@ -82,7 +105,7 @@ public class ManagedBuildPrebuilder implements TestExecutionListener {
 				log.error("Error building {}", buildDefinition, x);
 
 				try {
-					managedBuild.delete(OpenShifts.master(BuildManagerConfig.namespace()));
+					managedBuild.delete(buildManagerOpenShift);
 				} catch (KubernetesClientException y) {
 					log.error("Cannot delete managed build {}, ignoring...", buildDefinition, y);
 				}
