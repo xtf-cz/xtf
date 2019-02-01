@@ -7,6 +7,6 @@ import cz.xtf.core.bm.ManagedBuild;
  * <p>
  * Meant for enums so it can be easily used with annotations.
  */
-public interface BuildDefinition {
-	ManagedBuild getManagedBuild();
+public interface BuildDefinition<T extends ManagedBuild> {
+	T getManagedBuild();
 }
