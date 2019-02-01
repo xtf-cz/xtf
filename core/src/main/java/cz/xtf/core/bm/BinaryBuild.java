@@ -56,7 +56,7 @@ public abstract class BinaryBuild implements ManagedBuild {
 
 	@Getter
 	private final String id;
-
+	@Getter
 	private final Path path;
 
 	private final String builderImage;
