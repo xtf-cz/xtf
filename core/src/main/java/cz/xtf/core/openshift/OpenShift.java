@@ -940,7 +940,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	}
 
 	private Path storeLog(String log, Path dirPath, String fileName) throws IOException {
-		Path filePath = dirPath.resolve(fileName + ".log");
+		Path filePath = dirPath.resolve(fileName);
 
 		Files.createDirectories(dirPath);
 		Files.createFile(filePath);
