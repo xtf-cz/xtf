@@ -217,6 +217,9 @@ public class XTFTestSuite extends ParentRunner<Runner> {
 				log.info("action=create-project status=START namespace={}", IS_NAMESPACE);
 				openshift.createProjectRequest(IS_NAMESPACE);
 				log.info("action=create-project status=FINISH namespace={}", IS_NAMESPACE);
+				log.info("action=create-oreg-secret status=START namespace={}", IS_NAMESPACE);
+				openshift.createORegSecret();
+				log.info("action=create-oreg-secret status=FINISH namespace={}", IS_NAMESPACE);
 			}
 		}
 	}
