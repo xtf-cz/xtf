@@ -5,9 +5,9 @@ import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
-import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
@@ -245,7 +245,8 @@ public abstract class BinaryBuild implements ManagedBuild {
 
 	private void writeProjectTar(OutputStream os) {
 		Collection<File> filesToArchive = FileUtils.listFiles(path.toFile(), TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
-		try (ArchiveOutputStream o = new ArchiveStreamFactory().createArchiveOutputStream(ArchiveStreamFactory.TAR, os)) {
+		try (TarArchiveOutputStream o = (TarArchiveOutputStream) new ArchiveStreamFactory().createArchiveOutputStream(ArchiveStreamFactory.TAR, os)) {
+			o.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
 			for (File f : filesToArchive) {
 				String tarPath = path.relativize(f.toPath()).toString();
 				log.trace("adding file to tar: {}", tarPath);
