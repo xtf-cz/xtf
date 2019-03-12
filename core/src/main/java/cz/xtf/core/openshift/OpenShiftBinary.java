@@ -1,10 +1,17 @@
 package cz.xtf.core.openshift;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @Slf4j
 public class OpenShiftBinary {
@@ -31,27 +38,41 @@ public class OpenShiftBinary {
 	}
 
 	// Common method for any oc command call
-	public void execute(String... args) {
-		executeCommand(ArrayUtils.addAll(new String[]{path}, args));
+	public String execute(String... args) {
+		return executeCommand(ArrayUtils.addAll(new String[]{path}, args));
 	}
 
 	// Internal
-	private void executeCommand(String... args) {
+	private String executeCommand(String... args) {
 		ProcessBuilder pb = new ProcessBuilder(args);
 
-		pb.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-		pb.redirectError(ProcessBuilder.Redirect.INHERIT);
-
-		int result = -1;
+		pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
+		pb.redirectErrorStream(true);
 
 		try {
-			result = pb.start().waitFor();
-		} catch (IOException | InterruptedException e) {
+			Process p = pb.start();
+
+			ExecutorService es = Executors.newSingleThreadExecutor();
+
+			Future<String> res = es.submit(() -> {
+				try (InputStream is = p.getInputStream(); StringWriter sw = new StringWriter()) {
+					IOUtils.copy(is, sw);
+					sw.flush();
+					return sw.toString();
+				}
+			});
+
+			int result = p.waitFor();
+
+			if(result == 0) {
+				return res.get();
+			} else {
+				log.error("Failed while executing (code {}): {}", result, Arrays.toString(args));
+			}
+		} catch (IOException | InterruptedException |ExecutionException e) {
 			log.error("Failed while executing: " + Arrays.toString(args), e);
 		}
 
-		if(result != 0) {
-			log.error("Failed while executing (code {}): {}", result, Arrays.toString(args));
-		}
+		return null;
 	}
 }
