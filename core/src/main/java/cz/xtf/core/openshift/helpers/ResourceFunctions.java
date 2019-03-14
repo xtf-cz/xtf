@@ -12,7 +12,7 @@ public class ResourceFunctions {
 	}
 
 	public static Function<List<Pod>, Boolean> areExactlyNPodsRunning(int n) {
-		return pods -> pods.size() == n && pods.stream().allMatch(ResourceParsers::isPodRunning);
+		return pods -> pods.stream().filter(ResourceParsers::isPodRunning).count() == n;
 	}
 
 	public static Function<List<Pod>, Boolean> haveAnyPodRestarted() {
