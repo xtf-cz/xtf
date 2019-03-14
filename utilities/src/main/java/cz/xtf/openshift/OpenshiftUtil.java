@@ -56,9 +56,9 @@ import io.fabric8.openshift.api.model.BuildRequestBuilder;
 import io.fabric8.openshift.api.model.BuildTriggerPolicy;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
-import io.fabric8.openshift.api.model.OpenshiftRole;
-import io.fabric8.openshift.api.model.OpenshiftRoleBinding;
 import io.fabric8.openshift.api.model.Project;
+import io.fabric8.openshift.api.model.Role;
+import io.fabric8.openshift.api.model.RoleBinding;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.Template;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
@@ -279,7 +279,7 @@ public class OpenshiftUtil implements AutoCloseable {
 	}
 
 	public void addRoleToUser(String namespace, String role, String name) {
-		OpenshiftRoleBinding roleBinding = getOrCreateRoleBinding(namespace, role);
+		RoleBinding roleBinding = getOrCreateRoleBinding(namespace, role);
 
 		addSubjectToRoleBinding(roleBinding, "User", name);
 		addUserNameToRoleBinding(roleBinding, name);
@@ -509,46 +509,46 @@ public class OpenshiftUtil implements AutoCloseable {
 	}
 
 	// roles
-	public OpenshiftRole createRole(OpenshiftRole role) {
+	public Role createRole(Role role) {
 		return withDefaultUser(client -> client.roles().create(role));
 	}
 
-	public Collection<OpenshiftRole> getRoles() {
+	public Collection<Role> getRoles() {
 		return getRoles(context.getNamespace());
 	}
 
-	public Collection<OpenshiftRole> getRoles(String namespace) {
+	public Collection<Role> getRoles(String namespace) {
 		return withDefaultUser(client -> client.inNamespace(namespace).roles()
 				.list().getItems());
 	}
 
-	public Stream<OpenshiftRole> getRolesNamedWithPrefix(final String prefix) {
+	public Stream<Role> getRolesNamedWithPrefix(final String prefix) {
 		return getRoles().stream().filter(x -> x.getMetadata().getName().startsWith(prefix));
 	}
 
-	public void deleteRole(OpenshiftRole role) {
+	public void deleteRole(Role role) {
 		withDefaultUser(client -> client.roles().delete(role));
 	}
 
 	// role bindings
-	public OpenshiftRoleBinding createRoleBinding(OpenshiftRoleBinding roleBinding) {
+	public RoleBinding createRoleBinding(RoleBinding roleBinding) {
 		return withDefaultUser(client -> client.roleBindings().create(roleBinding));
 	}
 
-	public Collection<OpenshiftRoleBinding> getRoleBindings() {
+	public Collection<RoleBinding> getRoleBindings() {
 		return getRoleBindings(context.getNamespace());
 	}
 
-	public Collection<OpenshiftRoleBinding> getRoleBindings(String namespace) {
+	public Collection<RoleBinding> getRoleBindings(String namespace) {
 		return withDefaultUser(client -> client.inNamespace(namespace).roleBindings()
 				.list().getItems());
 	}
 
-	public Stream<OpenshiftRoleBinding> getRoleBindingsNamedWithPrefix(final String prefix) {
+	public Stream<RoleBinding> getRoleBindingsNamedWithPrefix(final String prefix) {
 		return getRoleBindings().stream().filter(x -> x.getMetadata().getName().startsWith(prefix));
 	}
 
-	public void deleteRoleBinding(OpenshiftRoleBinding roleBinding) {
+	public void deleteRoleBinding(RoleBinding roleBinding) {
 		withDefaultUser(client -> client.roleBindings().delete(roleBinding));
 	}
 
@@ -806,7 +806,7 @@ public class OpenshiftUtil implements AutoCloseable {
 	}
 
 	public void addRoleToServiceAccount(String namespace, String role, String serviceAccountName) {
-		OpenshiftRoleBinding roleBinding = getOrCreateRoleBinding(namespace, role);
+		RoleBinding roleBinding = getOrCreateRoleBinding(namespace, role);
 
 		addSubjectToRoleBinding(roleBinding, "ServiceAccount", serviceAccountName);
 		addUserNameToRoleBinding(roleBinding, String.format("system:serviceaccount:%s:%s", namespace, serviceAccountName));
@@ -819,7 +819,7 @@ public class OpenshiftUtil implements AutoCloseable {
 	}
 
 	public void addRoleToGroup(String namespace, String role, String groupName) {
-		OpenshiftRoleBinding roleBinding = getOrCreateRoleBinding(namespace, role);
+		RoleBinding roleBinding = getOrCreateRoleBinding(namespace, role);
 
 		addSubjectToRoleBinding(roleBinding, "SystemGroup", groupName);
 		addGroupNameToRoleBinding(roleBinding, groupName);
@@ -827,8 +827,8 @@ public class OpenshiftUtil implements AutoCloseable {
 		updateRoleBinding(roleBinding);
 	}
 
-	private OpenshiftRoleBinding getOrCreateRoleBinding(String namespace, String role) {
-		OpenshiftRoleBinding roleBinding = withAdminUser(client -> client.inNamespace(namespace).roleBindings().withName(role).get());
+	private RoleBinding getOrCreateRoleBinding(String namespace, String role) {
+		RoleBinding roleBinding = withAdminUser(client -> client.inNamespace(namespace).roleBindings().withName(role).get());
 
 		if(roleBinding == null) {
 			return withAdminUser(client -> client.inNamespace(namespace).roleBindings().createNew()
@@ -839,13 +839,13 @@ public class OpenshiftUtil implements AutoCloseable {
 		return roleBinding;
 	}
 
-	public OpenshiftRoleBinding updateRoleBinding(OpenshiftRoleBinding roleBinding) {
+	public RoleBinding updateRoleBinding(RoleBinding roleBinding) {
 		return withAdminUser(client -> client.inNamespace(roleBinding.getMetadata().getNamespace())
 				.roleBindings().withName(roleBinding.getMetadata().getName())
 				.replace(roleBinding));
 	}
 
-	private void addSubjectToRoleBinding(OpenshiftRoleBinding roleBinding, String entityKind, String entityName) {
+	private void addSubjectToRoleBinding(RoleBinding roleBinding, String entityKind, String entityName) {
 		ObjectReference subject = new ObjectReferenceBuilder().withKind(entityKind).withName(entityName).build();
 
 		if(!roleBinding.getSubjects().stream().anyMatch(x -> x.getName().equals(subject.getName()) && x.getKind().equals(subject.getKind()))) {
@@ -853,7 +853,7 @@ public class OpenshiftUtil implements AutoCloseable {
 		}
 	}
 
-	private void addUserNameToRoleBinding(OpenshiftRoleBinding roleBinding, String userName) {
+	private void addUserNameToRoleBinding(RoleBinding roleBinding, String userName) {
 		if( roleBinding.getUserNames() == null) {
 			roleBinding.setUserNames(new ArrayList<>());
 		}
@@ -862,7 +862,7 @@ public class OpenshiftUtil implements AutoCloseable {
 		}
 	}
 
-	private void addGroupNameToRoleBinding(OpenshiftRoleBinding roleBinding, String groupName) {
+	private void addGroupNameToRoleBinding(RoleBinding roleBinding, String groupName) {
 		if( roleBinding.getGroupNames() == null) {
 			roleBinding.setGroupNames(new ArrayList<>());
 		}
@@ -881,7 +881,7 @@ public class OpenshiftUtil implements AutoCloseable {
 
 	private void removeRoleFromEntity(String namespace, String role, String entityKind, String entityName, String userName) {
 		withAdminUser(client -> {
-			OpenshiftRoleBinding roleBinding = client.inNamespace(namespace).roleBindings().withName(role).get();
+			RoleBinding roleBinding = client.inNamespace(namespace).roleBindings().withName(role).get();
 
 			if (roleBinding != null) {
 				roleBinding.getSubjects().remove(new ObjectReferenceBuilder().withKind(entityKind).withName(entityName).withNamespace(namespace).build());

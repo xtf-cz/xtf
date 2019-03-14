@@ -29,8 +29,8 @@ import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
-import io.fabric8.openshift.api.model.OpenshiftRole;
-import io.fabric8.openshift.api.model.OpenshiftRoleBinding;
+import io.fabric8.openshift.api.model.Role;
+import io.fabric8.openshift.api.model.RoleBinding;
 import io.fabric8.openshift.api.model.Route;
 
 public class OpenshiftApplication {
@@ -51,8 +51,8 @@ public class OpenshiftApplication {
 	private List<Route> routes = new LinkedList<>();
 	private List<ConfigMap> configMaps = new LinkedList<>();
 	private List<HorizontalPodAutoscaler> autoScalers = new LinkedList<>();
-	private List<OpenshiftRole> roles = new LinkedList<>();
-	private List<OpenshiftRoleBinding> roleBindings = new LinkedList<>();
+	private List<Role> roles = new LinkedList<>();
+	private List<RoleBinding> roleBindings = new LinkedList<>();
 
 	private BuildConfig buildConfig;
 	private DeploymentConfig mainDeployment;
