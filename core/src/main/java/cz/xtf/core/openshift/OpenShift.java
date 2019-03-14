@@ -30,12 +30,12 @@ import io.fabric8.openshift.api.model.BuildRequest;
 import io.fabric8.openshift.api.model.BuildRequestBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
-import io.fabric8.openshift.api.model.OpenshiftRole;
-import io.fabric8.openshift.api.model.OpenshiftRoleBinding;
-import io.fabric8.openshift.api.model.OpenshiftRoleBindingBuilder;
 import io.fabric8.openshift.api.model.Project;
 import io.fabric8.openshift.api.model.ProjectRequest;
 import io.fabric8.openshift.api.model.ProjectRequestBuilder;
+import io.fabric8.openshift.api.model.Role;
+import io.fabric8.openshift.api.model.RoleBinding;
+import io.fabric8.openshift.api.model.RoleBindingBuilder;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteSpecBuilder;
 import io.fabric8.openshift.api.model.Template;
@@ -615,19 +615,19 @@ public class OpenShift extends DefaultOpenShiftClient {
 	}
 
 	// RoleBindings
-	public OpenshiftRoleBinding createRoleBinding(OpenshiftRoleBinding roleBinding) {
+	public RoleBinding createRoleBinding(RoleBinding roleBinding) {
 		return roleBindings().create(roleBinding);
 	}
 
-	public OpenshiftRoleBinding getRoleBinding(String name) {
+	public RoleBinding getRoleBinding(String name) {
 		return roleBindings().withName(name).get();
 	}
 
-	public List<OpenshiftRoleBinding> getRoleBindings() {
+	public List<RoleBinding> getRoleBindings() {
 		return roleBindings().list().getItems();
 	}
 
-	public List<OpenshiftRole> getRoles() {
+	public List<Role> getRoles() {
 		return roles().list().getItems();
 	}
 
@@ -643,18 +643,18 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 *
 	 * @return List of role bindings that aren't considered default.
 	 */
-	public List<OpenshiftRoleBinding> getUserRoleBindings() {
+	public List<RoleBinding> getUserRoleBindings() {
 		return roleBindings().withoutLabel(KEEP_LABEL).list().getItems().stream()
 				.filter(rb -> !rb.getMetadata().getName().matches("admin|system:deployers|system:image-builders|system:image-pullers"))
 				.collect(Collectors.toList());
 	}
 
-	public boolean deleteRoleBinding(OpenshiftRoleBinding roleBinding) {
+	public boolean deleteRoleBinding(RoleBinding roleBinding) {
 		return roleBindings().delete(roleBinding);
 	}
 
-	public OpenshiftRoleBinding addRoleToUser(String roleName, String username) {
-		OpenshiftRoleBinding roleBinding = getOrCreateRoleBinding(roleName);
+	public RoleBinding addRoleToUser(String roleName, String username) {
+		RoleBinding roleBinding = getOrCreateRoleBinding(roleName);
 
 		addSubjectToRoleBinding(roleBinding, "User", username);
 		addUserNameToRoleBinding(roleBinding, username);
@@ -662,8 +662,8 @@ public class OpenShift extends DefaultOpenShiftClient {
 		return updateRoleBinding(roleBinding);
 	}
 
-	public OpenshiftRoleBinding addRoleToServiceAccount(String roleName, String serviceAccountName) {
-		OpenshiftRoleBinding roleBinding = getOrCreateRoleBinding(roleName);
+	public RoleBinding addRoleToServiceAccount(String roleName, String serviceAccountName) {
+		RoleBinding roleBinding = getOrCreateRoleBinding(roleName);
 
 		addSubjectToRoleBinding(roleBinding, "ServiceAccount", serviceAccountName);
 		addUserNameToRoleBinding(roleBinding, String.format("system:serviceaccount:%s:%s", getNamespace(), serviceAccountName));
@@ -671,8 +671,8 @@ public class OpenShift extends DefaultOpenShiftClient {
 		return updateRoleBinding(roleBinding);
 	}
 
-	public OpenshiftRoleBinding addRoleToGroup(String roleName, String groupName) {
-		OpenshiftRoleBinding roleBinding = getOrCreateRoleBinding(roleName);
+	public RoleBinding addRoleToGroup(String roleName, String groupName) {
+		RoleBinding roleBinding = getOrCreateRoleBinding(roleName);
 
 		addSubjectToRoleBinding(roleBinding, "SystemGroup", groupName);
 		addGroupNameToRoleBinding(roleBinding, groupName);
@@ -680,11 +680,11 @@ public class OpenShift extends DefaultOpenShiftClient {
 		return updateRoleBinding(roleBinding);
 	}
 
-	private OpenshiftRoleBinding getOrCreateRoleBinding(String name) {
-		OpenshiftRoleBinding roleBinding = getRoleBinding(name);
+	private RoleBinding getOrCreateRoleBinding(String name) {
+		RoleBinding roleBinding = getRoleBinding(name);
 
 		if (roleBinding == null) {
-			roleBinding = new OpenshiftRoleBindingBuilder()
+			roleBinding = new RoleBindingBuilder()
 					.withNewMetadata().withName(name).endMetadata()
 					.withNewRoleRef().withName(name).endRoleRef()
 					.build();
@@ -693,11 +693,11 @@ public class OpenShift extends DefaultOpenShiftClient {
 		return roleBinding;
 	}
 
-	public OpenshiftRoleBinding updateRoleBinding(OpenshiftRoleBinding roleBinding) {
+	public RoleBinding updateRoleBinding(RoleBinding roleBinding) {
 		return roleBindings().withName(roleBinding.getMetadata().getName()).replace(roleBinding);
 	}
 
-	private void addSubjectToRoleBinding(OpenshiftRoleBinding roleBinding, String entityKind, String entityName) {
+	private void addSubjectToRoleBinding(RoleBinding roleBinding, String entityKind, String entityName) {
 		ObjectReference subject = new ObjectReferenceBuilder().withKind(entityKind).withName(entityName).build();
 
 		if (roleBinding.getSubjects().stream().noneMatch(x -> x.getName().equals(subject.getName()) && x.getKind().equals(subject.getKind()))) {
@@ -705,7 +705,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 		}
 	}
 
-	private void addUserNameToRoleBinding(OpenshiftRoleBinding roleBinding, String userName) {
+	private void addUserNameToRoleBinding(RoleBinding roleBinding, String userName) {
 		if (roleBinding.getUserNames() == null) {
 			roleBinding.setUserNames(new ArrayList<>());
 		}
@@ -714,7 +714,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 		}
 	}
 
-	private void addGroupNameToRoleBinding(OpenshiftRoleBinding roleBinding, String groupName) {
+	private void addGroupNameToRoleBinding(RoleBinding roleBinding, String groupName) {
 		if (roleBinding.getGroupNames() == null) {
 			roleBinding.setGroupNames(new ArrayList<>());
 		}
@@ -723,12 +723,12 @@ public class OpenShift extends DefaultOpenShiftClient {
 		}
 	}
 
-	public OpenshiftRoleBinding removeRoleFromServiceAccount(String roleName, String serviceAccountName) {
+	public RoleBinding removeRoleFromServiceAccount(String roleName, String serviceAccountName) {
 		return removeRoleFromEntity(roleName, "ServiceAccount", serviceAccountName, String.format("system:serviceaccount:%s:%s", getNamespace(), serviceAccountName));
 	}
 
-	public OpenshiftRoleBinding removeRoleFromEntity(String roleName, String entityKind, String entityName, String userName) {
-		OpenshiftRoleBinding roleBinding = this.roleBindings().withName(roleName).get();
+	public RoleBinding removeRoleFromEntity(String roleName, String entityKind, String entityName, String userName) {
+		RoleBinding roleBinding = this.roleBindings().withName(roleName).get();
 
 		if (roleBinding != null) {
 			roleBinding.getSubjects().remove(new ObjectReferenceBuilder().withKind(entityKind).withName(entityName).withNamespace(getNamespace()).build());

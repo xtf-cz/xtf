@@ -36,8 +36,8 @@ import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerBuilder;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
-import io.fabric8.openshift.api.model.OpenshiftRole;
-import io.fabric8.openshift.api.model.OpenshiftRoleBinding;
+import io.fabric8.openshift.api.model.Role;
+import io.fabric8.openshift.api.model.RoleBinding;
 import io.fabric8.openshift.api.model.Route;
 
 public class ApplicationBuilder {
@@ -407,11 +407,11 @@ public class ApplicationBuilder {
 		return routes.stream().map(RouteBuilder::build).collect(Collectors.toList());
 	}
 
-	public List<OpenshiftRole> buildRoles() {
+	public List<Role> buildRoles() {
 		return roles.stream().map(RoleBuilder::build).collect(Collectors.toList());
 	}
 
-	public List<OpenshiftRoleBinding> buildRoleBindings() {
+	public List<RoleBinding> buildRoleBindings() {
 		return roleBindings.stream().map(RoleBindingBuilder::build).collect(Collectors.toList());
 	}
 

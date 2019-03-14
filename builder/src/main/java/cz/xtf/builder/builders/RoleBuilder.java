@@ -1,12 +1,10 @@
 package cz.xtf.builder.builders;
 
+import io.fabric8.openshift.api.model.Role;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-
-import io.fabric8.openshift.api.model.OpenshiftRole;
-import io.fabric8.openshift.api.model.OpenshiftRoleBuilder;
 
 /**
  * Definition of Role. Example:
@@ -21,7 +19,7 @@ import io.fabric8.openshift.api.model.OpenshiftRoleBuilder;
  *   verbs: ["list", "get"]
  *</pre>
  */
-public class RoleBuilder extends AbstractBuilder<OpenshiftRole, RoleBuilder> {
+public class RoleBuilder extends AbstractBuilder<Role, RoleBuilder> {
 	private Collection<String> resources;
 	private Collection<String> verbs;
 
@@ -44,8 +42,8 @@ public class RoleBuilder extends AbstractBuilder<OpenshiftRole, RoleBuilder> {
 	}
 
 	@Override
-	public OpenshiftRole build() {
-		return new OpenshiftRoleBuilder()
+	public Role build() {
+		return new io.fabric8.openshift.api.model.RoleBuilder()
 				.withNewMetadata()
 					.withName(this.getName())
 				.endMetadata()

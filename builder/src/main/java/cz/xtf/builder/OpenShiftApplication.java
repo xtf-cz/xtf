@@ -14,8 +14,8 @@ import io.fabric8.kubernetes.api.model.ServiceAccount;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
-import io.fabric8.openshift.api.model.OpenshiftRole;
-import io.fabric8.openshift.api.model.OpenshiftRoleBinding;
+import io.fabric8.openshift.api.model.Role;
+import io.fabric8.openshift.api.model.RoleBinding;
 import io.fabric8.openshift.api.model.Route;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,8 +39,8 @@ public class OpenShiftApplication {
 	private List<Route> routes = new LinkedList<>();
 	private List<ConfigMap> configMaps = new LinkedList<>();
 	private List<HorizontalPodAutoscaler> autoScalers = new LinkedList<>();
-	private List<OpenshiftRole> roles = new LinkedList<>();
-	private List<OpenshiftRoleBinding> roleBindings = new LinkedList<>();
+	private List<Role> roles = new LinkedList<>();
+	private List<RoleBinding> roleBindings = new LinkedList<>();
 
 	public OpenShiftApplication(ApplicationBuilder appBuilder) {
 		this(appBuilder, OpenShifts.master());
