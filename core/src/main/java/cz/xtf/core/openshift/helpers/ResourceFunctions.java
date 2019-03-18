@@ -8,7 +8,7 @@ import java.util.function.Function;
 public class ResourceFunctions {
 
 	public static Function<List<Pod>, Boolean> areExactlyNPodsReady(int n) {
-		return pods -> pods.size() == n && pods.stream().allMatch(ResourceParsers::isPodReady);
+		return pods -> pods.stream().filter(ResourceParsers::isPodReady).count() == n;
 	}
 
 	public static Function<List<Pod>, Boolean> areExactlyNPodsRunning(int n) {
