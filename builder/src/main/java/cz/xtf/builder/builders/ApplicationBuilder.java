@@ -294,6 +294,11 @@ public class ApplicationBuilder {
 		return result;
 	}
 
+	/**
+	 * @deprecated superseded by {@link #buildApplication(OpenShift)}
+	 * Bring your own client is a preferred way to obtain OpenShiftApplication object
+	 */
+	@Deprecated
 	public OpenShiftApplication buildApplication() {
 		return new OpenShiftApplication(this);
 	}
