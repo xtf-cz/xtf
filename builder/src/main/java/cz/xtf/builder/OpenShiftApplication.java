@@ -42,6 +42,11 @@ public class OpenShiftApplication {
 	private List<Role> roles = new LinkedList<>();
 	private List<RoleBinding> roleBindings = new LinkedList<>();
 
+	/**
+	 * @deprecated superseded by {@link #OpenShiftApplication(ApplicationBuilder, OpenShift)}
+	 * Bring your own client is a preferred way to obtain OpenShiftApplication object
+	 */
+	@Deprecated
 	public OpenShiftApplication(ApplicationBuilder appBuilder) {
 		this(appBuilder, OpenShifts.master());
 	}
