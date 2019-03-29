@@ -3,6 +3,7 @@ package cz.xtf.builder.builders;
 import cz.xtf.builder.OpenShiftApplication;
 import cz.xtf.builder.db.OpenShiftAuxiliary;
 import cz.xtf.core.bm.ManagedBuildReference;
+import cz.xtf.core.openshift.OpenShift;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
@@ -295,6 +296,10 @@ public class ApplicationBuilder {
 
 	public OpenShiftApplication buildApplication() {
 		return new OpenShiftApplication(this);
+	}
+
+	public OpenShiftApplication buildApplication(OpenShift openShift) {
+		return new OpenShiftApplication(this, openShift);
 	}
 
 	public ApplicationBuilder addDatabase(OpenShiftAuxiliary database) {
