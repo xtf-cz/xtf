@@ -1,7 +1,7 @@
 package cz.xtf.builder.builders;
 
-import io.fabric8.openshift.api.model.RoleBinding;
-import io.fabric8.openshift.api.model.RoleBindingFluent;
+import io.fabric8.kubernetes.api.model.rbac.RoleBinding;
+import io.fabric8.kubernetes.api.model.rbac.RoleBindingFluent;
 
 /**
  * Definition of RoleBinding. Example:
@@ -86,6 +86,7 @@ public class RoleBindingBuilder extends AbstractBuilder<RoleBinding, RoleBinding
 	/**
 	 * What is namespace of the role reference.
 	 */
+	@Deprecated
 	public RoleBindingBuilder roleRefNamespace(String roleRefNamespace) {
 		this.roleRefNamespace = roleRefNamespace;
 		return this;
@@ -93,7 +94,7 @@ public class RoleBindingBuilder extends AbstractBuilder<RoleBinding, RoleBinding
 
 	@Override
 	public RoleBinding build() {
-		RoleBindingFluent.SubjectsNested<io.fabric8.openshift.api.model.RoleBindingBuilder> subject = new io.fabric8.openshift.api.model.RoleBindingBuilder()
+		RoleBindingFluent.SubjectsNested<io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder> subject = new io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder()
 				.withNewMetadata()
 				.withName(this.getName())
 				.endMetadata()
@@ -104,14 +105,11 @@ public class RoleBindingBuilder extends AbstractBuilder<RoleBinding, RoleBinding
 		if (subjectNamespace != null && !subjectNamespace.isEmpty())
 			subject.withNamespace(subjectNamespace);
 
-		RoleBindingFluent.RoleRefNested<io.fabric8.openshift.api.model.RoleBindingBuilder> roleRef = subject
+		RoleBindingFluent.RoleRefNested<io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder> roleRef = subject
 				.endSubject()
 				.withNewRoleRef()
 				.withKind(roleRefKind)
 				.withName(roleRefName);
-
-		if (roleRefNamespace != null && !roleRefNamespace.isEmpty())
-			roleRef.withNamespace(roleRefNamespace);
 
 		return roleRef
 				.endRoleRef()

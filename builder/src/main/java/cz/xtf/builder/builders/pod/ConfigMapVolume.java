@@ -32,7 +32,7 @@ public class ConfigMapVolume extends Volume {
 				int num = Character.getNumericValue(b);
 				defaultModeIntVal = num | defaultModeIntVal << 3;
 			}
-			cfm.withNewDefaultMode(defaultModeIntVal);
+			cfm.withDefaultMode(defaultModeIntVal);
 		}
 		cfm.endConfigMap();
 	}

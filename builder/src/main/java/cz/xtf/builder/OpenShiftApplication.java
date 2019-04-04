@@ -11,11 +11,11 @@ import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
+import io.fabric8.kubernetes.api.model.rbac.Role;
+import io.fabric8.kubernetes.api.model.rbac.RoleBinding;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
-import io.fabric8.openshift.api.model.Role;
-import io.fabric8.openshift.api.model.RoleBinding;
 import io.fabric8.openshift.api.model.Route;
 import lombok.extern.slf4j.Slf4j;
 
@@ -107,7 +107,7 @@ public class OpenShiftApplication {
 		routes = routes.stream().map(openShift::createRoute).collect(Collectors.toList());
 		configMaps = configMaps.stream().map(openShift::createConfigMap).collect(Collectors.toList());
 		autoScalers = autoScalers.stream().map(openShift::createHorizontalPodAutoscaler).collect(Collectors.toList());
-		roles = roles.stream().map(r -> openShift.roles().create(r)).collect(Collectors.toList());
+		roles = roles.stream().map(r -> openShift.rbac().roles().create(r)).collect(Collectors.toList());
 		roleBindings = roleBindings.stream().map(openShift::createRoleBinding).collect(Collectors.toList());
 	}
 }

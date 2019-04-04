@@ -44,7 +44,7 @@
 
 		<!-- Depedency version properties -->
 		<version.httpclient>4.5.5</version.httpclient>
-		<version.openshift-client>4.1.1</version.openshift-client>
+		<version.openshift-client>4.2.2</version.openshift-client>
 		<version.commons-io>2.6</version.commons-io>
 		<version.commons-lang3>3.4</version.commons-lang3>
 		<version.commons-compress>1.18</version.commons-compress>
@@ -58,7 +58,7 @@
 		<version.assertj-core>3.5.2</version.assertj-core>
 		<version.lombok>1.16.22</version.lombok>
 		<version.gson>2.8.5</version.gson>
-		
+
 		<!-- Plugin version properties -->
 		<version.maven-source-plugin>3.0.1</version.maven-source-plugin>
 		<version.maven-release-plugin>2.5.3</version.maven-release-plugin>
