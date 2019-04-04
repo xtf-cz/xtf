@@ -14,7 +14,6 @@
 		<module>http-client</module>
 		<module>product</module>
 		<module>test-helpers</module>
-		<module>utilities</module>
 	</modules>
 
 	<scm>
