@@ -75,6 +75,3 @@ Retrieving an instance with this metadata: `Produts.resolve("product");`
 
 ### JUnit5
 JUnit5 module provides number of extensions and listeners designed to easy up OpenShift images test management. See [JUnit5](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/SimpleWaiter.java) for more informations. 
-
-### Utilities
-Utilities contain former XTF version and is meant to be deprecated. Classes within this module are now being refactored and moved in other modules. Yet won't be touched and deleted from utilities module itself.
