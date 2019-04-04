@@ -16,7 +16,7 @@ public class BuildManager {
 			openShift.createProjectRequest();
 		}
 
-		openShift.addRoleToGroup("system:image-puller", "system:authenticated");
+		openShift.addRoleToGroup("system:image-puller", "ClusterRole",  "system:authenticated");
 	}
 
 	public ManagedBuildReference deploy(ManagedBuild managedBuild) {

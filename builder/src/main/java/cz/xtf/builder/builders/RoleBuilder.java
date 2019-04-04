@@ -1,6 +1,6 @@
 package cz.xtf.builder.builders;
 
-import io.fabric8.openshift.api.model.Role;
+import io.fabric8.kubernetes.api.model.rbac.Role;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,7 +43,7 @@ public class RoleBuilder extends AbstractBuilder<Role, RoleBuilder> {
 
 	@Override
 	public Role build() {
-		return new io.fabric8.openshift.api.model.RoleBuilder()
+		return new io.fabric8.kubernetes.api.model.rbac.RoleBuilder()
 				.withNewMetadata()
 					.withName(this.getName())
 				.endMetadata()
