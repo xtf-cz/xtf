@@ -133,7 +133,7 @@ public class ImageContent {
 	}
 
 	public String javaVersion() {
-		return shell.execute("java", "-version").getError().replaceAll("\n", "").replaceAll("openjdk version \"([0-9]\\.[0-9]\\.[0-9]).*", "$1");
+		return shell.execute("java", "-version").getError().replaceAll("\n", "").replaceAll("openjdk version \"([0-9]+\\.[0-9]+\\.[0-9]+).*", "$1");
 	}
 
 	public String mavenVersion() {
@@ -148,7 +148,7 @@ public class ImageContent {
 			mavenScriptInstalled = true;
 		}
 
-		return shell.executeWithBash(mavenScriptPath).getOutput().replaceAll("\n", "").replaceAll(".*Apache Maven ([0-9]\\.[0-9]\\.[0-9]) .*", "$1");
+		return shell.executeWithBash(mavenScriptPath).getOutput().replaceAll("\n", "").replaceAll(".*Apache Maven ([0-9]+\\.[0-9]+\\.[0-9]+) .*", "$1");
 	}
 
 	public List<RpmPackage> rpms() {
