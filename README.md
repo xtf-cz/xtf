@@ -10,8 +10,8 @@ While framework itself doesn't require any configuration it can easy up some rep
 
 * System properties 
 * Environment variables
-* test.properties file in root of the project designed to contain user specific setup
-* global-test.properties file in root of the project designed to contain shared setup
+* `test.properties` file in root of the project designed to contain user specific setup. You can use `-Dxtf.test_properties.path` property to specify the location for the desired user specific setup.
+* `global-test.properties` file in root of the project designed to contain shared setup. You can use `-Dxtf.global_test_properties.path` property to specify the location for the desired user specific setup.
 
 The mapping between system properties and environment variables is done by lower casing environment variable, replacing `_` with `.` and adding `xtf.` before the result.
 

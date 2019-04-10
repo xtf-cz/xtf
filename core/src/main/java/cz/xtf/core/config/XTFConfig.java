@@ -29,11 +29,13 @@ public final class XTFConfig {
 
 	private static final Properties properties = new Properties();
 
+	private static final String TEST_PROPERTIES_PATH = "xtf.test_properties.path";
+	private static final String GLOBAL_TEST_PROPERTIES_PATH = "xtf.global_test_properties.path";
+
 	// Pre-loading
 	static {
-		testPropertiesPath = XTFConfig.getProjectRoot().resolve("test.properties");
-		globalPropertiesPath = XTFConfig.getProjectRoot().resolve("global-test.properties");
-
+		globalPropertiesPath = resolvePropertiesPath(System.getProperty(GLOBAL_TEST_PROPERTIES_PATH, "global-test.properties"));
+		testPropertiesPath = resolvePropertiesPath(System.getProperty(TEST_PROPERTIES_PATH, "test.properties"));
 		properties.putAll(XTFConfig.getPropertiesFromPath(globalPropertiesPath));
 		properties.putAll(XTFConfig.getPropertiesFromPath(testPropertiesPath));
 		properties.putAll(System.getenv().entrySet().stream().collect(Collectors.toMap(e -> "xtf." + e.getKey().replaceAll("_", ".").toLowerCase(), Map.Entry::getValue)));
@@ -59,6 +61,13 @@ public final class XTFConfig {
 		Path dir = Paths.get("").toAbsolutePath();
 		while (dir.getParent().resolve("pom.xml").toFile().exists()) dir = dir.getParent();
 		return dir;
+	}
+
+	private static Path resolvePropertiesPath(String path) {
+		if (Paths.get(path).toFile().exists()) {
+			return Paths.get(path);
+		}
+		return getProjectRoot().resolve(path);
 	}
 
 	private static Properties getPropertiesFromPath(Path path) {
