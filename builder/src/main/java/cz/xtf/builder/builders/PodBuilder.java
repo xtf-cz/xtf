@@ -88,6 +88,11 @@ public class PodBuilder extends AbstractBuilder<Pod, PodBuilder> {
 		return this;
 	}
 
+	public PodBuilder addConfigMapVolume(final String name, final String configMapName, final String defaultMode) {
+		volumes.add(new ConfigMapVolume(name, configMapName, defaultMode));
+		return this;
+	}
+
 	public PodBuilder addPersistenVolumeClaim(String name, String claimName) {
 		volumes.add(new PersistentVolumeClaim(name, claimName));
 		return this;
