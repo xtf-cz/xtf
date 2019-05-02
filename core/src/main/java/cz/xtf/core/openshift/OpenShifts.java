@@ -1,8 +1,5 @@
 package cz.xtf.core.openshift;
 
-import cz.xtf.core.config.OpenShiftConfig;
-import cz.xtf.core.http.Https;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -15,6 +12,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Base64;
@@ -22,13 +21,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import cz.xtf.core.config.OpenShiftConfig;
+import cz.xtf.core.http.Https;
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
 public class OpenShifts {
 	private static final String CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v3/clients/";
 
 	private static OpenShift adminUtil;
 	private static OpenShift masterUtil;
-	private static OpenShiftBinary openShiftBinary;
 
 	private static String openShiftBinaryPath;
 
@@ -76,9 +78,9 @@ public class OpenShifts {
 	}
 
 	public static OpenShiftBinary masterBinary(String namespace) {
-		if(openShiftBinary == null) {
-			openShiftBinary = new OpenShiftBinary(OpenShifts.getBinaryPath());
-		}
+		String ocConfigPath = createUniqueOcConfigFolder().resolve("oc.config").toAbsolutePath().toString();
+
+		OpenShiftBinary openShiftBinary = new OpenShiftBinary(OpenShifts.getBinaryPath(), ocConfigPath);
 
 		if (OpenShiftConfig.token() == null) {
 			openShiftBinary.login(OpenShiftConfig.url(), OpenShiftConfig.masterUsername(), OpenShiftConfig.masterPassword());
@@ -135,10 +137,7 @@ public class OpenShifts {
 			throw new IllegalStateException("Client binary for version " + version + " isn't available at " + clientLocation);
 		}
 
-		File workdir = new File(Paths.get("tmp/oc").toAbsolutePath().toString());
-		if (!workdir.mkdirs()) {
-			throw new IllegalStateException("Cannot mkdirs " + workdir);
-		}
+		File workdir = ocBinaryFolder();
 
 		// Download and extract client
 		File ocTarFile = new File(workdir, "oc.tar.gz");
@@ -168,5 +167,24 @@ public class OpenShifts {
 		if(result != 0) {
 			throw new IOException("Failed to execute: " + Arrays.toString(args));
 		}
+	}
+
+	private static Path createUniqueOcConfigFolder() {
+		try {
+			return Files.createTempDirectory(ocBinaryFolder().toPath(), "config");
+		} catch (IOException e) {
+			throw new IllegalStateException("Temporary folder for oc config couldn't be created", e);
+		}
+	}
+
+	private static File ocBinaryFolder() {
+		File workdir = new File(Paths.get("tmp/oc").toAbsolutePath().toString());
+		if (workdir.exists()) {
+			return workdir;
+		}
+		if (!workdir.mkdirs()) {
+			throw new IllegalStateException("Cannot mkdirs " + workdir);
+		}
+		return workdir;
 	}
 }
