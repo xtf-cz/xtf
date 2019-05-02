@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -16,9 +17,11 @@ import java.util.concurrent.Future;
 @Slf4j
 public class OpenShiftBinary {
 	private final String path;
+	private final String ocConfigPath;
 
 	public OpenShiftBinary(String path) {
 		this.path = path;
+		this.ocConfigPath = new File(this.path).getParentFile().toPath().resolve("oc.config").toAbsolutePath().toString();
 	}
 
 	public void login(String url, String token) {
@@ -39,7 +42,7 @@ public class OpenShiftBinary {
 
 	// Common method for any oc command call
 	public String execute(String... args) {
-		return executeCommand(ArrayUtils.addAll(new String[]{path}, args));
+		return executeCommand(ArrayUtils.addAll(new String[] {path, "--config=" + ocConfigPath}, args));
 	}
 
 	// Internal
