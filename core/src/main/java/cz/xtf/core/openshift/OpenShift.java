@@ -150,7 +150,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @see OpenShift#recreateProject(String)
 	 */
 	public ProjectRequest recreateProject() {
-		return recreateProject(new ProjectRequestBuilder().withNewMetadata().withName(getNamespace()).endMetadata().build());
+		return recreateProject(getNamespace());
 	}
 
 	/**
@@ -169,10 +169,19 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return ProjectRequest instatnce
 	 */
 	public ProjectRequest recreateProject(ProjectRequest projectRequest) {
+		return recreateProject(projectRequest, TimeUnit.MINUTES, 2);
+	}
+
+	/**
+	 * Creates or recreates project specified by projectRequest instance and timeout.
+	 *
+	 * @return ProjectRequest instatnce
+	 */
+	public ProjectRequest recreateProject(ProjectRequest projectRequest, TimeUnit timeoutUnit, long timeout) {
 		boolean deleted = deleteProject(projectRequest.getMetadata().getName());
 		if (deleted) {
 			BooleanSupplier bs = () -> getProject(projectRequest.getMetadata().getName()) == null;
-			new SimpleWaiter(bs, TimeUnit.MINUTES, 2, "Waiting for old project deletion before creating new one").waitFor();
+			new SimpleWaiter(bs, timeoutUnit, timeout, "Waiting for old project deletion before creating new one").waitFor();
 		}
 		return createProjectRequest(projectRequest);
 	}
