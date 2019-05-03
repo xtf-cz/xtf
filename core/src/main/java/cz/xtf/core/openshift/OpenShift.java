@@ -1,5 +1,6 @@
 package cz.xtf.core.openshift;
 
+import cz.xtf.core.config.WaitingConfig;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -172,7 +173,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 		boolean deleted = deleteProject(projectRequest.getMetadata().getName());
 		if (deleted) {
 			BooleanSupplier bs = () -> getProject(projectRequest.getMetadata().getName()) == null;
-			new SimpleWaiter(bs, TimeUnit.MINUTES, 2, "Waiting for old project deletion before creating new one").waitFor();
+			new SimpleWaiter(bs, TimeUnit.MILLISECONDS, WaitingConfig.timeout(), "Waiting for old project deletion before creating new one").waitFor();
 		}
 		return createProjectRequest(projectRequest);
 	}
