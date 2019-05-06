@@ -123,6 +123,10 @@ public abstract class BinaryBuild implements ManagedBuild {
 
 	abstract String getImage(BuildConfig bc);
 
+	protected boolean isCached(){
+		return true;
+	}
+
 	@Override
 	public boolean needsUpdate(OpenShift openShift) {
 		BuildConfig activeBc = openShift.buildConfigs().withName(id).get();
@@ -226,7 +230,7 @@ public abstract class BinaryBuild implements ManagedBuild {
 	}
 
 	private String getContentHash() {
-		if (contentHash == null) {
+		if (!isCached() || contentHash == null) {
 			try {
 				MessageDigest md = MessageDigest.getInstance("SHA-256");
 				DigestOutputStream dos = new DigestOutputStream(NULL_OUTPUT_STREAM, md);
