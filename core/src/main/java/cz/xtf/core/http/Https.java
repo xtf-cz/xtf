@@ -1,13 +1,10 @@
 package cz.xtf.core.http;
 
-import cz.xtf.core.waiting.SupplierWaiter;
-import cz.xtf.core.waiting.Waiter;
-import lombok.extern.slf4j.Slf4j;
-
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +17,13 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import cz.xtf.core.waiting.SupplierWaiter;
+import cz.xtf.core.waiting.Waiter;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class Https {
@@ -44,6 +47,31 @@ public class Https {
 		};
 
 		return new SupplierWaiter<>(getCode, x -> x == expectedCode, x -> x == failCode);
+	}
+
+	public static Waiter doesUrlResponseEqual(String url, String string) {
+		return doesUrlResponseMatch(url, response -> response.equals(string));
+	}
+
+	public static Waiter doesUrlResponseStartWith(String url, String string) {
+		return doesUrlResponseMatch(url, response -> response.startsWith(string));
+	}
+
+	public static Waiter doesUrlResponseContain(String url, String... strings) {
+		return doesUrlResponseMatch(url, response -> Stream.of(strings).allMatch(response::contains));
+	}
+
+	public static Waiter doesUrlResponseMatch(String url, Predicate<String>... predicates) {
+		Supplier<String> getContent = () -> {
+			try {
+				return Https.getContent(url);
+			} catch (HttpsException e) {
+				log.warn("Attempt to retrieve http content from {} has failed. ({})", url, e.getMessage());
+				return "";
+			}
+		};
+
+		return new SupplierWaiter<>(getContent, content -> Stream.of(predicates).allMatch(p -> p.test(content)));
 	}
 
 	public static int getCode(String url) {
