@@ -42,7 +42,11 @@ public class OpenShifts {
 	}
 
 	public static OpenShift admin(String namespace) {
-		return OpenShift.get(OpenShiftConfig.url(), namespace, OpenShiftConfig.adminUsername(), OpenShiftConfig.adminPassword());
+		if(OpenShiftConfig.adminToken() == null) {
+			return OpenShift.get(OpenShiftConfig.url(), namespace, OpenShiftConfig.adminUsername(), OpenShiftConfig.adminPassword());
+		} else {
+			return OpenShift.get(OpenShiftConfig.url(), namespace, OpenShiftConfig.adminToken());
+		}
 	}
 
 	public static OpenShift master() {

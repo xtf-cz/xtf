@@ -3,6 +3,7 @@ package cz.xtf.core.config;
 public final class OpenShiftConfig {
 	public static final String OPENSHIFT_URL = "xtf.openshift.url";
 	public static final String OPENSHIFT_TOKEN = "xtf.openshift.token";
+	public static final String OPENSHIFT_ADMIN_TOKEN = "xtf.openshift.admin.token";
 	public static final String OPENSHIFT_VERSION = "xtf.openshift.version";
 	public static final String OPENSHIFT_NAMESPACE = "xtf.openshift.namespace";
 	public static final String OPENSHIFT_BINARY_PATH = "xtf.openshift.binary.path";
@@ -18,6 +19,10 @@ public final class OpenShiftConfig {
 
 	public static String token() {
 		return XTFConfig.get(OPENSHIFT_TOKEN);
+	}
+
+	public static String adminToken() {
+		return XTFConfig.get(OPENSHIFT_ADMIN_TOKEN);
 	}
 
 	public static String version() {
