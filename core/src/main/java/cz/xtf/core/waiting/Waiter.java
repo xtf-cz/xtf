@@ -1,16 +1,16 @@
 package cz.xtf.core.waiting;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.util.concurrent.TimeUnit;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * An object that waits on condition to be met.
  */
 public interface Waiter {
 	long DEFAULT_INTERVAL = 1_000L;
-	long DEFAULT_TIMEOUT = 60_000;
 
 	/**
 	 * Sets waiter timeout after which waiters stops waiting. Timeout is logged
@@ -60,10 +60,10 @@ public interface Waiter {
 
 	/**
 	 * Sets waiters logPoints.
-	 * @see LogPoint
 	 *
 	 * @param logPoint what points of waiting should be logged.
 	 * @return this
+	 * @see LogPoint
 	 */
 	Waiter logPoint(LogPoint logPoint);
 
@@ -71,7 +71,6 @@ public interface Waiter {
 	 * Waits till condition is met.
 	 *
 	 * @return true if wanted condition was met, false if unwanted state condition was met
-	 *
 	 * @throws WaiterException in case of timeout
 	 */
 	boolean waitFor();
@@ -90,7 +89,7 @@ public interface Waiter {
 		 * @param millis waiting timeout on condition
 		 */
 		public void logStart(String reason, long millis) {
-			if(this.equals(START) || this.equals(BOTH)) log.info("Waiting up to {}. Reason: {}", DurationFormatUtils.formatDurationWords(millis, true, true), reason);
+			if (this.equals(START) || this.equals(BOTH)) log.info("Waiting up to {}. Reason: {}", DurationFormatUtils.formatDurationWords(millis, true, true), reason);
 		}
 
 		/**
@@ -100,7 +99,7 @@ public interface Waiter {
 		 * @param millis waiting timeout on condition
 		 */
 		public void logEnd(String reason, long millis) {
-			if(this.equals(END) || this.equals(BOTH)) log.info("Finished waiting after {}. Reason: {}", DurationFormatUtils.formatDurationWords(millis, true, true), reason);
+			if (this.equals(END) || this.equals(BOTH)) log.info("Finished waiting after {}. Reason: {}", DurationFormatUtils.formatDurationWords(millis, true, true), reason);
 		}
 	}
 }

@@ -4,6 +4,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import cz.xtf.core.config.WaitingConfig;
+
 public class SupplierWaiter<X> implements Waiter {
 	private Supplier<X> supplier;
 	private Function<X, Boolean> successCondition;
@@ -20,7 +22,7 @@ public class SupplierWaiter<X> implements Waiter {
 	}
 
 	public SupplierWaiter(Supplier<X> supplier, Function<X, Boolean> successCondition, Function<X, Boolean> failureCondition) {
-		this(supplier, successCondition, failureCondition, TimeUnit.MILLISECONDS, DEFAULT_TIMEOUT);
+		this(supplier, successCondition, failureCondition, TimeUnit.MILLISECONDS, WaitingConfig.timeout());
 	}
 
 	public SupplierWaiter(Supplier<X> supplier, Function<X, Boolean> successCondition, String reason) {
@@ -28,7 +30,7 @@ public class SupplierWaiter<X> implements Waiter {
 	}
 
 	public SupplierWaiter(Supplier<X> supplier, Function<X, Boolean> successCondition, Function<X, Boolean> failureCondition, String reason) {
-		this(supplier, successCondition, failureCondition, TimeUnit.MILLISECONDS, DEFAULT_TIMEOUT, reason);
+		this(supplier, successCondition, failureCondition, TimeUnit.MILLISECONDS, WaitingConfig.timeout(), reason);
 	}
 
 	public SupplierWaiter(Supplier<X> supplier, Function<X, Boolean> successCondition, TimeUnit timeoutUnit, long timeout) {

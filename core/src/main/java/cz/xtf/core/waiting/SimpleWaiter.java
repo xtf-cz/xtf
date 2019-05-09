@@ -3,6 +3,8 @@ package cz.xtf.core.waiting;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 
+import cz.xtf.core.config.WaitingConfig;
+
 public class SimpleWaiter implements Waiter {
 	private BooleanSupplier successCondition;
 	private BooleanSupplier failureCondition;
@@ -14,11 +16,11 @@ public class SimpleWaiter implements Waiter {
 	private LogPoint logPoint;
 
 	public SimpleWaiter(BooleanSupplier successCondition) {
-		this(successCondition, TimeUnit.MILLISECONDS, DEFAULT_TIMEOUT, null);
+		this(successCondition, TimeUnit.MILLISECONDS, WaitingConfig.timeout(), null);
 	}
 
 	public SimpleWaiter(BooleanSupplier successCondition, String reason) {
-		this(successCondition, TimeUnit.MILLISECONDS, DEFAULT_TIMEOUT, reason);
+		this(successCondition, TimeUnit.MILLISECONDS, WaitingConfig.timeout(), reason);
 	}
 
 	public SimpleWaiter(BooleanSupplier successCondition, TimeUnit timeoutUnit, long timeout) {

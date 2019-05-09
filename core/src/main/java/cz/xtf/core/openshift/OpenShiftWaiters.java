@@ -1,13 +1,5 @@
 package cz.xtf.core.openshift;
 
-import cz.xtf.core.config.WaitingConfig;
-import cz.xtf.core.openshift.helpers.ResourceFunctions;
-import cz.xtf.core.waiting.SimpleWaiter;
-import cz.xtf.core.waiting.SupplierWaiter;
-import cz.xtf.core.waiting.Waiter;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.openshift.api.model.Build;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -15,6 +7,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import cz.xtf.core.openshift.helpers.ResourceFunctions;
+import cz.xtf.core.waiting.SimpleWaiter;
+import cz.xtf.core.waiting.SupplierWaiter;
+import cz.xtf.core.waiting.Waiter;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.openshift.api.model.Build;
 
 public class OpenShiftWaiters {
 	private OpenShift openShift;
@@ -52,7 +51,7 @@ public class OpenShiftWaiters {
 		Supplier<Build> supplier = () -> openShift.getLatestBuild(buildConfigName);
 		String reason = "Waiting for presence of latest build of buildconfig " + buildConfigName;
 
-		return new SupplierWaiter<>(supplier, Objects::nonNull, TimeUnit.MILLISECONDS, WaitingConfig.timeout(), reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
+		return new SupplierWaiter<>(supplier, Objects::nonNull, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
 	}
 
 	/**
@@ -150,7 +149,7 @@ public class OpenShiftWaiters {
 		Function<List<Pod>, Boolean> sc = ResourceFunctions.areExactlyNPodsReady(replicas);
 		Function<List<Pod>, Boolean> fc = ResourceFunctions.haveAnyPodRestartedAtLeastNTimes(restartTolerance);
 
-		return new SupplierWaiter<>(ps, sc, fc, TimeUnit.MILLISECONDS, WaitingConfig.timeout());
+		return new SupplierWaiter<>(ps, sc, fc);
 	}
 
 	/**
@@ -185,7 +184,7 @@ public class OpenShiftWaiters {
 	}
 
 	private Waiter areExactlyNPodsReady(int n, Supplier<List<Pod>> podSupplier) {
-		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsReady(n), TimeUnit.MILLISECONDS, WaitingConfig.timeout());
+		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsReady(n));
 	}
 
 	/**
@@ -220,7 +219,7 @@ public class OpenShiftWaiters {
 	}
 
 	private Waiter areExactlyNPodsRunning(int n, Supplier<List<Pod>> podSupplier) {
-		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsRunning(n), TimeUnit.MILLISECONDS, WaitingConfig.timeout());
+		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsRunning(n));
 	}
 
 	public Waiter areNoPodsPresent(String dcName) {
@@ -243,7 +242,7 @@ public class OpenShiftWaiters {
 	}
 
 	private static Waiter areNoPodsPresent(Supplier<List<Pod>> podSupplier) {
-		return new SupplierWaiter<>(podSupplier, List::isEmpty, TimeUnit.MILLISECONDS, WaitingConfig.timeout());
+		return new SupplierWaiter<>(podSupplier, List::isEmpty);
 	}
 
 	public Waiter havePodsBeenRestarted(String dcName) {
@@ -265,6 +264,6 @@ public class OpenShiftWaiters {
 	}
 
 	private static Waiter havePodsBeenRestartedAtLeastNTimes(int times, Supplier<List<Pod>> podSupplier) {
-		return new SupplierWaiter<>(podSupplier, ResourceFunctions.haveAnyPodRestartedAtLeastNTimes(times), TimeUnit.MILLISECONDS, WaitingConfig.timeout());
+		return new SupplierWaiter<>(podSupplier, ResourceFunctions.haveAnyPodRestartedAtLeastNTimes(times));
 	}
 }
