@@ -16,10 +16,10 @@ public class SinceVersionCondition implements ExecutionCondition {
 		SinceVersions sinceVersions = AnnotationSupport.findAnnotation(context.getElement(), SinceVersions.class).orElse(null);
 
 		if (sinceVersion != null) {
-			return this.resolve(sinceVersion);
+			return resolve(sinceVersion);
 		} else if (sinceVersions != null) {
 			for (SinceVersion sv : sinceVersions.value()) {
-				ConditionEvaluationResult cer = this.resolve(sv);
+				ConditionEvaluationResult cer = resolve(sv);
 				if (cer.isDisabled()) return cer;
 			}
 			return ConditionEvaluationResult.enabled("Feature is expected to be available.");
@@ -28,7 +28,7 @@ public class SinceVersionCondition implements ExecutionCondition {
 		return ConditionEvaluationResult.enabled("SinceVersion annotation isn't present on target.");
 	}
 
-	private ConditionEvaluationResult resolve(SinceVersion sinceVersion) {
+	public static ConditionEvaluationResult resolve(SinceVersion sinceVersion) {
 		Image image = Image.resolve(sinceVersion.image());
 		if (image.getRepo().equals(sinceVersion.name())) {
 			if (image.isVersionAtLeast(sinceVersion.since())) {

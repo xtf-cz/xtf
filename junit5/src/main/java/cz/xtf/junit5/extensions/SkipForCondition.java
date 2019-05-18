@@ -16,10 +16,10 @@ public class SkipForCondition implements ExecutionCondition {
 		SkipFors skipFors = AnnotationSupport.findAnnotation(context.getElement(), SkipFors.class).orElse(null);
 
 		if (skipFor != null) {
-			return this.resolve(skipFor);
+			return resolve(skipFor);
 		} else if (skipFors != null) {
 			for (SkipFor sf : skipFors.value()) {
-				ConditionEvaluationResult cer = this.resolve(sf);
+				ConditionEvaluationResult cer = resolve(sf);
 				if (cer.isDisabled()) return cer;
 			}
 			return  ConditionEvaluationResult.enabled("Feature is expected to be available.");
@@ -28,7 +28,7 @@ public class SkipForCondition implements ExecutionCondition {
 		return ConditionEvaluationResult.enabled("SkipFor(s) annotation isn't present on target.");
 	}
 
-	private ConditionEvaluationResult resolve(SkipFor skipFor) {
+	public static ConditionEvaluationResult resolve(SkipFor skipFor) {
 		Image image = Image.resolve(skipFor.image());
 		if (image.getRepo().equals(skipFor.name())) {
 			String reason = skipFor.reason().equals("") ? "" : " (" + skipFor.reason() + ")";

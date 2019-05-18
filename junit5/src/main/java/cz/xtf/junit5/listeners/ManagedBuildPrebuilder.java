@@ -24,8 +24,12 @@ import cz.xtf.core.openshift.OpenShifts;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
 import cz.xtf.core.waiting.WaiterException;
+import cz.xtf.junit5.annotations.SinceVersion;
+import cz.xtf.junit5.annotations.SkipFor;
 import cz.xtf.junit5.annotations.UsesBuild;
 import cz.xtf.junit5.config.JUnitConfig;
+import cz.xtf.junit5.extensions.SinceVersionCondition;
+import cz.xtf.junit5.extensions.SkipForCondition;
 import cz.xtf.junit5.interfaces.BuildDefinition;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.extern.slf4j.Slf4j;
@@ -135,6 +139,15 @@ public class ManagedBuildPrebuilder implements TestExecutionListener {
 				Class klass = classSource.getJavaClass();
 
 				log.debug("Processing {}", klass);
+
+				// We don't want to prepare build when whole test case is skipped
+				boolean classSkippedForStream = Arrays.stream(klass.getAnnotationsByType(SkipFor.class))
+						.anyMatch(a -> SkipForCondition.resolve((SkipFor) a).isDisabled());
+				boolean classSkippedForTestedVersion = Arrays.stream(klass.getAnnotationsByType(SinceVersion.class))
+						.anyMatch(a -> SinceVersionCondition.resolve((SinceVersion) a).isDisabled());
+				if (classSkippedForStream || classSkippedForTestedVersion) {
+					return;
+				}
 
 				Arrays.stream(klass.getAnnotations()).filter(a -> a.annotationType().getAnnotation(UsesBuild.class) != null).forEach(a -> {
 					try {
