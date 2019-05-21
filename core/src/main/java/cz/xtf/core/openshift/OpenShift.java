@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.api.model.ResourceQuota;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
+import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.LocalPortForward;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
@@ -54,6 +55,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -72,17 +74,52 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	public static final String KEEP_LABEL = "xtf.cz/keep";
 
+	/**
+	 * Autoconfigures the client with the default fabric8 client rules
+	 * @return
+	 */
+	public static OpenShift get(String namespace) {
+		Config kubeconfig = Config.autoConfigure(null);
+
+		OpenShiftConfig openShiftConfig = new OpenShiftConfig(kubeconfig);
+
+		setupTimeouts(openShiftConfig);
+
+		if (StringUtils.isNotEmpty(namespace)) {
+			openShiftConfig.setNamespace(namespace);
+		}
+
+		return new OpenShift(openShiftConfig);
+	}
+
+	public static OpenShift get(Path kubeconfigPath, String namespace) {
+		try {
+			String kubeconfigContents = new String(Files.readAllBytes(kubeconfigPath), StandardCharsets.UTF_8);
+			Config kubeconfig = Config.fromKubeconfig(null, kubeconfigContents, kubeconfigPath.toAbsolutePath().toString());
+			OpenShiftConfig openShiftConfig = new OpenShiftConfig(kubeconfig);
+
+			setupTimeouts(openShiftConfig);
+
+			if (StringUtils.isNotEmpty(namespace)) {
+				openShiftConfig.setNamespace(namespace);
+			}
+
+			return new OpenShift(openShiftConfig);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public static OpenShift get(String masterUrl, String namespace, String username, String password) {
 		OpenShiftConfig openShiftConfig = new OpenShiftConfigBuilder()
 				.withMasterUrl(masterUrl)
 				.withTrustCerts(true)
-				.withRequestTimeout(120_000)
-				.withConnectionTimeout(120_000)
 				.withNamespace(namespace)
 				.withUsername(username)
 				.withPassword(password)
-				.withBuildTimeout(10 * 60 * 1000)
 				.build();
+
+		setupTimeouts(openShiftConfig);
 
 		return new OpenShift(openShiftConfig);
 	}
@@ -91,14 +128,19 @@ public class OpenShift extends DefaultOpenShiftClient {
 		OpenShiftConfig openShiftConfig = new OpenShiftConfigBuilder()
 				.withMasterUrl(masterUrl)
 				.withTrustCerts(true)
-				.withRequestTimeout(120_000)
-				.withConnectionTimeout(120_000)
-				.withBuildTimeout(10 * 60 * 1000)
 				.withNamespace(namespace)
 				.withOauthToken(token)
 				.build();
 
+		setupTimeouts(openShiftConfig);
+
 		return new OpenShift(openShiftConfig);
+	}
+
+	private static void setupTimeouts(OpenShiftConfig config) {
+		config.setBuildTimeout(10 * 60 * 1000);
+		config.setRequestTimeout(120_000);
+		config.setConnectionTimeout(120_000);
 	}
 
 	private final OpenShiftWaiters waiters;
@@ -188,6 +230,14 @@ public class OpenShift extends DefaultOpenShiftClient {
 	public Project getProject(String name) {
 		try {
 			return projects().withName(name).get();
+		} catch (KubernetesClientException e) {
+			return null;
+		}
+	}
+
+	public Project getProject() {
+		try {
+			return projects().withName(getNamespace()).get();
 		} catch (KubernetesClientException e) {
 			return null;
 		}
