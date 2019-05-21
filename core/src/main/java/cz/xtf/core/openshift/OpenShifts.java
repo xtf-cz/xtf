@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
@@ -23,6 +24,7 @@ import java.util.Optional;
 
 import cz.xtf.core.config.OpenShiftConfig;
 import cz.xtf.core.http.Https;
+import io.fabric8.kubernetes.client.Config;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -42,11 +44,19 @@ public class OpenShifts {
 	}
 
 	public static OpenShift admin(String namespace) {
-		if(OpenShiftConfig.adminToken() == null) {
-			return OpenShift.get(OpenShiftConfig.url(), namespace, OpenShiftConfig.adminUsername(), OpenShiftConfig.adminPassword());
-		} else {
+		if (StringUtils.isNotEmpty(OpenShiftConfig.adminToken())) {
 			return OpenShift.get(OpenShiftConfig.url(), namespace, OpenShiftConfig.adminToken());
 		}
+
+		if (StringUtils.isNotEmpty(OpenShiftConfig.adminUsername())) {
+			return OpenShift.get(OpenShiftConfig.url(), namespace, OpenShiftConfig.adminUsername(), OpenShiftConfig.adminPassword());
+		}
+
+		if (StringUtils.isNotEmpty(OpenShiftConfig.adminKubeconfig())) {
+			return OpenShift.get(Paths.get(OpenShiftConfig.adminKubeconfig()), namespace);
+		}
+
+		return OpenShift.get(namespace);
 	}
 
 	public static OpenShift master() {
@@ -57,11 +67,19 @@ public class OpenShifts {
 	}
 
 	public static OpenShift master(String namespace) {
-		if(OpenShiftConfig.token() == null) {
-			return OpenShift.get(OpenShiftConfig.url(), namespace, OpenShiftConfig.masterUsername(), OpenShiftConfig.masterPassword());
-		} else {
-			return OpenShift.get(OpenShiftConfig.url(), namespace, OpenShiftConfig.token());
+		if (StringUtils.isNotEmpty(OpenShiftConfig.masterToken())) {
+			return OpenShift.get(OpenShiftConfig.url(), namespace, OpenShiftConfig.masterToken());
 		}
+
+		if (StringUtils.isNotEmpty(OpenShiftConfig.masterUsername())) {
+			return OpenShift.get(OpenShiftConfig.url(), namespace, OpenShiftConfig.masterUsername(), OpenShiftConfig.masterPassword());
+		}
+
+		if (StringUtils.isNotEmpty(OpenShiftConfig.masterKubeconfig())) {
+			return OpenShift.get(Paths.get(OpenShiftConfig.masterKubeconfig()), namespace);
+		}
+
+		return OpenShift.get(namespace);
 	}
 
 	public static String getBinaryPath() {
@@ -82,53 +100,71 @@ public class OpenShifts {
 	}
 
 	public static OpenShiftBinary masterBinary(String namespace) {
+		return getBinary(OpenShiftConfig.masterToken(), OpenShiftConfig.masterUsername(), OpenShiftConfig.masterPassword(), OpenShiftConfig.masterKubeconfig(), namespace);
+	}
+
+	public static OpenShiftBinary adminBinary() {
+		return adminBinary(OpenShiftConfig.namespace());
+	}
+
+	public static OpenShiftBinary adminBinary(String namespace) {
+		return getBinary(OpenShiftConfig.adminToken(), OpenShiftConfig.adminUsername(), OpenShiftConfig.adminPassword(), OpenShiftConfig.adminKubeconfig(), namespace);
+	}
+
+	private static OpenShiftBinary getBinary(String token, String username, String password, String kubeconfig, String namespace) {
 		String ocConfigPath = createUniqueOcConfigFolder().resolve("oc.config").toAbsolutePath().toString();
+		OpenShiftBinary openShiftBinary;
 
-		OpenShiftBinary openShiftBinary = new OpenShiftBinary(OpenShifts.getBinaryPath(), ocConfigPath);
-
-		if (OpenShiftConfig.token() == null) {
-			openShiftBinary.login(OpenShiftConfig.url(), OpenShiftConfig.masterUsername(), OpenShiftConfig.masterPassword());
-		} else {
-			openShiftBinary.login(OpenShiftConfig.url(), OpenShiftConfig.token());
+		if (StringUtils.isNotEmpty(token) || StringUtils.isNotEmpty(username)) {
+			// If we are using a token or username/password, we start with a nonexisting kubeconfig and do an "oc login"
+			openShiftBinary = new OpenShiftBinary(OpenShifts.getBinaryPath(), ocConfigPath);
+			if (StringUtils.isNotEmpty(token)) {
+				openShiftBinary.login(OpenShiftConfig.url(), token);
+			} else {
+				openShiftBinary.login(OpenShiftConfig.url(), username, password);
+			}
+		}
+		else {
+			// If we are using an existing kubeconfig (or a default kubeconfig), we copy the original kubeconfig
+			if (StringUtils.isNotEmpty(kubeconfig)) {
+				// We copy the specified kubeconfig
+				try {
+					Files.copy(Paths.get(kubeconfig), Paths.get(ocConfigPath), StandardCopyOption.REPLACE_EXISTING);
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			} else {
+				// We copy the default ~/.kube/config
+				File defaultKubeConfig = Paths.get(getHomeDir(), ".kube", "config").toFile();
+				if (defaultKubeConfig.isFile()) {
+					try {
+						Files.copy(defaultKubeConfig.toPath(), Paths.get(ocConfigPath), StandardCopyOption.REPLACE_EXISTING);
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+				} else {
+					throw new RuntimeException(defaultKubeConfig.getAbsolutePath() + " does not exist and no other OpenShift master option specified");
+				}
+			}
+			openShiftBinary = new OpenShiftBinary(OpenShifts.getBinaryPath(), ocConfigPath);
 		}
 
-		openShiftBinary.project(namespace);
+		if (StringUtils.isNotEmpty(namespace)) {
+			openShiftBinary.project(namespace);
+		}
 
 		return openShiftBinary;
 	}
 
-	public static String getVersion() {
-		String content = Https.httpsGetContent(OpenShiftConfig.url() + "/version/openshift");
-		return ModelNode.fromJSONString(content).get("gitVersion").asString().replaceAll("^v(.*)", "$1");
-	}
-
-	public static String getMasterToken() {
-		if(OpenShiftConfig.token() != null) {
-			return OpenShiftConfig.token();
-		} else {
-			HttpsURLConnection connection = null;
-			try {
-				connection = Https.getHttpsConnection(new URL(OpenShiftConfig.url() + "/oauth/authorize?response_type=token&client_id=openshift-challenging-client"));
-				String encoded = Base64.getEncoder().encodeToString((OpenShiftConfig.masterUsername() + ":" + OpenShiftConfig.masterPassword()).getBytes(StandardCharsets.UTF_8));
-				connection.setRequestProperty("Authorization", "Basic " + encoded);
-				connection.setInstanceFollowRedirects(false);
-
-				connection.connect();
-				Map<String, List<String>> headers = connection.getHeaderFields();
-				connection.disconnect();
-
-				List<String> location = headers.get("Location");
-				if (location != null) {
-					Optional<String> acces_token = location.stream().filter(s -> s.contains("access_token")).findFirst();
-					return acces_token.map(s -> StringUtils.substringBetween(s, "#access_token=", "&")).orElse(null);
-				}
-			} catch (IOException ex) {
-				log.error("Unable to retrieve token from Location header: {} ", ex.getMessage());
-			} finally {
-				if (connection != null) connection.disconnect();
+	private static String getHomeDir() {
+		String home = System.getenv("HOME");
+		if (home != null && !home.isEmpty()) {
+			File f = new File(home);
+			if (f.exists() && f.isDirectory()) {
+				return home;
 			}
-			return null;
 		}
+		return System.getProperty("user.home", ".");
 	}
 
 	private static String downloadOpenShiftBinary(String version) {
@@ -158,6 +194,70 @@ public class OpenShifts {
 		} catch (IOException | InterruptedException e) {
 			throw new IllegalStateException("Failed to download and extract oc binary from " + clientLocation + "oc.tar.gz", e);
 		}
+	}
+
+	public static String getVersion() {
+		String content = Https.httpsGetContent(OpenShiftConfig.url() + "/version/openshift");
+		return ModelNode.fromJSONString(content).get("gitVersion").asString().replaceAll("^v(.*)", "$1");
+	}
+
+	public static String getMasterToken() {
+		return getToken(OpenShiftConfig.masterToken(), OpenShiftConfig.masterUsername(), OpenShiftConfig.masterPassword(), OpenShiftConfig.masterKubeconfig());
+	}
+
+	public static String getAdminToken() {
+		return getToken(OpenShiftConfig.adminToken(), OpenShiftConfig.adminUsername(), OpenShiftConfig.adminPassword(), OpenShiftConfig.adminKubeconfig());
+	}
+
+	private static String getToken(String token, String username, String password, String kubeconfig) {
+		if (StringUtils.isNotEmpty(token)) {
+			return token;
+		}
+
+		// Attempt to get the token via HTTP basic auth:
+		if (StringUtils.isNotEmpty(username)) {
+			HttpsURLConnection connection = null;
+			try {
+				connection = Https.getHttpsConnection(new URL(OpenShiftConfig.url() + "/oauth/authorize?response_type=token&client_id=openshift-challenging-client"));
+				String encoded = Base64.getEncoder().encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
+				connection.setRequestProperty("Authorization", "Basic " + encoded);
+				connection.setInstanceFollowRedirects(false);
+
+				connection.connect();
+				Map<String, List<String>> headers = connection.getHeaderFields();
+				connection.disconnect();
+
+				List<String> location = headers.get("Location");
+				if (location != null) {
+					Optional<String> acces_token = location.stream().filter(s -> s.contains("access_token")).findFirst();
+					return acces_token.map(s -> StringUtils.substringBetween(s, "#access_token=", "&")).orElse(null);
+				}
+			} catch (IOException ex) {
+				log.error("Unable to retrieve token from Location header: {} ", ex.getMessage());
+			} finally {
+				if (connection != null) connection.disconnect();
+			}
+			return null;
+		}
+
+		if (StringUtils.isNotEmpty(kubeconfig)) {
+			try {
+				Config config = Config.fromKubeconfig(null, new String(Files.readAllBytes(Paths.get(kubeconfig)), StandardCharsets.UTF_8), kubeconfig);
+				return config.getOauthToken();
+			} catch (IOException e) {
+				log.error("Unable to retrieve token from kubeconfig: {} ", kubeconfig, e);
+			}
+			return null;
+		}
+
+		File defaultKubeConfig = Paths.get(getHomeDir(), ".kube", "config").toFile();
+		try {
+			Config config = Config.fromKubeconfig(null, new String(Files.readAllBytes(defaultKubeConfig.toPath()), StandardCharsets.UTF_8), defaultKubeConfig.getAbsolutePath());
+			return config.getOauthToken();
+		} catch (IOException e) {
+			log.error("Unable to retrieve token from default kubeconfig: {} ", defaultKubeConfig, e);
+		}
+		return null;
 	}
 
 	private static void executeCommand(String... args) throws IOException, InterruptedException {

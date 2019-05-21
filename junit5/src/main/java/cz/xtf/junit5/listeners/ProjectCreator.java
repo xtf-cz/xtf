@@ -1,6 +1,5 @@
 package cz.xtf.junit5.listeners;
 
-import cz.xtf.core.config.OpenShiftConfig;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.openshift.OpenShifts;
 import cz.xtf.core.waiting.SimpleWaiter;
@@ -17,7 +16,7 @@ public class ProjectCreator implements TestExecutionListener {
 
 	@Override
 	public void testPlanExecutionStarted(TestPlan testPlan) {
-		if(openShift.getProject(OpenShiftConfig.namespace()) == null) {
+		if(openShift.getProject() == null) {
 			openShift.createProjectRequest();
 		}
 	}
@@ -28,7 +27,7 @@ public class ProjectCreator implements TestExecutionListener {
 			boolean deleted = openShift.deleteProject();
 			// For multi-module maven projects, other modules may attempt to crate project requests immediately after this modules deleteProject
 			if (deleted) {
-				BooleanSupplier bs = () -> openShift.getProject(OpenShiftConfig.namespace()) == null;
+				BooleanSupplier bs = () -> openShift.getProject() == null;
 				new SimpleWaiter(bs, TimeUnit.MINUTES, 2, "Waiting for old project deletion").waitFor();
 			}
 		}
