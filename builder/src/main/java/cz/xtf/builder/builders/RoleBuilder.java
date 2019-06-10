@@ -1,10 +1,10 @@
 package cz.xtf.builder.builders;
 
-import io.fabric8.kubernetes.api.model.rbac.Role;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+
+import io.fabric8.kubernetes.api.model.rbac.Role;
 
 /**
  * Definition of Role. Example:
@@ -17,11 +17,13 @@ import java.util.Collection;
  * rules:
  *   resources: ["pods", "pods/log"]
  *   verbs: ["list", "get"]
+ *   apiGroups: [""]
  *</pre>
  */
 public class RoleBuilder extends AbstractBuilder<Role, RoleBuilder> {
 	private Collection<String> resources;
 	private Collection<String> verbs;
+	private Collection<String> apiGroups;
 
 	public RoleBuilder(String roleName) {
 		this(null, roleName);
@@ -29,6 +31,7 @@ public class RoleBuilder extends AbstractBuilder<Role, RoleBuilder> {
 
 	RoleBuilder(ApplicationBuilder applicationBuilder, String roleName) {
 		super(applicationBuilder, roleName);
+		this.apiGroups = Arrays.asList("");
 	}
 
 	public RoleBuilder resources(String... resources) {
@@ -41,6 +44,11 @@ public class RoleBuilder extends AbstractBuilder<Role, RoleBuilder> {
 		return this;
 	}
 
+	public RoleBuilder apiGroups(String... apiGroups) {
+		this.apiGroups = new ArrayList<String>(Arrays.asList(apiGroups));
+		return this;
+	}
+
 	@Override
 	public Role build() {
 		return new io.fabric8.kubernetes.api.model.rbac.RoleBuilder()
@@ -50,6 +58,7 @@ public class RoleBuilder extends AbstractBuilder<Role, RoleBuilder> {
 				.addNewRule()
 					.addToVerbs(verbs.toArray(new String[0]))
 					.addToResources(resources.toArray(new String[0]))
+					.addToApiGroups(apiGroups.toArray(new String[0]))
 				.endRule()
 				.build();
 	}
