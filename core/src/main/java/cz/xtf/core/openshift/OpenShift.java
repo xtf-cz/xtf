@@ -1,5 +1,24 @@
 package cz.xtf.core.openshift;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+
 import cz.xtf.core.config.WaitingConfig;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
@@ -35,6 +54,7 @@ import io.fabric8.openshift.api.model.BuildRequest;
 import io.fabric8.openshift.api.model.BuildRequestBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
+import io.fabric8.openshift.api.model.ImageStreamTag;
 import io.fabric8.openshift.api.model.Project;
 import io.fabric8.openshift.api.model.ProjectRequest;
 import io.fabric8.openshift.api.model.ProjectRequestBuilder;
@@ -46,26 +66,8 @@ import io.fabric8.openshift.client.OpenShiftConfig;
 import io.fabric8.openshift.client.OpenShiftConfigBuilder;
 import io.fabric8.openshift.client.ParameterValue;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import rx.Observable;
 import rx.observables.StringObservable;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BooleanSupplier;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class OpenShift extends DefaultOpenShiftClient {
@@ -265,6 +267,23 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	public boolean deleteImageStream(ImageStream imageStream) {
 		return imageStreams().delete(imageStream);
+	}
+
+	// ImageStreamTags
+	public ImageStreamTag createImageStreamTag(ImageStreamTag imageStreamTag) {
+		return imageStreamTags().create(imageStreamTag);
+	}
+
+	public ImageStreamTag getImageStreamTag(String name) {
+		return imageStreamTags().withName(name).get();
+	}
+
+	public List<ImageStreamTag> getImageStreamTags() {
+		return imageStreamTags().list().getItems();
+	}
+
+	public boolean deleteImageStreamTag(ImageStreamTag imageStreamTag) {
+		return imageStreamTags().delete(imageStreamTag);
 	}
 
 	// Pods

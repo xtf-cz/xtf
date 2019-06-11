@@ -14,6 +14,8 @@ import cz.xtf.core.waiting.SupplierWaiter;
 import cz.xtf.core.waiting.Waiter;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.openshift.api.model.Build;
+import io.fabric8.openshift.api.model.ImageStream;
+import io.fabric8.openshift.api.model.ImageStreamTag;
 
 public class OpenShiftWaiters {
 	private OpenShift openShift;
@@ -50,6 +52,34 @@ public class OpenShiftWaiters {
 	public Waiter isLatestBuildPresent(String buildConfigName) {
 		Supplier<Build> supplier = () -> openShift.getLatestBuild(buildConfigName);
 		String reason = "Waiting for presence of latest build of buildconfig " + buildConfigName;
+
+		return new SupplierWaiter<>(supplier, Objects::nonNull, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
+	}
+
+	/**
+	 * Creates waiter for image stream presence with default timeout,
+	 * 5 seconds interval check and both logging points.
+	 *
+	 * @param imageStreamName name of image stream for which build to be waited upon
+	 * @return Waiter instance
+	 */
+	public Waiter isImageStreamPresent(String imageStreamName) {
+		Supplier<ImageStream> supplier = () -> openShift.getImageStream(imageStreamName);
+		String reason = "Waiting for presence of image stream " + imageStreamName;
+
+		return new SupplierWaiter<>(supplier, Objects::nonNull, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
+	}
+
+	/**
+	 * Creates waiter for image stream tag presence with default timeout,
+	 * 5 seconds interval check and both logging points.
+	 *
+	 * @param imageStreamTagName name of image stream tag for which to be waited upon
+	 * @return Waiter instance
+	 */
+	public Waiter isImageStreamTagPresent(String imageStreamTagName) {
+		Supplier<ImageStreamTag> supplier = () -> openShift.getImageStreamTag(imageStreamTagName);
+		String reason = "Waiting for presence of image stream tag " + imageStreamTagName;
 
 		return new SupplierWaiter<>(supplier, Objects::nonNull, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
 	}
