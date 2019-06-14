@@ -61,17 +61,23 @@ public class OpenShiftBinary {
 		ProcessBuilder pb = new ProcessBuilder(args);
 
 		pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
-		pb.redirectErrorStream(true);
+		pb.redirectError(ProcessBuilder.Redirect.PIPE);
 
 		try {
 			Process p = pb.start();
 
-			ExecutorService es = Executors.newSingleThreadExecutor();
+			ExecutorService es = Executors.newFixedThreadPool(2);
 
-			Future<String> res = es.submit(() -> {
+			Future<String> out = es.submit(() -> {
 				try (InputStream is = p.getInputStream(); StringWriter sw = new StringWriter()) {
 					IOUtils.copy(is, sw);
-					sw.flush();
+					return sw.toString();
+				}
+			});
+
+			Future<String> err = es.submit(() -> {
+				try (InputStream is = p.getErrorStream(); StringWriter sw = new StringWriter()) {
+					IOUtils.copy(is, sw);
 					return sw.toString();
 				}
 			});
@@ -79,9 +85,10 @@ public class OpenShiftBinary {
 			int result = p.waitFor();
 
 			if (result == 0) {
-				return res.get();
+				return out.get();
 			} else {
 				log.error("Failed while executing (code {}): {}", result, Arrays.toString(args));
+				log.error(err.get());
 			}
 		} catch (IOException | InterruptedException | ExecutionException e) {
 			log.error("Failed while executing: " + Arrays.toString(args), e);
