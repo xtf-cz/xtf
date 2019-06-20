@@ -14,7 +14,9 @@ import cz.xtf.core.waiting.SupplierWaiter;
 import cz.xtf.core.waiting.Waiter;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.openshift.api.model.Build;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class OpenShiftWaiters {
 	private OpenShift openShift;
 
@@ -61,32 +63,40 @@ public class OpenShiftWaiters {
 	 */
 	public Waiter isProjectClean() {
 		BooleanSupplier bs = () -> {
+
 			List<Boolean> cleanedResources = new ArrayList<>();
-			cleanedResources.add(openShift.templates().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.apps().deployments().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.batch().jobs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.deploymentConfigs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.apps().statefulSets().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.replicationControllers().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.buildConfigs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.imageStreams().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.endpoints().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.services().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.builds().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.routes().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.pods().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.persistentVolumeClaims().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.autoscaling().horizontalPodAutoscalers().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.configMaps().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.getUserSecrets().isEmpty());
-			cleanedResources.add(openShift.getUserServiceAccounts().isEmpty());
-			cleanedResources.add(openShift.getUserRoleBindings().isEmpty());
-			cleanedResources.add(openShift.getRoles().isEmpty());
+			cleanedResources.add(isResourceCleaned(openShift.templates().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.apps().deployments().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.batch().jobs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.deploymentConfigs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.apps().statefulSets().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.replicationControllers().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.buildConfigs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.imageStreams().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.endpoints().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.services().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.builds().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.routes().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.pods().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.persistentVolumeClaims().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.autoscaling().horizontalPodAutoscalers().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.configMaps().withoutLabel(OpenShift.KEEP_LABEL).list().getItems()));
+			cleanedResources.add(isResourceCleaned(openShift.getUserSecrets()));
+			cleanedResources.add(isResourceCleaned(openShift.getUserServiceAccounts()));
+			cleanedResources.add(isResourceCleaned(openShift.getUserRoleBindings()));
+			cleanedResources.add(isResourceCleaned(openShift.getRoles()));
 
 			return !cleanedResources.contains(false);
 		};
 
 		return new SimpleWaiter(bs, TimeUnit.SECONDS, 20, "Cleaning project.");
+	}
+
+	private boolean isResourceCleaned(List<? extends Object> list) {
+		if (!list.isEmpty()) {
+			log.debug("Resource not cleaned: " + list.toString());
+		}
+		return list.isEmpty();
 	}
 
 	/**
