@@ -68,6 +68,46 @@ public interface Waiter {
 	Waiter logPoint(LogPoint logPoint);
 
 	/**
+	 * Sets waiters execution for each iteration.
+	 *
+	 * @param runnable code to be executed upon successful waiting.
+	 * @return this
+	 */
+	default Waiter onIteration(Runnable runnable) {
+		throw new UnsupportedOperationException("Method onIteration hasn't been implemented.");
+	}
+
+	/**
+	 * Sets waiters successful awaiting execution.
+	 *
+	 * @param runnable code to be executed upon successful waiting.
+	 * @return this
+	 */
+	default Waiter onSuccess(Runnable runnable) {
+		throw new UnsupportedOperationException("Method onSuccess hasn't been implemented.");
+	}
+
+	/**
+	 * Sets waiters failed awaiting execution.
+	 *
+	 * @param runnable code to be executed upon failed waiting.
+	 * @return this
+	 */
+	default Waiter onFailure(Runnable runnable) {
+		throw new UnsupportedOperationException("Method onFailure hasn't been implemented.");
+	}
+
+	/**
+	 * Sets waiters timed out awaiting execution.
+	 *
+	 * @param runnable code to be executed upon timed out waiting.
+	 * @return this
+	 */
+	default Waiter onTimeout(Runnable runnable) {
+		throw new UnsupportedOperationException("Method onTimeout hasn't been implemented.");
+	}
+
+	/**
 	 * Waits till condition is met.
 	 *
 	 * @return true if wanted condition was met, false if unwanted state condition was met

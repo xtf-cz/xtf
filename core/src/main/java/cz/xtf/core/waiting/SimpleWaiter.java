@@ -9,6 +9,11 @@ public class SimpleWaiter implements Waiter {
 	private BooleanSupplier successCondition;
 	private BooleanSupplier failureCondition;
 
+	private Runnable onIteration;
+	private Runnable onSuccess;
+	private Runnable onFailure;
+	private Runnable onTimeout;
+
 	private long timeout;
 	private long interval;
 
@@ -29,7 +34,13 @@ public class SimpleWaiter implements Waiter {
 
 	public SimpleWaiter(BooleanSupplier successCondition, TimeUnit timeoutUnit, long timeout, String reason) {
 		this.successCondition = successCondition;
-		this.failureCondition = null;
+		this.failureCondition = () -> false;
+
+		this.onIteration = () -> {};
+		this.onSuccess = () -> {};
+		this.onFailure = () -> {};
+		this.onTimeout = () -> {};
+
 		this.timeout = timeoutUnit.toMillis(timeout);
 		this.interval = DEFAULT_INTERVAL;
 		this.reason = reason;
@@ -72,6 +83,26 @@ public class SimpleWaiter implements Waiter {
 		return this;
 	}
 
+	public SimpleWaiter onIteration(Runnable runnable) {
+		onIteration = runnable;
+		return this;
+	}
+
+	public SimpleWaiter onSuccess(Runnable runnable) {
+		onSuccess = runnable;
+		return this;
+	}
+
+	public SimpleWaiter onFailure(Runnable runnable) {
+		onFailure = runnable;
+		return this;
+	}
+
+	public SimpleWaiter onTimeout(Runnable runnable) {
+		onTimeout = runnable;
+		return this;
+	}
+
 	@Override
 	public boolean waitFor() {
 		long startTime = System.currentTimeMillis();
@@ -79,14 +110,17 @@ public class SimpleWaiter implements Waiter {
 
 		logPoint.logStart(reason, timeout);
 		while (System.currentTimeMillis() < endTime) {
-			if (failureCondition != null && failureCondition.getAsBoolean()) {
+			if (failureCondition.getAsBoolean()) {
 				logPoint.logEnd(reason + " (Failure)", System.currentTimeMillis() - startTime);
+				onFailure.run();
 				return false;
 			}
 			if (successCondition.getAsBoolean()) {
 				logPoint.logEnd(reason + " (Success)", System.currentTimeMillis() - startTime);
+				onSuccess.run();
 				return true;
 			}
+			onIteration.run();
 
 			try {
 				Thread.sleep(interval);
@@ -95,6 +129,7 @@ public class SimpleWaiter implements Waiter {
 			}
 		}
 		logPoint.logEnd(reason + " (Time out)", System.currentTimeMillis() - startTime);
+		onTimeout.run();
 		throw new WaiterException(reason);
 	}
 }
