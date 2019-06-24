@@ -1,10 +1,8 @@
 package cz.xtf.core.openshift;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -60,33 +58,7 @@ public class OpenShiftWaiters {
 	 * @return Waiter instance
 	 */
 	public Waiter isProjectClean() {
-		BooleanSupplier bs = () -> {
-			List<Boolean> cleanedResources = new ArrayList<>();
-			cleanedResources.add(openShift.templates().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.apps().deployments().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.batch().jobs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.deploymentConfigs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.apps().statefulSets().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.replicationControllers().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.buildConfigs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.imageStreams().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.endpoints().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.services().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.builds().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.routes().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.pods().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.persistentVolumeClaims().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.autoscaling().horizontalPodAutoscalers().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.configMaps().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().isEmpty());
-			cleanedResources.add(openShift.getUserSecrets().isEmpty());
-			cleanedResources.add(openShift.getUserServiceAccounts().isEmpty());
-			cleanedResources.add(openShift.getUserRoleBindings().isEmpty());
-			cleanedResources.add(openShift.getRoles().isEmpty());
-
-			return !cleanedResources.contains(false);
-		};
-
-		return new SimpleWaiter(bs, TimeUnit.SECONDS, 20, "Cleaning project.");
+		return new SimpleWaiter(() -> openShift.listRemovableResources().isEmpty(), TimeUnit.SECONDS, 20, "Cleaning project.");
 	}
 
 	/**
