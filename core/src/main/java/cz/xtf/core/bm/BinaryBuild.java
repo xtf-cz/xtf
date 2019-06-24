@@ -105,8 +105,9 @@ public abstract class BinaryBuild implements ManagedBuild {
 
 	@Override
 	public void delete(OpenShift openShift) {
-		openShift.imageStreams().withName(is.getMetadata().getName()).delete();
-		openShift.buildConfigs().withName(bc.getMetadata().getName()).delete();
+		openShift.imageStreams().withName(is.getMetadata().getName()).cascading(false).withGracePeriod(0).delete();
+		openShift.buildConfigs().withName(bc.getMetadata().getName()).cascading(true).withGracePeriod(0).delete();
+		openShift.pods().withName(bc.getMetadata().getName() + "-1-build").cascading(false).withGracePeriod(0).delete();
 	}
 
 	@Override
