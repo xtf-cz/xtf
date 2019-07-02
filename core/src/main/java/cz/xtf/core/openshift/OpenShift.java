@@ -984,7 +984,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 			return false;
 		};
 
-		return new SimpleWaiter(() -> listRemovableResources().isEmpty(), TimeUnit.SECONDS, 20, "Cleaning project.");
+		return new SimpleWaiter(bs, TimeUnit.SECONDS, 20, "Cleaning project.");
 	}
 
 	List<HasMetadata> listRemovableResources() {
