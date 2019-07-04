@@ -967,24 +967,11 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @see #getUserRoleBindings()
 	 */
 	public Waiter clean() {
-		listRemovableResources().forEach(hasMetadata ->  resource(hasMetadata).withGracePeriod(0).cascading(false).delete());
-
-		BooleanSupplier bs = () -> {
-			List<HasMetadata> removables = listRemovableResources();
-
-			// HACK - Handle issue with hanging -deploy orphan
-			if (removables.isEmpty()) {
-				return true;
-			} else if (removables.stream().filter(hm -> hm.getMetadata().getName().endsWith("-deploy")).count() == removables.size()) {
-				log.info("Removing finalizers from leftover pods");
-				cleanFinalizers();
-				return false;
-			}
-
-			return false;
-		};
-
-		return new SimpleWaiter(bs, TimeUnit.SECONDS, 20, "Cleaning project.");
+		for (HasMetadata hasMetadata : listRemovableResources()) {
+			log.debug("DELETE :: " + hasMetadata.getKind() + "/" + hasMetadata.getMetadata().getName());
+			resource(hasMetadata).withGracePeriod(0).cascading(true).delete();
+		}
+		return new SimpleWaiter(() -> listRemovableResources().isEmpty(), TimeUnit.SECONDS, 20, "Cleaning project.");
 	}
 
 	List<HasMetadata> listRemovableResources() {
