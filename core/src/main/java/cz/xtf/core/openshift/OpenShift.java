@@ -971,7 +971,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 			log.debug("DELETE :: " + hasMetadata.getKind() + "/" + hasMetadata.getMetadata().getName());
 			resource(hasMetadata).withGracePeriod(0).cascading(true).delete();
 		}
-		return new SimpleWaiter(() -> listRemovableResources().isEmpty(), TimeUnit.SECONDS, 20, "Cleaning project.");
+		return waiters.isProjectClean();
 	}
 
 	List<HasMetadata> listRemovableResources() {
