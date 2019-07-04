@@ -11,6 +11,11 @@ public class SupplierWaiter<X> implements Waiter {
 	private Function<X, Boolean> successCondition;
 	private Function<X, Boolean> failureCondition;
 
+	private Runnable onIteration;
+	private Runnable onSuccess;
+	private Runnable onFailure;
+	private Runnable onTimeout;
+
 	private long timeout;
 	private long interval;
 
@@ -49,6 +54,12 @@ public class SupplierWaiter<X> implements Waiter {
 		this.supplier = supplier;
 		this.successCondition = successCondition;
 		this.failureCondition = failureCondition;
+
+		this.onIteration = () -> {};
+		this.onSuccess = () -> {};
+		this.onFailure = () -> {};
+		this.onTimeout = () -> {};
+
 		this.interval = DEFAULT_INTERVAL;
 		this.timeout = timeoutUnit.toMillis(timeout);
 		this.reason = reason;
@@ -86,6 +97,26 @@ public class SupplierWaiter<X> implements Waiter {
 		return this;
 	}
 
+	public SupplierWaiter onIteration(Runnable runnable) {
+		onIteration = runnable;
+		return this;
+	}
+
+	public SupplierWaiter onSuccess(Runnable runnable) {
+		onSuccess = runnable;
+		return this;
+	}
+
+	public SupplierWaiter onFailure(Runnable runnable) {
+		onFailure = runnable;
+		return this;
+	}
+
+	public SupplierWaiter onTimeout(Runnable runnable) {
+		onTimeout = runnable;
+		return this;
+	}
+
 	@Override
 	public boolean waitFor() {
 		long startTime = System.currentTimeMillis();
@@ -97,12 +128,15 @@ public class SupplierWaiter<X> implements Waiter {
 
 			if (failureCondition.apply(x)) {
 				logPoint.logEnd(reason + " (Failure)", System.currentTimeMillis() - startTime);
+				onFailure.run();
 				return false;
 			}
 			if (successCondition.apply(x)) {
 				logPoint.logEnd(reason + " (Success)", System.currentTimeMillis() - startTime);
+				onSuccess.run();
 				return true;
 			}
+			onIteration.run();
 
 			try {
 				Thread.sleep(interval);
@@ -111,6 +145,7 @@ public class SupplierWaiter<X> implements Waiter {
 			}
 		}
 		logPoint.logEnd(reason + "(Timeout)", timeout);
+		onTimeout.run();
 		throw new WaiterException(reason);
 	}
 }
