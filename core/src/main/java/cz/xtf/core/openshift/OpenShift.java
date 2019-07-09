@@ -74,6 +74,8 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	public static final String KEEP_LABEL = "xtf.cz/keep";
 
+	public static final int DEFAULT_TIMEOUT = 120_000;
+
 	/**
 	 * Autoconfigures the client with the default fabric8 client rules
 	 * @return
@@ -139,8 +141,8 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	private static void setupTimeouts(OpenShiftConfig config) {
 		config.setBuildTimeout(10 * 60 * 1000);
-		config.setRequestTimeout(120_000);
-		config.setConnectionTimeout(120_000);
+		config.setRequestTimeout(DEFAULT_TIMEOUT);
+		config.setConnectionTimeout(DEFAULT_TIMEOUT);
 	}
 
 	private final OpenShiftWaiters waiters;
@@ -581,7 +583,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	}
 
 	public Build startBinaryBuild(String buildConfigName, File file) {
-		return buildConfigs().withName(buildConfigName).instantiateBinary().fromFile(file);
+		return buildConfigs().withName(buildConfigName).instantiateBinary().withTimeoutInMillis(DEFAULT_TIMEOUT).fromFile(file);
 	}
 
 	// BuildConfigs

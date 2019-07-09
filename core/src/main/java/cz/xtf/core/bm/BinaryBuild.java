@@ -89,7 +89,7 @@ public abstract class BinaryBuild implements ManagedBuild {
 			ExecutorService executorService = Executors.newSingleThreadExecutor();
 			final Future<?> future = executorService.submit(() -> writeProjectTar(pos));
 
-			openShift.buildConfigs().withName(bc.getMetadata().getName()).instantiateBinary().fromInputStream(pis);
+			openShift.buildConfigs().withName(bc.getMetadata().getName()).instantiateBinary().withTimeoutInMillis(OpenShift.DEFAULT_TIMEOUT).fromInputStream(pis);
 			future.get();
 		} catch (IOException | InterruptedException | ExecutionException e) {
 			log.error("Exception building {}", id, e);
