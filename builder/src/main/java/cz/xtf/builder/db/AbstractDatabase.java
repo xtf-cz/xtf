@@ -11,16 +11,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
-	private final String username;
-	private final String password;
-	private final String dbName;
-	private final String symbolicName;
-	private String openShiftName;
-	private String jndiName = null;
-	private boolean isObjectStore = false;
-	private boolean configureEnvironment = true;
-	private boolean external = false;
-	private boolean nonXaDatasource = false;
+	protected final String username;
+	protected final String password;
+	protected final String dbName;
+	protected final String symbolicName;
+	protected String openShiftName;
+	protected String jndiName = null;
+	protected boolean isObjectStore = false;
+	protected boolean configureEnvironment = true;
+	protected boolean external = false;
+	protected boolean nonXaDatasource = false;
 
 	protected boolean withLivenessProbe;
 	protected boolean withReadinessProbe;
