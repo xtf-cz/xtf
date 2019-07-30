@@ -969,6 +969,11 @@ public class OpenShift extends DefaultOpenShiftClient {
 	public Waiter clean() {
 		for (HasMetadata hasMetadata : listRemovableResources()) {
 			log.debug("DELETE :: " + hasMetadata.getKind() + "/" + hasMetadata.getMetadata().getName());
+			resource(hasMetadata).withGracePeriod(0).cascading(false).delete();
+		}
+		//TODO: Temporary workaround to delete any leftover resources with `cascading: true`
+		for (HasMetadata hasMetadata : listRemovableResources()) {
+			log.warn("DELETE LEFTOVER :: " + hasMetadata.getKind() + "/" + hasMetadata.getMetadata().getName());
 			resource(hasMetadata).withGracePeriod(0).cascading(true).delete();
 		}
 		return waiters.isProjectClean();
@@ -999,10 +1004,6 @@ public class OpenShift extends DefaultOpenShiftClient {
 		removables.addAll(rbac().roles().withoutLabel(KEEP_LABEL).list().getItems());
 
 		return removables;
-	}
-
-	private void cleanFinalizers() {
-		pods().list().getItems().forEach(p -> pods().withName(p.getMetadata().getName()).edit().editMetadata().removeAllFromFinalizers(p.getMetadata().getFinalizers()).endMetadata().done());
 	}
 
 	// Logs storing
