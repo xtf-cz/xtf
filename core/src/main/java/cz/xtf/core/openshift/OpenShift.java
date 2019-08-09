@@ -1,6 +1,7 @@
 package cz.xtf.core.openshift;
 
 import cz.xtf.core.config.WaitingConfig;
+import cz.xtf.core.openshift.crd.CustomResourceDefinitionContextProvider;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -64,12 +65,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class OpenShift extends DefaultOpenShiftClient {
+	private static ServiceLoader<CustomResourceDefinitionContextProvider> crdContextProviderLoader;
 	private static String routeSuffix;
 
 	public static final String KEEP_LABEL = "xtf.cz/keep";
@@ -141,6 +144,13 @@ public class OpenShift extends DefaultOpenShiftClient {
 		config.setBuildTimeout(10 * 60 * 1000);
 		config.setRequestTimeout(120_000);
 		config.setConnectionTimeout(120_000);
+	}
+
+	private static synchronized ServiceLoader<CustomResourceDefinitionContextProvider> getCRDContextProviders() {
+		if (crdContextProviderLoader == null) {
+			crdContextProviderLoader = ServiceLoader.load(CustomResourceDefinitionContextProvider.class);
+		}
+		return crdContextProviderLoader;
 	}
 
 	private final OpenShiftWaiters waiters;
@@ -695,7 +705,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return List of role bindings that aren't considered default.
 	 */
 	public List<RoleBinding> getUserRoleBindings() {
-		return rbac().roleBindings().withoutLabel(KEEP_LABEL).list().getItems().stream()
+		return rbac().roleBindings().withoutLabel(KEEP_LABEL).withoutLabel("olm.owner.kind", "ClusterServiceVersion").list().getItems().stream()
 				.filter(rb -> !rb.getMetadata().getName().matches("admin|system:deployers|system:image-builders|system:image-pullers"))
 				.collect(Collectors.toList());
 	}
@@ -967,6 +977,10 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @see #getUserRoleBindings()
 	 */
 	public Waiter clean() {
+		for (CustomResourceDefinitionContextProvider crdContextProvider : OpenShift.getCRDContextProviders()) {
+			customResource(crdContextProvider.getContext()).delete(getNamespace());
+		}
+
 		for (HasMetadata hasMetadata : listRemovableResources()) {
 			log.debug("DELETE :: " + hasMetadata.getKind() + "/" + hasMetadata.getMetadata().getName());
 			resource(hasMetadata).withGracePeriod(0).cascading(false).delete();
@@ -1001,7 +1015,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 		removables.addAll(getUserSecrets());
 		removables.addAll(getUserServiceAccounts());
 		removables.addAll(getUserRoleBindings());
-		removables.addAll(rbac().roles().withoutLabel(KEEP_LABEL).list().getItems());
+		removables.addAll(rbac().roles().withoutLabel(KEEP_LABEL).withoutLabel("olm.owner.kind", "ClusterServiceVersion").list().getItems());
 
 		return removables;
 	}
