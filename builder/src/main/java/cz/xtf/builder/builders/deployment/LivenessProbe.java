@@ -8,6 +8,7 @@ public class LivenessProbe extends AbstractProbe {
 	private int timeoutSeconds = -1;
 	private int successThreshold = -1;
 	private int failureThreshold = -1;
+	private int periodSeconds = -1;
 	private Boolean isEnabled = null;
 
 	public LivenessProbe setInitialDelay(int initialDelay) {
@@ -54,6 +55,9 @@ public class LivenessProbe extends AbstractProbe {
 		}
 		if (failureThreshold > 0) {
 			builder.withFailureThreshold(failureThreshold);
+		}
+		if (periodSeconds > 0) {
+			builder.withPeriodSeconds(periodSeconds);
 		}
 	}
 
