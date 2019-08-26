@@ -9,6 +9,7 @@ public class ReadinessProbe extends AbstractProbe {
 	private int successThreshold = -1;
 	private int failureThreshold = -1;
 	private int initialDelaySeconds = 0;
+	private int periodSeconds = -1;
 
 	public ReadinessProbe setTimeoutSeconds(int timeoutSeconds) {
 		this.timeoutSeconds = timeoutSeconds;
@@ -54,6 +55,9 @@ public class ReadinessProbe extends AbstractProbe {
 		}
 		if (failureThreshold > 0) {
 			builder.withFailureThreshold(failureThreshold);
+		}
+		if (periodSeconds > 0) {
+			builder.withPeriodSeconds(periodSeconds);
 		}
 	}
 }
