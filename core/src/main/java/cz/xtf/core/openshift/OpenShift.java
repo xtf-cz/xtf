@@ -58,6 +58,7 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -966,28 +967,43 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @see #getUserRoleBindings()
 	 */
 	public Waiter clean() {
-		// keep the order for deletion to prevent K8s creating resources again
-		templates().withoutLabel(KEEP_LABEL).delete();
-		apps().deployments().withoutLabel(KEEP_LABEL).delete();
-		apps().statefulSets().withoutLabel(KEEP_LABEL).delete();
-		batch().jobs().withoutLabel(KEEP_LABEL).delete();
-		deploymentConfigs().withoutLabel(KEEP_LABEL).delete();
-		replicationControllers().withoutLabel(KEEP_LABEL).delete();
-		buildConfigs().withoutLabel(KEEP_LABEL).delete();
-		imageStreams().withoutLabel(KEEP_LABEL).delete();
-		endpoints().withoutLabel(KEEP_LABEL).delete();
-		services().withoutLabel(KEEP_LABEL).delete();
-		builds().withoutLabel(KEEP_LABEL).delete();
-		routes().withoutLabel(KEEP_LABEL).delete();
-		pods().withoutLabel(KEEP_LABEL).withGracePeriod(0).delete();
-		persistentVolumeClaims().withoutLabel(KEEP_LABEL).delete();
-		autoscaling().horizontalPodAutoscalers().withoutLabel(KEEP_LABEL).delete();
-		configMaps().withoutLabel(KEEP_LABEL).delete();
-		getUserSecrets().forEach(this::deleteSecret);
-		getUserServiceAccounts().forEach(this::deleteServiceAccount);
-		getUserRoleBindings().forEach(this::deleteRoleBinding);
-		rbac().roles().withoutLabel(KEEP_LABEL).delete();
+		for (HasMetadata hasMetadata : listRemovableResources()) {
+			log.debug("DELETE :: " + hasMetadata.getKind() + "/" + hasMetadata.getMetadata().getName());
+			resource(hasMetadata).withGracePeriod(0).cascading(false).delete();
+		}
+		//TODO: Temporary workaround to delete any leftover resources with `cascading: true`
+		for (HasMetadata hasMetadata : listRemovableResources()) {
+			log.warn("DELETE LEFTOVER :: " + hasMetadata.getKind() + "/" + hasMetadata.getMetadata().getName());
+			resource(hasMetadata).withGracePeriod(0).cascading(true).delete();
+		}
 		return waiters.isProjectClean();
+	}
+
+	List<HasMetadata> listRemovableResources() {
+		// keep the order for deletion to prevent K8s creating resources again
+		List<HasMetadata> removables = new ArrayList<>();
+		removables.addAll(templates().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(apps().deployments().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(batch().jobs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(deploymentConfigs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(apps().statefulSets().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(replicationControllers().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(buildConfigs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(imageStreams().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(endpoints().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(services().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(builds().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(routes().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(pods().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(persistentVolumeClaims().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(autoscaling().horizontalPodAutoscalers().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(configMaps().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(getUserSecrets());
+		removables.addAll(getUserServiceAccounts());
+		removables.addAll(getUserRoleBindings());
+		removables.addAll(rbac().roles().withoutLabel(KEEP_LABEL).list().getItems());
+
+		return removables;
 	}
 
 	// Logs storing
