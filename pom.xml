@@ -43,7 +43,7 @@
 
 		<!-- Depedency version properties -->
 		<version.httpclient>4.5.5</version.httpclient>
-		<version.openshift-client>4.4.2</version.openshift-client>
+		<version.openshift-client>4.3.1</version.openshift-client>
 		<version.commons-io>2.6</version.commons-io>
 		<version.commons-lang3>3.4</version.commons-lang3>
 		<version.commons-compress>1.18</version.commons-compress>
