@@ -5,6 +5,7 @@ import cz.xtf.core.openshift.crd.CustomResourceDefinitionContextProvider;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Endpoints;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
@@ -16,6 +17,7 @@ import io.fabric8.kubernetes.api.model.Node;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ResourceQuota;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -64,10 +66,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -292,11 +297,55 @@ public class OpenShift extends DefaultOpenShiftClient {
 	}
 
 	public String getPodLog(Pod pod) {
-		return pods().withName(pod.getMetadata().getName()).getLog();
+		return getPodLog(pod, getAnyContainer(pod));
+	}
+	
+	public String getPodLog(Pod pod, String containerName) {
+		return getPodLog(pod, getContainerByName(pod, containerName));
+	}
+
+	public String getPodLog(Pod pod, Container container) {
+		if (Objects.nonNull(container)) {
+			return pods().withName(pod.getMetadata().getName()).inContainer(container.getName()).getLog();
+		} else {
+			return pods().withName(pod.getMetadata().getName()).getLog();
+		}
+	}
+
+	/**
+	 * Return logs of all containers from the pod
+	 * 
+	 * @param pod Pod to retrieve from
+	 * @return Map of container name / logs
+	 */
+	public Map<String, String> getAllContainerLogs(Pod pod) {
+		return retrieveFromPodContainer(pod, container -> this.getPodLog(pod, container));
 	}
 
 	public Reader getPodLogReader(Pod pod) {
-		return pods().withName(pod.getMetadata().getName()).getLogReader();
+		return getPodLogReader(pod, getAnyContainer(pod));
+	}
+
+	public Reader getPodLogReader(Pod pod, Container container) {
+		if (Objects.nonNull(container)) {
+			return pods().withName(pod.getMetadata().getName()).inContainer(container.getName()).getLogReader();
+		} else {
+			return pods().withName(pod.getMetadata().getName()).getLogReader();
+		}
+	}
+	
+	public Reader getPodLogReader(Pod pod, String containerName) {
+		return getPodLogReader(pod, getContainerByName(pod, containerName));
+	}
+
+	/**
+	 * Return readers on logs of all containers from the pod
+	 * 
+	 * @param pod Pod to retrieve from
+	 * @return Map of container name / reader
+	 */
+	public Map<String, Reader> getAllContainerLogReaders(Pod pod) {
+		return retrieveFromPodContainer(pod, container -> this.getPodLogReader(pod, container));
 	}
 
 	public Observable<String> observePodLog(String dcName) {
@@ -304,8 +353,31 @@ public class OpenShift extends DefaultOpenShiftClient {
 	}
 
 	public Observable<String> observePodLog(Pod pod) {
-		LogWatch watcher = pods().withName(pod.getMetadata().getName()).watchLog();
+		return observePodLog(pod, getAnyContainer(pod));
+	}
+
+	public Observable<String> observePodLog(Pod pod, Container container) {
+		LogWatch watcher;
+		if (Objects.nonNull(container)) {
+			watcher = pods().withName(pod.getMetadata().getName()).inContainer(container.getName()).watchLog();
+		} else {
+			watcher = pods().withName(pod.getMetadata().getName()).watchLog();
+		}
 		return StringObservable.byLine(StringObservable.from(new InputStreamReader(watcher.getOutput())));
+	}
+	
+	public Observable<String> observePodLog(Pod pod, String containerName) {
+		return observePodLog(pod, getContainerByName(pod, containerName));
+	}
+
+	/**
+	 * Return obervables on logs of all containers from the pod
+	 * 
+	 * @param pod Pod to retrieve from
+	 * @return Map of container name / logs obervable
+	 */
+	public Map<String, Observable<String>> observeAllContainerLogs(Pod pod) {
+		return retrieveFromPodContainer(pod, container -> this.observePodLog(pod, container));
 	}
 
 	public List<Pod> getPods() {
@@ -371,6 +443,38 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	public boolean deletePods(Map<String, String> labels) {
 		return pods().withLabels(labels).delete();
+	}
+	
+	/**
+	 * Retrieve pod containers
+	 * 
+	 * @param pod pod to retrieve in
+	 * @return List of containers of empty list if none ...
+	 */
+	public List<Container> getAllContainers(Pod pod) {
+		return Optional.ofNullable(pod.getSpec()).map(PodSpec::getContainers).orElse(new ArrayList<>());
+	}
+
+	/**
+	 * Retrieve any container from the given pod
+	 * 
+	 * @param pod Pod to retrieve from
+	 * @return One random container from the pod
+	 */
+	public Container getAnyContainer(Pod pod) {
+		List<Container> containers = getAllContainers(pod);
+		return containers.get(new Random().nextInt(containers.size()));
+	}
+	
+	public Container getContainerByName(Pod pod, String containerName) {
+		return getAllContainers(pod).stream()
+			.filter(c -> c.getName().equals(containerName))
+			.findFirst()
+			.orElseThrow(() -> new RuntimeException("Cannot find container with name " + containerName + " in pod " + pod.getMetadata().getName()));
+	}
+
+	private <R> Map<String, R> retrieveFromPodContainer(Pod pod, Function<Container, R> containerRetriever) {
+		return getAllContainers(pod).stream().collect(Collectors.toMap(Container::getName, containerRetriever));
 	}
 
 	// Secrets
