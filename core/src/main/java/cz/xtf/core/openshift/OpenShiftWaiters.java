@@ -2,6 +2,7 @@ package cz.xtf.core.openshift;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -11,9 +12,11 @@ import cz.xtf.core.openshift.helpers.ResourceFunctions;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.SupplierWaiter;
 import cz.xtf.core.waiting.Waiter;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.Build;
+import io.fabric8.openshift.api.model.BuildStatus;
 
 public class OpenShiftWaiters {
 	private OpenShift openShift;
@@ -22,8 +25,21 @@ public class OpenShiftWaiters {
 		this.openShift = openShift;
 	}
 
+	/**
+	 * Creates waiter for latest build completion with preconfigured timeout 10 minutes,
+	 * 5 seconds interval check and both logging points.
+	 *
+	 * @param buildConfigName build name to wait upon
+	 * @return Waiter instance
+	 */
 	public Waiter hasBuildCompleted(String buildConfigName) {
-		return hasBuildCompleted(openShift.getLatestBuild(buildConfigName));
+		Supplier<String> supplier = () -> Optional.ofNullable(openShift.getLatestBuild(buildConfigName))
+			.map(Build::getMetadata).map(ObjectMeta::getName)
+			.map(openShift::getBuild).map(Build::getStatus).map(BuildStatus::getPhase)
+			.orElse(null);
+		String reason = "Waiting for completion of latest build " + buildConfigName;
+
+		return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES, 10, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
 	}
 
 	/**
