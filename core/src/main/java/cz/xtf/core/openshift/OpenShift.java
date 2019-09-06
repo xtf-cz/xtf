@@ -688,6 +688,10 @@ public class OpenShift extends DefaultOpenShiftClient {
 		return rbac().roleBindings().list().getItems();
 	}
 
+	public Role getRole(String name) {
+		return rbac().roles().withName(name).get();
+	}
+
 	public List<Role> getRoles() {
 		return rbac().roles().list().getItems();
 	}
