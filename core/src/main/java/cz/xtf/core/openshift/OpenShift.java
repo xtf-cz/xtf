@@ -392,7 +392,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return List of secrets that aren't considered default.
 	 */
 	public List<Secret> getUserSecrets() {
-		return secrets().withoutLabel(OpenShift.KEEP_LABEL).list().getItems().stream()
+		return secrets().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems().stream()
 				.filter(s -> !s.getType().startsWith("kubernetes.io/"))
 				.collect(Collectors.toList());
 	}
@@ -666,7 +666,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return List of service accounts that aren't considered default.
 	 */
 	public List<ServiceAccount> getUserServiceAccounts() {
-		return serviceAccounts().withoutLabel(KEEP_LABEL).list().getItems().stream()
+		return serviceAccounts().withLabelNotIn(KEEP_LABEL).list().getItems().stream()
 				.filter(sa -> !sa.getMetadata().getName().matches("builder|default|deployer"))
 				.collect(Collectors.toList());
 	}
@@ -709,7 +709,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return List of role bindings that aren't considered default.
 	 */
 	public List<RoleBinding> getUserRoleBindings() {
-		return rbac().roleBindings().withoutLabel(KEEP_LABEL).withoutLabel("olm.owner.kind", "ClusterServiceVersion").list().getItems().stream()
+		return rbac().roleBindings().withLabelNotIn(KEEP_LABEL).withLabelNotIn("olm.owner.kind", "ClusterServiceVersion").list().getItems().stream()
 				.filter(rb -> !rb.getMetadata().getName().matches("admin|system:deployers|system:image-builders|system:image-pullers"))
 				.collect(Collectors.toList());
 	}
@@ -1000,26 +1000,26 @@ public class OpenShift extends DefaultOpenShiftClient {
 	List<HasMetadata> listRemovableResources() {
 		// keep the order for deletion to prevent K8s creating resources again
 		List<HasMetadata> removables = new ArrayList<>();
-		removables.addAll(templates().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(apps().deployments().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(batch().jobs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(deploymentConfigs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(apps().statefulSets().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(replicationControllers().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(buildConfigs().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(imageStreams().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(endpoints().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(services().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(builds().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(routes().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(pods().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(persistentVolumeClaims().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(autoscaling().horizontalPodAutoscalers().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
-		removables.addAll(configMaps().withoutLabel(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(templates().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(apps().deployments().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(batch().jobs().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(deploymentConfigs().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(apps().statefulSets().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(replicationControllers().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(buildConfigs().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(imageStreams().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(endpoints().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(services().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(builds().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(routes().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(pods().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(persistentVolumeClaims().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(autoscaling().horizontalPodAutoscalers().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(configMaps().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
 		removables.addAll(getUserSecrets());
 		removables.addAll(getUserServiceAccounts());
 		removables.addAll(getUserRoleBindings());
-		removables.addAll(rbac().roles().withoutLabel(KEEP_LABEL).withoutLabel("olm.owner.kind", "ClusterServiceVersion").list().getItems());
+		removables.addAll(rbac().roles().withLabelNotIn(KEEP_LABEL).withLabelNotIn("olm.owner.kind", "ClusterServiceVersion").list().getItems());
 
 		return removables;
 	}
