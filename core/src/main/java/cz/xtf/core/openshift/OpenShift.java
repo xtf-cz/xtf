@@ -75,7 +75,6 @@ public class OpenShift extends DefaultOpenShiftClient {
 	private static ServiceLoader<CustomResourceDefinitionContextProvider> crdContextProviderLoader;
 	private static String routeSuffix;
 
-	private static final String DEFAULT_PROPAGATION_POLICY = "Background";
 	public static final String KEEP_LABEL = "xtf.cz/keep";
 
 	/**
@@ -988,7 +987,12 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 		for (HasMetadata hasMetadata : listRemovableResources()) {
 			log.debug("DELETE :: " + hasMetadata.getKind() + "/" + hasMetadata.getMetadata().getName());
-			resource(hasMetadata).withPropagationPolicy(DEFAULT_PROPAGATION_POLICY).delete();
+			resource(hasMetadata).withGracePeriod(0).cascading(false).delete();
+		}
+		//TODO: Temporary workaround to delete any leftover resources with `cascading: true`
+		for (HasMetadata hasMetadata : listRemovableResources()) {
+			log.warn("DELETE LEFTOVER :: " + hasMetadata.getKind() + "/" + hasMetadata.getMetadata().getName());
+			resource(hasMetadata).withGracePeriod(0).cascading(true).delete();
 		}
 		return waiters.isProjectClean();
 	}
