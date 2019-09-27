@@ -301,7 +301,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	}
 	
 	public String getPodLog(Pod pod, String containerName) {
-		return getPodLog(pod, getContainerByName(pod, containerName));
+		return getPodLog(pod, getContainer(pod, containerName));
 	}
 
 	public String getPodLog(Pod pod, Container container) {
@@ -319,11 +319,15 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return Map of container name / logs
 	 */
 	public Map<String, String> getAllContainerLogs(Pod pod) {
-		return retrieveFromPodContainer(pod, container -> this.getPodLog(pod, container));
+		return retrieveFromPodContainers(pod, container -> this.getPodLog(pod, container));
 	}
 
 	public Reader getPodLogReader(Pod pod) {
 		return getPodLogReader(pod, getAnyContainer(pod));
+	}
+	
+	public Reader getPodLogReader(Pod pod, String containerName) {
+		return getPodLogReader(pod, getContainer(pod, containerName));
 	}
 
 	public Reader getPodLogReader(Pod pod, Container container) {
@@ -333,10 +337,6 @@ public class OpenShift extends DefaultOpenShiftClient {
 			return pods().withName(pod.getMetadata().getName()).getLogReader();
 		}
 	}
-	
-	public Reader getPodLogReader(Pod pod, String containerName) {
-		return getPodLogReader(pod, getContainerByName(pod, containerName));
-	}
 
 	/**
 	 * Return readers on logs of all containers from the pod
@@ -345,7 +345,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return Map of container name / reader
 	 */
 	public Map<String, Reader> getAllContainerLogReaders(Pod pod) {
-		return retrieveFromPodContainer(pod, container -> this.getPodLogReader(pod, container));
+		return retrieveFromPodContainers(pod, container -> this.getPodLogReader(pod, container));
 	}
 
 	public Observable<String> observePodLog(String dcName) {
@@ -354,6 +354,10 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	public Observable<String> observePodLog(Pod pod) {
 		return observePodLog(pod, getAnyContainer(pod));
+	}
+	
+	public Observable<String> observePodLog(Pod pod, String containerName) {
+		return observePodLog(pod, getContainer(pod, containerName));
 	}
 
 	public Observable<String> observePodLog(Pod pod, Container container) {
@@ -366,10 +370,6 @@ public class OpenShift extends DefaultOpenShiftClient {
 		return StringObservable.byLine(StringObservable.from(new InputStreamReader(watcher.getOutput())));
 	}
 	
-	public Observable<String> observePodLog(Pod pod, String containerName) {
-		return observePodLog(pod, getContainerByName(pod, containerName));
-	}
-
 	/**
 	 * Return obervables on logs of all containers from the pod
 	 * 
@@ -377,7 +377,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return Map of container name / logs obervable
 	 */
 	public Map<String, Observable<String>> observeAllContainerLogs(Pod pod) {
-		return retrieveFromPodContainer(pod, container -> this.observePodLog(pod, container));
+		return retrieveFromPodContainers(pod, container -> this.observePodLog(pod, container));
 	}
 
 	public List<Pod> getPods() {
@@ -466,14 +466,14 @@ public class OpenShift extends DefaultOpenShiftClient {
 		return containers.get(new Random().nextInt(containers.size()));
 	}
 	
-	public Container getContainerByName(Pod pod, String containerName) {
+	public Container getContainer(Pod pod, String containerName) {
 		return getAllContainers(pod).stream()
 			.filter(c -> c.getName().equals(containerName))
 			.findFirst()
 			.orElseThrow(() -> new RuntimeException("Cannot find container with name " + containerName + " in pod " + pod.getMetadata().getName()));
 	}
 
-	private <R> Map<String, R> retrieveFromPodContainer(Pod pod, Function<Container, R> containerRetriever) {
+	private <R> Map<String, R> retrieveFromPodContainers(Pod pod, Function<Container, R> containerRetriever) {
 		return getAllContainers(pod).stream().collect(Collectors.toMap(Container::getName, containerRetriever));
 	}
 
