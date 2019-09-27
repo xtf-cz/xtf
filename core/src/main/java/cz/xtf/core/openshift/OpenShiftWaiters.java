@@ -6,11 +6,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import cz.xtf.core.openshift.crd.CustomResourceDefinitionContextProvider;
 import cz.xtf.core.openshift.helpers.ResourceFunctions;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.SupplierWaiter;
 import cz.xtf.core.waiting.Waiter;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.Build;
 
 public class OpenShiftWaiters {
@@ -58,7 +60,17 @@ public class OpenShiftWaiters {
 	 * @return Waiter instance
 	 */
 	public Waiter isProjectClean() {
-		return new SimpleWaiter(() -> openShift.listRemovableResources().isEmpty(), TimeUnit.SECONDS, 20, "Cleaning project.");
+		return new SimpleWaiter(() -> {
+			int crdInstances = 0;
+			for (CustomResourceDefinitionContextProvider crdContextProvider : OpenShift.getCRDContextProviders()) {
+				try {
+					crdInstances += ((List) (openShift.customResource(crdContextProvider.getContext()).list(openShift.getNamespace()).get("items"))).size();
+				} catch (KubernetesClientException kce) {
+					// CRD might not be installed on the cluster
+				}
+			}
+			return crdInstances == 0 & openShift.listRemovableResources().isEmpty();
+		}, TimeUnit.SECONDS, 20, "Cleaning project.");
 	}
 
 	/**
