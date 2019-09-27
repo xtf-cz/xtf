@@ -151,7 +151,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 		config.setConnectionTimeout(120_000);
 	}
 
-	private static synchronized ServiceLoader<CustomResourceDefinitionContextProvider> getCRDContextProviders() {
+	protected static synchronized ServiceLoader<CustomResourceDefinitionContextProvider> getCRDContextProviders() {
 		if (crdContextProviderLoader == null) {
 			crdContextProviderLoader = ServiceLoader.load(CustomResourceDefinitionContextProvider.class);
 		}
@@ -1086,7 +1086,12 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 */
 	public Waiter clean() {
 		for (CustomResourceDefinitionContextProvider crdContextProvider : OpenShift.getCRDContextProviders()) {
-			customResource(crdContextProvider.getContext()).delete(getNamespace());
+			try {
+				customResource(crdContextProvider.getContext()).delete(getNamespace());
+				log.debug("DELETE :: " + crdContextProvider.getContext().getName() + " instances");
+			} catch (KubernetesClientException kce) {
+				log.debug(crdContextProvider.getContext().getName() + " might not be installed on the cluster.", kce);
+			}
 		}
 
 		for (HasMetadata hasMetadata : listRemovableResources()) {
