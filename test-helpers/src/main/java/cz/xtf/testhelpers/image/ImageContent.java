@@ -112,7 +112,7 @@ public class ImageContent {
 	}
 
 	public List<String> listZipFilesInDir(String path) {
-		return shell.executeWithBash("ls -R1 ~ " + path + " | grep '\\.zip$'").getOutputAsList();
+		return shell.executeWithBash("ls -R1 " + path + " | grep '\\.zip$'").getOutputAsList();
 	}
 
 	public List<String> listFilesMd5sumInDir(String path) {
