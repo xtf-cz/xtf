@@ -1111,6 +1111,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 		List<HasMetadata> removables = new ArrayList<>();
 		removables.addAll(templates().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
 		removables.addAll(apps().deployments().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
+		removables.addAll(apps().replicaSets().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
 		removables.addAll(batch().jobs().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
 		removables.addAll(deploymentConfigs().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
 		removables.addAll(apps().statefulSets().withLabelNotIn(OpenShift.KEEP_LABEL).list().getItems());
