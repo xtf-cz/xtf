@@ -1116,6 +1116,11 @@ public class OpenShift extends DefaultOpenShiftClient {
 		getUserRoleBindings().forEach(this::deleteRoleBinding);
 		rbac().roles().withLabelNotIn(KEEP_LABEL).withLabelNotIn("olm.owner.kind", "ClusterServiceVersion").delete();
 
+		for (HasMetadata hasMetadata : listRemovableResources()) {
+			log.warn("DELETE LEFTOVER :: " + hasMetadata.getKind() + "/" + hasMetadata.getMetadata().getName());
+			resource(hasMetadata).withGracePeriod(0).cascading(true).delete();
+		}
+
 		return waiters.isProjectClean();
 	}
 
