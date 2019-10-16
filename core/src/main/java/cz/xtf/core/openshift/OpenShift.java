@@ -1094,15 +1094,28 @@ public class OpenShift extends DefaultOpenShiftClient {
 			}
 		}
 
-		for (HasMetadata hasMetadata : listRemovableResources()) {
-			log.debug("DELETE :: " + hasMetadata.getKind() + "/" + hasMetadata.getMetadata().getName());
-			resource(hasMetadata).withGracePeriod(0).cascading(false).delete();
-		}
-		//TODO: Temporary workaround to delete any leftover resources with `cascading: true`
-		for (HasMetadata hasMetadata : listRemovableResources()) {
-			log.warn("DELETE LEFTOVER :: " + hasMetadata.getKind() + "/" + hasMetadata.getMetadata().getName());
-			resource(hasMetadata).withGracePeriod(0).cascading(true).delete();
-		}
+		templates().withLabelNotIn(KEEP_LABEL).delete();
+		apps().deployments().withLabelNotIn(KEEP_LABEL).delete();
+		apps().replicaSets().withLabelNotIn(KEEP_LABEL).delete();
+		apps().statefulSets().withLabelNotIn(KEEP_LABEL).delete();
+		batch().jobs().withLabelNotIn(KEEP_LABEL).delete();
+		deploymentConfigs().withLabelNotIn(KEEP_LABEL).delete();
+		replicationControllers().withLabelNotIn(KEEP_LABEL).delete();
+		buildConfigs().withLabelNotIn(KEEP_LABEL).delete();
+		imageStreams().withLabelNotIn(KEEP_LABEL).delete();
+		endpoints().withLabelNotIn(KEEP_LABEL).delete();
+		services().withLabelNotIn(KEEP_LABEL).delete();
+		builds().withLabelNotIn(KEEP_LABEL).delete();
+		routes().withLabelNotIn(KEEP_LABEL).delete();
+		pods().withLabelNotIn(KEEP_LABEL).withGracePeriod(0).delete();
+		persistentVolumeClaims().withLabelNotIn(KEEP_LABEL).delete();
+		autoscaling().horizontalPodAutoscalers().withLabelNotIn(KEEP_LABEL).delete();
+		configMaps().withLabelNotIn(KEEP_LABEL).delete();
+		getUserSecrets().forEach(this::deleteSecret);
+		getUserServiceAccounts().forEach(this::deleteServiceAccount);
+		getUserRoleBindings().forEach(this::deleteRoleBinding);
+		rbac().roles().withLabelNotIn(KEEP_LABEL).withLabelNotIn("olm.owner.kind", "ClusterServiceVersion").delete();
+
 		return waiters.isProjectClean();
 	}
 
