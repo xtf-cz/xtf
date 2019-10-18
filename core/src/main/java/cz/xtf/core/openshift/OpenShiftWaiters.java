@@ -71,6 +71,15 @@ public class OpenShiftWaiters {
 	}
 
 	/**
+	 * Create waiter for project to created with 20 seconds timeout.
+	 *
+	 * @return Waiter instance
+	 */
+	public Waiter isProjectReady() {
+		return new SimpleWaiter(() -> openShift.getProject() != null, TimeUnit.SECONDS, 20, "Waiting for the project to be created.");
+	}
+
+	/**
 	 * Creates waiter for clean project with 20 seconds timeout.
 	 *
 	 * @return Waiter instance

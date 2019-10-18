@@ -1,5 +1,6 @@
 package cz.xtf.junit5.listeners;
 
+import cz.xtf.core.config.OpenShiftConfig;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.openshift.OpenShifts;
 import cz.xtf.core.waiting.SimpleWaiter;
@@ -18,6 +19,10 @@ public class ProjectCreator implements TestExecutionListener {
 	public void testPlanExecutionStarted(TestPlan testPlan) {
 		if(openShift.getProject() == null) {
 			openShift.createProjectRequest();
+			openShift.waiters().isProjectReady().waitFor();
+		}
+		if(OpenShiftConfig.pullSecret() != null) {
+			openShift.setupPullSecret(OpenShiftConfig.pullSecret());
 		}
 	}
 
