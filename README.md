@@ -25,8 +25,23 @@ Example: `OPENSHIFT_MASTER_URL` is mapped to `xtf.openshift.master.url`.
 ##### Configuration:
 Take a look at [OpenShiftConfig](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/config/OpenShiftConfig.java) class to see possible configurations. Enabling some them will allow you to instantiate as `OpenShift openShift = OpenShifts.master()`.
 
+##### Pull Secrets
+There's a convenient method `OpenShift::setupPullSecret()` to setup pull secrets as recommended by OpenShift [documentation](https://docs.openshift.com/container-platform/4.2/openshift_images/managing-images/using-image-pull-secrets.html).
+Property `xtf.openshift.pullsecret` is checked in `ProjectCreator` listener and `BuildManager` to populate projects with pull secret if provided. The pull secret is expected to be provided in Json format.
+
+Single registry
+```json
+{"auths":{"registry.redhat.io":{"auth":"<TOKEN>"}}}
+```
+
+Multiple registries
+```json
+{"auths":{"registry.redhat.io":{"auth":"<TOKEN>"},"quay.io":{"auth":"<TOKEN>"}}}
+```
+
+
 #### Waiters
-[Waiter](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/Waiter.java) is a concept for conditional waiting. It retrieves an object or state in specified `interval` and checks for the specified success and failure conditions. When one of them is met, the waiter will quit. If neither is met in `timeout`, then exception is thrown. 
+[Waiter](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/Waiter.java) is a concept for conditional waiting. It retrieves an object or state in specified `interval` and checks for the specified success and failure conditions. When one of them is met, the waiter will quit. If neither is met in `timeout`, then exception is thrown.
 
 XTF provides two different implementations ([SimpleWaiter](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/SimpleWaiter.java) and [SupplierWaiter](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/SupplierWaiter.java)) and several preconfigured instances. All the default parameters of preconfigured Waiters are overrideable.
 

@@ -20,7 +20,7 @@ cz.xtf.junit5.listeners.TestResultReporter
 Records specified images url. Set `xtf.junit.used_image` property with images id split by ',' character. Particular image url will be then stored in `used-images.properties` file in project root.
 
 ##### ProjectCreator
-Creates project before test executions on OpenShift if doesn't exist. Use `xtf.junit.clean_openshift` property to delete after all test have been executed. 
+Creates project before test executions on OpenShift if doesn't exist. Use `xtf.junit.clean_openshift` property to delete after all test have been executed. It also checks property `xtf.openshift.pullsecret` to create pull secret in the new project.
 
 ##### TestExecutionLogger
 Logs individual test executions into the console.
