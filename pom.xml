@@ -46,7 +46,7 @@
 		<version.openshift-client>4.6.1</version.openshift-client>
 		<version.commons-io>2.6</version.commons-io>
 		<version.commons-lang3>3.4</version.commons-lang3>
-		<version.commons-compress>1.18</version.commons-compress>
+		<version.commons-compress>1.19</version.commons-compress>
 		<version.commons-codec>1.11</version.commons-codec>
 		<version.slf4j-api>1.7.12</version.slf4j-api>
 		<version.rxjava-string>1.1.1</version.rxjava-string>
