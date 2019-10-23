@@ -1,6 +1,7 @@
 package cz.xtf.core.bm;
 
 import cz.xtf.core.config.BuildManagerConfig;
+import cz.xtf.core.config.OpenShiftConfig;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.waiting.Waiter;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,10 @@ public class BuildManager {
 
 		if (openShift.getProject(openShift.getNamespace()) == null) {
 			openShift.createProjectRequest();
+			openShift.waiters().isProjectReady().waitFor();
+		}
+		if (OpenShiftConfig.pullSecret() != null) {
+			openShift.setupPullSecret(OpenShiftConfig.pullSecret());
 		}
 
 		openShift.addRoleToGroup("system:image-puller", "ClusterRole",  "system:authenticated");

@@ -15,6 +15,7 @@ public final class OpenShiftConfig {
 	public static final String OPENSHIFT_MASTER_KUBECONFIG = "xtf.openshift.master.kubeconfig";
 	public static final String OPENSHIFT_MASTER_TOKEN = "xtf.openshift.master.token";
 	public static final String OPENSHIFT_ROUTE_DOMAIN = "xtf.openshift.route_domain";
+	public static final String OPENSHIFT_PULL_SECRET = "xtf.openshift.pullsecret";
 
 	public static String url() {
 		return XTFConfig.get(OPENSHIFT_URL);
@@ -70,6 +71,10 @@ public final class OpenShiftConfig {
 
 	public static String masterKubeconfig() {
 		return XTFConfig.get(OPENSHIFT_MASTER_KUBECONFIG);
+	}
+
+	public static String pullSecret() {
+		return XTFConfig.get(OPENSHIFT_PULL_SECRET);
 	}
 
 	/**
