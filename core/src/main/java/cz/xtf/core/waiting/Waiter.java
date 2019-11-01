@@ -1,6 +1,8 @@
 package cz.xtf.core.waiting;
 
+import cz.xtf.core.config.WaitingConfig;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.slf4j.event.Level;
 
 import java.util.concurrent.TimeUnit;
 
@@ -68,6 +70,17 @@ public interface Waiter {
 	Waiter logPoint(LogPoint logPoint);
 
 	/**
+	 * Set the level of severity for a log message.
+	 *
+	 * @param level what level of severity should be used to log the message.
+	 * @return this
+	 * @see Level
+	 */
+	default Waiter level(Level level) {
+		throw new UnsupportedOperationException("Method level hasn't been implemented.");
+	}
+
+	/**
 	 * Sets waiters execution for each iteration.
 	 *
 	 * @param runnable code to be executed upon successful waiting.
@@ -129,7 +142,31 @@ public interface Waiter {
 		 * @param millis waiting timeout on condition
 		 */
 		public void logStart(String reason, long millis) {
-			if (this.equals(START) || this.equals(BOTH)) log.info("Waiting up to {}. Reason: {}", DurationFormatUtils.formatDurationWords(millis, true, true), reason);
+			logStart(reason, millis, WaitingConfig.level());
+		}
+
+		/**
+		 * Logs start of waiting using the selected logging {@param level}. Its time and reason in case
+		 * of {@link LogPoint#START} or {@link LogPoint#BOTH}.
+		 *
+		 * @param reason reason of waiting
+		 * @param millis waiting timeout on condition
+		 * @param level logging severity of {@param reason} log
+		 */
+		public void logStart(String reason, long millis, Level level) {
+			if (this.equals(START) || this.equals(BOTH))
+				logMessage(level, String.format("Waiting up to %s. Reason: %s", DurationFormatUtils.formatDurationWords(millis, true, true), reason));
+		}
+
+		/**
+		 * Logs end of waiting using the selected logging {@param level}. Its time and reason in case
+		 * of {@link LogPoint#END} or {@link LogPoint#BOTH}
+		 *
+		 * @param reason reason of waiting
+		 * @param millis waiting timeout on condition
+		 */
+		public void logEnd(String reason, long millis) {
+			logEnd(reason, millis, WaitingConfig.level());
 		}
 
 		/**
@@ -137,9 +174,31 @@ public interface Waiter {
 		 *
 		 * @param reason reason of waiting
 		 * @param millis waiting timeout on condition
+		 * @param level logging severity of {@param reason} log
 		 */
-		public void logEnd(String reason, long millis) {
-			if (this.equals(END) || this.equals(BOTH)) log.info("Finished waiting after {}. Reason: {}", DurationFormatUtils.formatDurationWords(millis, true, true), reason);
+		public void logEnd(String reason, long millis, Level level) {
+			if (this.equals(END) || this.equals(BOTH))
+				logMessage(level, String.format("Finished waiting after %s. Reason: %s", DurationFormatUtils.formatDurationWords(millis, true, true), reason));
+		}
+
+		private void logMessage(Level level, String message) {
+			switch (level) {
+				case TRACE:
+					log.trace(message);
+					break;
+				case DEBUG:
+					log.debug(message);
+					break;
+				case INFO:
+					log.info(message);
+					break;
+				case WARN:
+					log.warn(message);
+					break;
+				case ERROR:
+					log.error(message);
+					break;
+			}
 		}
 	}
 }

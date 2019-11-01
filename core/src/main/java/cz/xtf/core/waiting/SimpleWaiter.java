@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 
 import cz.xtf.core.config.WaitingConfig;
+import org.slf4j.event.Level;
 
 public class SimpleWaiter implements Waiter {
 	private BooleanSupplier successCondition;
@@ -19,6 +20,7 @@ public class SimpleWaiter implements Waiter {
 
 	private String reason;
 	private LogPoint logPoint;
+	private Level level;
 
 	public SimpleWaiter(BooleanSupplier successCondition) {
 		this(successCondition, TimeUnit.MILLISECONDS, WaitingConfig.timeout(), null);
@@ -44,6 +46,7 @@ public class SimpleWaiter implements Waiter {
 		this.timeout = timeoutUnit.toMillis(timeout);
 		this.interval = DEFAULT_INTERVAL;
 		this.reason = reason;
+		this.level = WaitingConfig.level();
 		this.logPoint = reason == null ? LogPoint.NONE : LogPoint.START;
 	}
 
@@ -83,6 +86,11 @@ public class SimpleWaiter implements Waiter {
 		return this;
 	}
 
+	public SimpleWaiter level(Level level) {
+		this.level = level;
+		return this;
+	}
+
 	public SimpleWaiter onIteration(Runnable runnable) {
 		onIteration = runnable;
 		return this;
@@ -108,15 +116,15 @@ public class SimpleWaiter implements Waiter {
 		long startTime = System.currentTimeMillis();
 		long endTime = startTime + timeout;
 
-		logPoint.logStart(reason, timeout);
+		logPoint.logStart(reason, timeout, level);
 		while (System.currentTimeMillis() < endTime) {
 			if (failureCondition.getAsBoolean()) {
-				logPoint.logEnd(reason + " (Failure)", System.currentTimeMillis() - startTime);
+				logPoint.logEnd(reason + " (Failure)", System.currentTimeMillis() - startTime, level);
 				onFailure.run();
 				return false;
 			}
 			if (successCondition.getAsBoolean()) {
-				logPoint.logEnd(reason + " (Success)", System.currentTimeMillis() - startTime);
+				logPoint.logEnd(reason + " (Success)", System.currentTimeMillis() - startTime, level);
 				onSuccess.run();
 				return true;
 			}
@@ -128,7 +136,7 @@ public class SimpleWaiter implements Waiter {
 				throw new WaiterException("Thread has been interrupted!");
 			}
 		}
-		logPoint.logEnd(reason + " (Time out)", System.currentTimeMillis() - startTime);
+		logPoint.logEnd(reason + " (Time out)", System.currentTimeMillis() - startTime, level);
 		onTimeout.run();
 		throw new WaiterException(reason);
 	}
