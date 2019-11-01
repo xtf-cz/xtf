@@ -5,6 +5,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import cz.xtf.core.config.WaitingConfig;
+import org.slf4j.event.Level;
 
 public class SupplierWaiter<X> implements Waiter {
 	private Supplier<X> supplier;
@@ -21,6 +22,7 @@ public class SupplierWaiter<X> implements Waiter {
 
 	private String reason;
 	private LogPoint logPoint;
+	private Level level;
 
 	public SupplierWaiter(Supplier<X> supplier, Function<X, Boolean> successCondition) {
 		this(supplier, successCondition, x -> false);
@@ -63,6 +65,7 @@ public class SupplierWaiter<X> implements Waiter {
 		this.interval = DEFAULT_INTERVAL;
 		this.timeout = timeoutUnit.toMillis(timeout);
 		this.reason = reason;
+		this.level = WaitingConfig.level();
 		this.logPoint = reason == null ? LogPoint.NONE : LogPoint.START;
 	}
 
@@ -97,6 +100,11 @@ public class SupplierWaiter<X> implements Waiter {
 		return this;
 	}
 
+	public SupplierWaiter level(Level level) {
+		this.level = level;
+		return this;
+	}
+
 	public SupplierWaiter onIteration(Runnable runnable) {
 		onIteration = runnable;
 		return this;
@@ -122,17 +130,17 @@ public class SupplierWaiter<X> implements Waiter {
 		long startTime = System.currentTimeMillis();
 		long endTime = startTime + timeout;
 
-		logPoint.logStart(reason, timeout);
+		logPoint.logStart(reason, timeout, level);
 		while (System.currentTimeMillis() < endTime) {
 			X x = supplier.get();
 
 			if (failureCondition.apply(x)) {
-				logPoint.logEnd(reason + " (Failure)", System.currentTimeMillis() - startTime);
+				logPoint.logEnd(reason + " (Failure)", System.currentTimeMillis() - startTime, level);
 				onFailure.run();
 				return false;
 			}
 			if (successCondition.apply(x)) {
-				logPoint.logEnd(reason + " (Success)", System.currentTimeMillis() - startTime);
+				logPoint.logEnd(reason + " (Success)", System.currentTimeMillis() - startTime, level);
 				onSuccess.run();
 				return true;
 			}
@@ -144,7 +152,7 @@ public class SupplierWaiter<X> implements Waiter {
 				throw new WaiterException("Thread has been interrupted!");
 			}
 		}
-		logPoint.logEnd(reason + "(Timeout)", timeout);
+		logPoint.logEnd(reason + "(Timeout)", timeout, level);
 		onTimeout.run();
 		throw new WaiterException(reason);
 	}
