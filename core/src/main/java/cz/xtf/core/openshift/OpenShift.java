@@ -68,6 +68,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -647,7 +648,9 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * @return Map of environment variables
 	 */
 	public Map<String, String> getDeploymentConfigEnvVars(String name) {
-		return getDeploymentConfig(name).getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().stream().collect(Collectors.toMap(EnvVar::getName, EnvVar::getValue));
+		Map<String, String> envVars = new HashMap<>();
+		getDeploymentConfig(name).getSpec().getTemplate().getSpec().getContainers().get(0).getEnv().forEach(envVar -> envVars.put(envVar.getName(), envVar.getValue()));
+		return envVars;
 	}
 
 	public DeploymentConfig updateDeploymentconfig(DeploymentConfig deploymentConfig) {
