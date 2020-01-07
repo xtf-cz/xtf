@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import cz.xtf.core.config.WaitingConfig;
 import cz.xtf.core.openshift.crd.CustomResourceDefinitionContextProvider;
 import cz.xtf.core.openshift.helpers.ResourceFunctions;
 import cz.xtf.core.waiting.SimpleWaiter;
@@ -95,7 +96,7 @@ public class OpenShiftWaiters {
 				}
 			}
 			return crdInstances == 0 & openShift.listRemovableResources().isEmpty();
-		}, TimeUnit.SECONDS, 20, "Cleaning project.");
+		}, TimeUnit.MILLISECONDS, WaitingConfig.timeoutCleanup(), "Cleaning project.");
 	}
 
 	/**
