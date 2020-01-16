@@ -1,11 +1,14 @@
 package cz.xtf.core.http;
 
+import org.apache.commons.io.FileUtils;
+
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,6 +16,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -75,7 +79,7 @@ public class Https {
 	}
 
 	public static int getCode(String url) {
-		if(url.startsWith("https")) {
+		if (url.startsWith("https")) {
 			return Https.httpsGetCode(url);
 		} else {
 			return Https.httpGetCode(url);
@@ -83,7 +87,7 @@ public class Https {
 	}
 
 	public static String getContent(String url) {
-		if(url.startsWith("https")) {
+		if (url.startsWith("https")) {
 			return Https.httpsGetContent(url);
 		} else {
 			return Https.httpGetContent(url);
@@ -139,10 +143,21 @@ public class Https {
 		return Https.getConnectionContent(connection);
 	}
 
+	public static void copyHttpsURLToFile(String source, File destination, int connectionTimeout, int readTimeout) throws IOException {
+		copyHttpsURLToFile(Https.urlFromString(source), destination, connectionTimeout, readTimeout);
+	}
+
+	public static void copyHttpsURLToFile(URL source, File destination, int connectionTimeout, int readTimeout) throws IOException {
+		URLConnection connection = getHttpsConnection(source);
+		connection.setConnectTimeout(connectionTimeout);
+		connection.setReadTimeout(readTimeout);
+		FileUtils.copyInputStreamToFile(connection.getInputStream(), destination);
+	}
+
 	public static HttpsURLConnection getHttpsConnection(URL url) {
 		try {
 			SSLContext sslContext = SSLContext.getInstance("TLS");
-			sslContext.init(null, new TrustManager[]{new TrustAllManager()}, new SecureRandom());
+			sslContext.init(null, new TrustManager[] {new TrustAllManager()}, new SecureRandom());
 
 			HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
 			connection.setSSLSocketFactory(sslContext.getSocketFactory());
@@ -205,10 +220,12 @@ public class Https {
 	public static class TrustAllManager implements X509TrustManager {
 
 		@Override
-		public void checkClientTrusted(X509Certificate[] x509Certificates, String s) { }
+		public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {
+		}
 
 		@Override
-		public void checkServerTrusted(X509Certificate[] x509Certificates, String s) { }
+		public void checkServerTrusted(X509Certificate[] x509Certificates, String s) {
+		}
 
 		@Override
 		public X509Certificate[] getAcceptedIssuers() {
