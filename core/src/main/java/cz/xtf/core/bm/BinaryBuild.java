@@ -34,8 +34,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
+import cz.xtf.core.config.WaitingConfig;
 import cz.xtf.core.openshift.OpenShift;
+import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
@@ -107,7 +110,12 @@ public abstract class BinaryBuild implements ManagedBuild {
 	public void delete(OpenShift openShift) {
 		openShift.imageStreams().withName(is.getMetadata().getName()).cascading(false).withGracePeriod(0).delete();
 		openShift.buildConfigs().withName(bc.getMetadata().getName()).cascading(true).withGracePeriod(0).delete();
-		openShift.pods().withName(bc.getMetadata().getName() + "-1-build").cascading(false).withGracePeriod(0).delete();
+		final String podName = bc.getMetadata().getName() + "-1-build";
+		openShift.pods().withName(podName).cascading(false).withGracePeriod(0).delete();
+
+		new SimpleWaiter(() -> openShift.getImageStream(is.getMetadata().getName())  == null, TimeUnit.MILLISECONDS, WaitingConfig.timeout(), "Waiting for old imageStreams deletion").waitFor();
+		new SimpleWaiter(() -> openShift.getBuildConfig(bc.getMetadata().getName())  == null, TimeUnit.MILLISECONDS, WaitingConfig.timeout(), "Waiting for old buildConfigs deletion").waitFor();
+		new SimpleWaiter(() -> openShift.getPods().stream().noneMatch(p -> podName.equals(p.getMetadata().getName())), TimeUnit.MILLISECONDS, WaitingConfig.timeout(), "Waiting for old pods deletion").waitFor();
 	}
 
 	@Override
