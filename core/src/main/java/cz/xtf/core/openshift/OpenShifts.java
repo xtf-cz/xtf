@@ -187,7 +187,7 @@ public class OpenShifts {
 					systemType = "linux";
 					ocFileName = "oc.tar";
 				}
-				final Optional<Route> downloadsRouteOptional = Optional.ofNullable(master("openshift-console").getRoute("downloads"));
+				final Optional<Route> downloadsRouteOptional = Optional.ofNullable(admin("openshift-console").getRoute("downloads"));
 				final Route downloads = downloadsRouteOptional.orElseThrow(() -> new IllegalStateException("We are not able to find download link for OC binary."));
 				clientLocation = String.format("https://" + downloads.getSpec().getHost() + "/amd64/%s/", systemType);
 				return downloadOpenShiftBinaryInternal(version, ocFileName, clientLocation, true);
@@ -240,7 +240,7 @@ public class OpenShifts {
 					.withScope("NonNamespaced")
 					.withVersion("v1")
 					.build();
-			return toString(toMap(toMap(master().customResource(crdContext).get("version"), "status"), "desired"), "version");
+			return toString(toMap(toMap(admin().customResource(crdContext).get("version"), "status"), "desired"), "version");
 		}
 	}
 
