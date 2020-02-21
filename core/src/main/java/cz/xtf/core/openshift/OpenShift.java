@@ -1110,6 +1110,10 @@ public class OpenShift extends DefaultOpenShiftClient {
 		return new PodShell(this, pod);
 	}
 
+	public PodShell podShell(Pod pod, String containerName) {
+		return new PodShell(this, pod, containerName);
+	}
+
 	// Clean up function
 	/**
 	 * Deletes all* resources in namespace. Doesn't wait till all are deleted. <br/>
