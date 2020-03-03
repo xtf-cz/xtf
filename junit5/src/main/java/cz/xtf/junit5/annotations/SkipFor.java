@@ -15,6 +15,9 @@ import java.lang.annotation.Target;
 @ExtendWith(SkipForCondition.class)
 public @interface SkipFor {
 
+	/**
+	 * Name or regexp pattern matching name of the image. For example "eap73-openjdk11-openshift-rhel8" or "eap73-openjdk11-.*"
+	 */
 	String name();
 
 	String image();

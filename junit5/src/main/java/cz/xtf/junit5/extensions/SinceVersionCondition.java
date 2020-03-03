@@ -8,6 +8,8 @@ import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.commons.support.AnnotationSupport;
 
+import java.util.regex.Pattern;
+
 public class SinceVersionCondition implements ExecutionCondition {
 
 	@Override
@@ -30,7 +32,8 @@ public class SinceVersionCondition implements ExecutionCondition {
 
 	public static ConditionEvaluationResult resolve(SinceVersion sinceVersion) {
 		Image image = Image.resolve(sinceVersion.image());
-		if (image.getRepo().equals(sinceVersion.name())) {
+		Pattern name = Pattern.compile(sinceVersion.name());
+		if (name.matcher(image.getRepo()).matches()) {
 			if (image.isVersionAtLeast(sinceVersion.since())) {
 				return ConditionEvaluationResult.enabled("'" + image.getRepo() + "' image tag is equal or bigger then expected. Tested feature should be available.");
 			} else {
