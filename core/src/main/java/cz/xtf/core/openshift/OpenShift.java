@@ -2,6 +2,8 @@ package cz.xtf.core.openshift;
 
 import cz.xtf.core.config.WaitingConfig;
 import cz.xtf.core.openshift.crd.CustomResourceDefinitionContextProvider;
+import cz.xtf.core.openshift.client.dsl.TracedImageStreamOperations;
+import cz.xtf.core.openshift.imagestreams.MapBasedImageStreamRegistry;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -32,15 +34,19 @@ import io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder;
 import io.fabric8.kubernetes.api.model.rbac.Subject;
 import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
 import io.fabric8.kubernetes.client.Config;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.LocalPortForward;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.BuildRequest;
 import io.fabric8.openshift.api.model.BuildRequestBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfig;
+import io.fabric8.openshift.api.model.DoneableImageStream;
 import io.fabric8.openshift.api.model.ImageStream;
+import io.fabric8.openshift.api.model.ImageStreamList;
 import io.fabric8.openshift.api.model.Project;
 import io.fabric8.openshift.api.model.ProjectRequest;
 import io.fabric8.openshift.api.model.ProjectRequestBuilder;
@@ -89,6 +95,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	/**
 	 * Autoconfigures the client with the default fabric8 client rules
+	 *
 	 * @return
 	 */
 	public static OpenShift get(String namespace) {
@@ -178,20 +185,20 @@ public class OpenShift extends DefaultOpenShiftClient {
 	/**
 	 * Convenient method to create pull secret for authenticated image registries.
 	 * The secret content must be provided in "dockerconfigjson" formar.
-	 *
+	 * <p>
 	 * E.g.: {"auths":{"registry.redhat.io":{"auth":"<REDACTED_TOKEN>"}}}
-	 *
+	 * <p>
 	 * Linking Secret to ServiceAccount is based on OpenShift documentation:
 	 * https://docs.openshift.com/container-platform/4.2/openshift_images/managing-images/using-image-pull-secrets.html
 	 *
-	 * @param name of the Secret to be created
+	 * @param name   of the Secret to be created
 	 * @param secret content of Secret in json format
 	 */
 	public void setupPullSecret(String name, String secret) {
 		Secret pullSecret = new SecretBuilder()
 				.withNewMetadata()
-					.withNewName(name)
-					.addToLabels(KEEP_LABEL, "true")
+				.withNewName(name)
+				.addToLabels(KEEP_LABEL, "true")
 				.endMetadata()
 				.withNewType("kubernetes.io/dockerconfigjson")
 				.withData(Collections.singletonMap(".dockerconfigjson", Base64.getEncoder().encodeToString(secret.getBytes())))
@@ -302,6 +309,19 @@ public class OpenShift extends DefaultOpenShiftClient {
 	}
 
 	// ImageStreams
+	/**
+	 * Returning a {@link TracedImageStreamOperations} instance here so 
+	 * that image streams creation is traced.
+	 * 
+	 * @return {@link TracedImageStreamOperations} instance that leverages
+	 * {@link MapBasedImageStreamRegistry} in order to track image streams 
+	 * creation.
+	 */
+	@Override
+	public MixedOperation<ImageStream, ImageStreamList, DoneableImageStream, Resource<ImageStream, DoneableImageStream>> imageStreams() {
+		return new TracedImageStreamOperations(httpClient, OpenShiftConfig.wrap(getConfiguration()));
+	}
+
 	public ImageStream createImageStream(ImageStream imageStream) {
 		return imageStreams().create(imageStream);
 	}
@@ -334,7 +354,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	public String getPodLog(Pod pod) {
 		return getPodLog(pod, getAnyContainer(pod));
 	}
-	
+
 	public String getPodLog(Pod pod, String containerName) {
 		return getPodLog(pod, getContainer(pod, containerName));
 	}
@@ -349,7 +369,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	/**
 	 * Return logs of all containers from the pod
-	 * 
+	 *
 	 * @param pod Pod to retrieve from
 	 * @return Map of container name / logs
 	 */
@@ -360,7 +380,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	public Reader getPodLogReader(Pod pod) {
 		return getPodLogReader(pod, getAnyContainer(pod));
 	}
-	
+
 	public Reader getPodLogReader(Pod pod, String containerName) {
 		return getPodLogReader(pod, getContainer(pod, containerName));
 	}
@@ -375,7 +395,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	/**
 	 * Return readers on logs of all containers from the pod
-	 * 
+	 *
 	 * @param pod Pod to retrieve from
 	 * @return Map of container name / reader
 	 */
@@ -390,7 +410,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	public Observable<String> observePodLog(Pod pod) {
 		return observePodLog(pod, getAnyContainer(pod));
 	}
-	
+
 	public Observable<String> observePodLog(Pod pod, String containerName) {
 		return observePodLog(pod, getContainer(pod, containerName));
 	}
@@ -404,10 +424,10 @@ public class OpenShift extends DefaultOpenShiftClient {
 		}
 		return StringObservable.byLine(StringObservable.from(new InputStreamReader(watcher.getOutput())));
 	}
-	
+
 	/**
 	 * Return obervables on logs of all containers from the pod
-	 * 
+	 *
 	 * @param pod Pod to retrieve from
 	 * @return Map of container name / logs obervable
 	 */
@@ -429,7 +449,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	/**
 	 * @param deploymentConfigName name of deploymentConfig
-	 * @param version deployment version to be retrieved
+	 * @param version              deployment version to be retrieved
 	 * @return active pods created by deploymentConfig with specified version
 	 */
 	public List<Pod> getPods(String deploymentConfigName, int version) {
@@ -468,7 +488,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	/**
 	 * Deletes pods with specified label.
 	 *
-	 * @param key key of the label
+	 * @param key   key of the label
 	 * @param value value of the label
 	 * @return True if any pod has been deleted
 	 */
@@ -479,10 +499,10 @@ public class OpenShift extends DefaultOpenShiftClient {
 	public boolean deletePods(Map<String, String> labels) {
 		return pods().withLabels(labels).delete();
 	}
-	
+
 	/**
 	 * Retrieve pod containers
-	 * 
+	 *
 	 * @param pod pod to retrieve in
 	 * @return List of containers of empty list if none ...
 	 */
@@ -492,7 +512,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	/**
 	 * Retrieve any container from the given pod
-	 * 
+	 *
 	 * @param pod Pod to retrieve from
 	 * @return One random container from the pod
 	 */
@@ -500,12 +520,12 @@ public class OpenShift extends DefaultOpenShiftClient {
 		List<Container> containers = getAllContainers(pod);
 		return containers.get(new Random().nextInt(containers.size()));
 	}
-	
+
 	public Container getContainer(Pod pod, String containerName) {
 		return getAllContainers(pod).stream()
-			.filter(c -> c.getName().equals(containerName))
-			.findFirst()
-			.orElseThrow(() -> new RuntimeException("Cannot find container with name " + containerName + " in pod " + pod.getMetadata().getName()));
+				.filter(c -> c.getName().equals(containerName))
+				.findFirst()
+				.orElseThrow(() -> new RuntimeException("Cannot find container with name " + containerName + " in pod " + pod.getMetadata().getName()));
 	}
 
 	private <R> Map<String, R> retrieveFromPodContainers(Pod pod, Function<Container, R> containerRetriever) {
@@ -660,7 +680,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	/**
 	 * Updates deployment config environment variables with envVars values.
 	 *
-	 * @param name name of deploymentConfig
+	 * @param name    name of deploymentConfig
 	 * @param envVars environment variables
 	 */
 	public DeploymentConfig updateDeploymentConfigEnvVars(String name, Map<String, String> envVars) {
@@ -684,7 +704,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	/**
 	 * Scales deployment config to specified number of replicas.
 	 *
-	 * @param name name of deploymentConfig
+	 * @param name     name of deploymentConfig
 	 * @param replicas number of target replicas
 	 */
 	public void scale(String name, int replicas) {
@@ -765,7 +785,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	/**
 	 * Updates build config with specified environment variables.
 	 *
-	 * @param name name of buildConfig
+	 * @param name    name of buildConfig
 	 * @param envVars environment variables
 	 */
 	public BuildConfig updateBuildConfigEnvVars(String name, Map<String, String> envVars) {
@@ -887,7 +907,6 @@ public class OpenShift extends DefaultOpenShiftClient {
 	 * Most of the groups are `system:*` wide therefore use `kind: ClusterRole`
 	 *
 	 * @Deprecated use method {@link #addRoleToGroup(String, String, String)}
-	 *
 	 */
 	@Deprecated
 	public RoleBinding addRoleToGroup(String roleName, String groupName) {
@@ -1115,6 +1134,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	}
 
 	// Clean up function
+
 	/**
 	 * Deletes all* resources in namespace. Doesn't wait till all are deleted. <br/>
 	 * <br/>
