@@ -1,17 +1,16 @@
 package cz.xtf.junit5.extensions;
 
 import cz.xtf.core.image.Image;
+import cz.xtf.core.openshift.OpenShifts;
 import cz.xtf.junit5.annotations.SkipFor;
 import cz.xtf.junit5.annotations.SkipFors;
+import cz.xtf.junit5.model.DockerImageMetadata;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.commons.support.AnnotationSupport;
 
-import java.util.regex.Pattern;
-
 public class SkipForCondition implements ExecutionCondition {
-
 	@Override
 	public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
 		SkipFor skipFor = AnnotationSupport.findAnnotation(context.getElement(), SkipFor.class).orElse(null);
@@ -32,8 +31,10 @@ public class SkipForCondition implements ExecutionCondition {
 
 	public static ConditionEvaluationResult resolve(SkipFor skipFor) {
 		Image image = Image.resolve(skipFor.image());
-		Pattern name = Pattern.compile(skipFor.name());
-		if (name.matcher(image.getRepo()).matches()) {
+		DockerImageMetadata metadata = DockerImageMetadata.prepare(OpenShifts.master(), image);
+		String[] imageNameParts = metadata.getNameLabelValue().split("/");
+		String actualImageName = imageNameParts.length == 2 ? imageNameParts[1] : imageNameParts[0];
+		if (skipFor.name().equals(actualImageName)) {
 			String reason = skipFor.reason().equals("") ? "" : " (" + skipFor.reason() + ")";
 			return ConditionEvaluationResult.disabled("Tested feature isn't expected to be available in '" + image.getRepo() + "' image." + reason);
 		} else {
