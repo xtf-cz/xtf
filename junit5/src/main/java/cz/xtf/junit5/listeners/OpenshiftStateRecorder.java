@@ -13,6 +13,7 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.Route;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
 import org.junit.platform.engine.TestExecutionResult;
@@ -26,6 +27,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 
 import static org.junit.platform.engine.TestExecutionResult.Status.FAILED;
 
@@ -44,19 +47,29 @@ import static org.junit.platform.engine.TestExecutionResult.Status.FAILED;
  *    To use this interface a test class needs to be extended with this class using @ExtendWith
  */
 @Slf4j
-public class OpenshiftStateRecorder implements TestExecutionListener, LifecycleMethodExecutionExceptionHandler {
-	private static final Path statusDir = Paths.get("log","status");
+public class OpenshiftStateRecorder implements TestExecutionListener, LifecycleMethodExecutionExceptionHandler, BeforeAllCallback {
+	private static final String ALWAYS_REBUILD_PROPERTY = "xtf.state_recorder.store_always";
+	private final boolean storeAlways;
 
-	private final OpenShift openShift = OpenShifts.master();
+	private final Path statusDir;
+
+	private final OpenShift openShift;
 	private final OpenShift buildOpenShift;
 
 	private final String namespace;
 	private final String buildNamespace;
 
+	private final DateTimeFormatter openshiftTimestampFormatter;
+	private static LocalDateTime testStartTime;
+
 	public OpenshiftStateRecorder(){
+		statusDir = Paths.get("log","status");
+		openShift = OpenShifts.master();
 		namespace = openShift.getNamespace();
 		buildNamespace = XTFConfig.get(BuildManagerConfig.BUILD_NAMESPACE);
 		buildOpenShift = OpenShifts.master(buildNamespace);
+		openshiftTimestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		storeAlways = Boolean.parseBoolean(XTFConfig.get(ALWAYS_REBUILD_PROPERTY, "false"));
 	}
 
 	private String getTestDisplayName(TestIdentifier testIdentifier) {
@@ -64,6 +77,15 @@ public class OpenshiftStateRecorder implements TestExecutionListener, LifecycleM
 			.replaceAll(".*class:", "")
 			.replaceAll("].*", "");
 		return String.format("%s#%s", className, testIdentifier.getDisplayName());
+	}
+
+	/**
+	 * Store time every time test class is started.
+	 * During storing state, only events after this time are stored.
+	 */
+	@Override
+	public void beforeAll(ExtensionContext extensionContext) throws Exception {
+		testStartTime = LocalDateTime.now(ZoneOffset.UTC);
 	}
 
 	// Log the openshift state if BeforeAll fail
@@ -94,7 +116,7 @@ public class OpenshiftStateRecorder implements TestExecutionListener, LifecycleM
 	@Override
 	public void executionFinished(TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {
 		try {
-			if (FAILED.equals(testExecutionResult.getStatus()) && testIdentifier.isTest()) {
+			if ((storeAlways || FAILED.equals(testExecutionResult.getStatus())) && testIdentifier.isTest()) {
 				storeOpenshiftState(getTestDisplayName(testIdentifier));
 			}
 		} catch (IOException e) {
@@ -130,7 +152,7 @@ public class OpenshiftStateRecorder implements TestExecutionListener, LifecycleM
 	private void storeNamespaceState(Path directory, OpenShift openShift) throws IOException {
 		String namespace = openShift.getNamespace();
 		BufferedWriter writer = new BufferedWriter(new FileWriter(directory.toAbsolutePath() + "/namespace-" + namespace + ".txt"));
-		writer.write("Namespace " + namespace + " state - " + LocalDateTime.now());
+		writer.write("Namespace " + namespace + " state - " + LocalDateTime.now() + " - UTC:" + LocalDateTime.now(ZoneOffset.UTC));
 		writer.newLine();
 
 		writer.write("Pods: (name ; status ; readyContainers/totalContainers ; containerRestart)");
@@ -159,13 +181,15 @@ public class OpenshiftStateRecorder implements TestExecutionListener, LifecycleM
 		writer.newLine();
 
 
-		writer.write("Events:");
+		writer.write("Events since: " + testStartTime);
 		writer.newLine();
 		for (Event event : openShift.getEvents()){
-			writer.write(event.getFirstTimestamp() + " " +
+			if (LocalDateTime.parse(event.getFirstTimestamp(), openshiftTimestampFormatter).isAfter(testStartTime)) {
+				writer.write(event.getFirstTimestamp() + " " +
 						event.getInvolvedObject().getKind() + ":" + event.getInvolvedObject().getName() + " => " +
 						event.getMessage());
-			writer.newLine();
+				writer.newLine();
+			}
 		}
 		writer.newLine();
 
