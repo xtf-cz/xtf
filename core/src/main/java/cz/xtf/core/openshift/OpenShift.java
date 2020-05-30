@@ -41,6 +41,7 @@ import io.fabric8.openshift.api.model.BuildRequest;
 import io.fabric8.openshift.api.model.BuildRequestBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
+import io.fabric8.openshift.api.model.ImageStreamTag;
 import io.fabric8.openshift.api.model.Project;
 import io.fabric8.openshift.api.model.ProjectRequest;
 import io.fabric8.openshift.api.model.ProjectRequestBuilder;
@@ -318,6 +319,23 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	public boolean deleteImageStream(ImageStream imageStream) {
 		return imageStreams().delete(imageStream);
+	}
+
+	// ImageStreamsTags
+	public ImageStreamTag createImageStreamTag(ImageStreamTag imageStreamTag) {
+		return imageStreamTags().create(imageStreamTag);
+	}
+
+	public ImageStreamTag getImageStreamTag(String imageStreamName, String tag) {
+		return imageStreamTags().withName(imageStreamName + ":" + tag).get();
+	}
+
+	public List<ImageStreamTag> getImageStreamTags() {
+		return imageStreamTags().list().getItems();
+	}
+
+	public boolean deleteImageStreamTag(ImageStreamTag imageStreamTag) {
+		return imageStreamTags().delete(imageStreamTag);
 	}
 
 	// Pods

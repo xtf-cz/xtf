@@ -1,13 +1,16 @@
 package cz.xtf.junit5.extensions;
 
 import cz.xtf.core.image.Image;
+import cz.xtf.core.openshift.OpenShifts;
 import cz.xtf.junit5.annotations.SinceVersion;
 import cz.xtf.junit5.annotations.SinceVersions;
+import cz.xtf.junit5.model.DockerImageMetadata;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.commons.support.AnnotationSupport;
 
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SinceVersionCondition implements ExecutionCondition {
@@ -31,9 +34,20 @@ public class SinceVersionCondition implements ExecutionCondition {
 	}
 
 	public static ConditionEvaluationResult resolve(SinceVersion sinceVersion) {
+		if (sinceVersion.name().equals("") == sinceVersion.imageMetadataLabelName().equals("")) {
+			throw new RuntimeException("Only one of 'name' and 'imageMetadataLabelName' can be presented in 'SkipFor' annotation.");
+		}
 		Image image = Image.resolve(sinceVersion.image());
-		Pattern name = Pattern.compile(sinceVersion.name());
-		if (name.matcher(image.getRepo()).matches()) {
+		Matcher matcher;
+
+		if (!sinceVersion.name().equals("")) {
+			matcher = Pattern.compile(sinceVersion.name()).matcher(image.getRepo());
+		} else {
+			DockerImageMetadata metadata = DockerImageMetadata.get(OpenShifts.master(), image);
+			matcher = Pattern.compile(sinceVersion.imageMetadataLabelName()).matcher(metadata.labels().get("name"));
+		}
+
+		if (matcher.matches()) {
 			if (image.isVersionAtLeast(sinceVersion.since())) {
 				return ConditionEvaluationResult.enabled("'" + image.getRepo() + "' image tag is equal or bigger then expected. Tested feature should be available.");
 			} else {
