@@ -15,10 +15,21 @@ import java.lang.annotation.Target;
 @ExtendWith(SinceVersionCondition.class)
 public @interface SinceVersion {
 
+
 	/**
 	 * Name or regexp pattern matching name of the image. For example "eap73-openjdk11-openshift-rhel8" or "eap73-openjdk11-.*"
+	 * <p>
+	 * Only one of {@code imageMetadataLabelName} and {@code name} can be presented.
 	 */
-	String name();
+	String name() default "";
+
+	/**
+	 * Name or regexp pattern matching name in {@code Docker Labels} in image metadata
+	 * For example "eap73-openjdk11-openshift-rhel8" or "eap73-openjdk11-.*".
+	 * <p>
+	 * Only one of {@code imageMetadataLabelName} and {@code name} can be presented.
+	 */
+	String imageMetadataLabelName() default "";
 
 	String image();
 
