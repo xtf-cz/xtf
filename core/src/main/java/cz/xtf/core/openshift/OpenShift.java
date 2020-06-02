@@ -1,6 +1,7 @@
 package cz.xtf.core.openshift;
 
 import cz.xtf.core.config.WaitingConfig;
+import cz.xtf.core.event.EventList;
 import cz.xtf.core.openshift.crd.CustomResourceDefinitionContextProvider;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
@@ -1094,6 +1095,14 @@ public class OpenShift extends DefaultOpenShiftClient {
 	}
 
 	// Events
+	public EventList getEventList() {
+		return new EventList(events().list().getItems());
+	}
+
+	/**
+	 * Use {@link OpenShift#getEventList()} instead
+	 */
+	@Deprecated
 	public List<Event> getEvents() {
 		return events().list().getItems();
 	}
@@ -1221,6 +1230,11 @@ public class OpenShift extends DefaultOpenShiftClient {
 	}
 
 	// Waiting
+
+	/**
+	 * Use {@link OpenShiftWaiters#get(OpenShift, BooleanSupplier)} instead.
+	 */
+	@Deprecated
 	public OpenShiftWaiters waiters() {
 		return waiters;
 	}
