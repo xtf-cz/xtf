@@ -1,10 +1,12 @@
 package cz.xtf.core.waiting;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import cz.xtf.core.config.WaitingConfig;
+import cz.xtf.core.waiting.helpers.ExponentialTimeBackoff;
 import org.slf4j.event.Level;
 
 public class SupplierWaiter<X> implements Waiter {
@@ -23,6 +25,7 @@ public class SupplierWaiter<X> implements Waiter {
 	private String reason;
 	private LogPoint logPoint;
 	private Level level;
+	private BooleanSupplier failFast;
 
 	public SupplierWaiter(Supplier<X> supplier, Function<X, Boolean> successCondition) {
 		this(supplier, successCondition, x -> false);
@@ -61,6 +64,8 @@ public class SupplierWaiter<X> implements Waiter {
 		this.onSuccess = () -> {};
 		this.onFailure = () -> {};
 		this.onTimeout = () -> {};
+
+		this.failFast = () -> false;
 
 		this.interval = DEFAULT_INTERVAL;
 		this.timeout = timeoutUnit.toMillis(timeout);
@@ -125,13 +130,29 @@ public class SupplierWaiter<X> implements Waiter {
 		return this;
 	}
 
+	public SupplierWaiter failFast(BooleanSupplier failFast) {
+		this.failFast = failFast;
+		return this;
+	}
+
 	@Override
 	public boolean waitFor() {
 		long startTime = System.currentTimeMillis();
 		long endTime = startTime + timeout;
 
 		logPoint.logStart(reason, timeout, level);
+
+		ExponentialTimeBackoff backoff = ExponentialTimeBackoff.builder()
+				.blocking(false)
+				.maxBackoff(32000)
+				.build();
 		while (System.currentTimeMillis() < endTime) {
+
+			if (backoff.next() && failFast.getAsBoolean()) {
+				logPoint.logEnd(reason + " (fail fast method failure)", System.currentTimeMillis() - startTime, level);
+				return false;
+			}
+
 			X x = supplier.get();
 
 			if (failureCondition.apply(x)) {

@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 
 import cz.xtf.core.config.WaitingConfig;
+import cz.xtf.core.waiting.helpers.ExponentialTimeBackoff;
 import org.slf4j.event.Level;
 
 public class SimpleWaiter implements Waiter {
@@ -21,6 +22,7 @@ public class SimpleWaiter implements Waiter {
 	private String reason;
 	private LogPoint logPoint;
 	private Level level;
+	private BooleanSupplier failFast;
 
 	public SimpleWaiter(BooleanSupplier successCondition) {
 		this(successCondition, TimeUnit.MILLISECONDS, WaitingConfig.timeout(), null);
@@ -106,6 +108,11 @@ public class SimpleWaiter implements Waiter {
 		return this;
 	}
 
+	public SimpleWaiter failFast(BooleanSupplier failFast) {
+		this.failFast = failFast;
+		return this;
+	}
+
 	public SimpleWaiter onTimeout(Runnable runnable) {
 		onTimeout = runnable;
 		return this;
@@ -117,7 +124,17 @@ public class SimpleWaiter implements Waiter {
 		long endTime = startTime + timeout;
 
 		logPoint.logStart(reason, timeout, level);
+
+		ExponentialTimeBackoff backoff = ExponentialTimeBackoff.builder()
+				.blocking(false)
+				.maxBackoff(32000)
+				.build();
+
 		while (System.currentTimeMillis() < endTime) {
+			if (backoff.next() && failFast.getAsBoolean()) {
+				logPoint.logEnd(reason + " (fail fast method failure)", System.currentTimeMillis() - startTime, level);
+				return false;
+			}
 			if (failureCondition.getAsBoolean()) {
 				logPoint.logEnd(reason + " (Failure)", System.currentTimeMillis() - startTime, level);
 				onFailure.run();

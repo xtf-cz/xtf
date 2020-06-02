@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -21,9 +22,24 @@ import io.fabric8.openshift.api.model.BuildStatus;
 
 public class OpenShiftWaiters {
 	private OpenShift openShift;
+	private BooleanSupplier failFast;
 
 	OpenShiftWaiters(OpenShift openShift) {
+		this(openShift, () -> false);
+	}
+
+	OpenShiftWaiters(OpenShift openShift, BooleanSupplier failFast) {
 		this.openShift = openShift;
+		this.failFast = failFast;
+	}
+
+	/**
+	 * @param openShift
+	 * @param failFast {@link BooleanSupplier} that returns true if waiter should fail due to error state of i.e. OpenShift
+	 * @return
+	 */
+	public static OpenShiftWaiters get(OpenShift openShift, BooleanSupplier failFast) {
+		return new OpenShiftWaiters(openShift, failFast);
 	}
 
 	/**
@@ -40,7 +56,9 @@ public class OpenShiftWaiters {
 			.orElse(null);
 		String reason = "Waiting for completion of latest build " + buildConfigName;
 
-		return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES, 10, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
+		return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES, 10, reason).logPoint(Waiter.LogPoint.BOTH)
+				.failFast(failFast)
+				.interval(5_000);
 	}
 
 	/**
@@ -54,7 +72,9 @@ public class OpenShiftWaiters {
 		Supplier<String> supplier = () -> openShift.getBuild(build.getMetadata().getName()).getStatus().getPhase();
 		String reason = "Waiting for completion of build " + build.getMetadata().getName();
 
-		return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES, 10, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
+		return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES, 10, reason).logPoint(Waiter.LogPoint.BOTH)
+				.failFast(failFast)
+				.interval(5_000);
 	}
 
 	/**
@@ -68,7 +88,9 @@ public class OpenShiftWaiters {
 		Supplier<Build> supplier = () -> openShift.getLatestBuild(buildConfigName);
 		String reason = "Waiting for presence of latest build of buildconfig " + buildConfigName;
 
-		return new SupplierWaiter<>(supplier, Objects::nonNull, reason).logPoint(Waiter.LogPoint.BOTH).interval(5_000);
+		return new SupplierWaiter<>(supplier, Objects::nonNull, reason).logPoint(Waiter.LogPoint.BOTH)
+				.failFast(failFast)
+				.interval(5_000);
 	}
 
 	/**
@@ -77,7 +99,8 @@ public class OpenShiftWaiters {
 	 * @return Waiter instance
 	 */
 	public Waiter isProjectReady() {
-		return new SimpleWaiter(() -> openShift.getProject() != null, TimeUnit.SECONDS, 20, "Waiting for the project to be created.");
+		return new SimpleWaiter(() -> openShift.getProject() != null, TimeUnit.SECONDS, 20, "Waiting for the project to be created.")
+				.failFast(failFast);
 	}
 
 	/**
@@ -96,7 +119,8 @@ public class OpenShiftWaiters {
 				}
 			}
 			return crdInstances == 0 & openShift.listRemovableResources().isEmpty();
-		}, TimeUnit.MILLISECONDS, WaitingConfig.timeoutCleanup(), "Cleaning project.");
+		}, TimeUnit.MILLISECONDS, WaitingConfig.timeoutCleanup(), "Cleaning project.")
+				.failFast(failFast);
 	}
 
 	/**
@@ -159,7 +183,7 @@ public class OpenShiftWaiters {
 		Function<List<Pod>, Boolean> sc = ResourceFunctions.areExactlyNPodsReady(replicas);
 		Function<List<Pod>, Boolean> fc = ResourceFunctions.haveAnyPodRestartedAtLeastNTimes(restartTolerance);
 
-		return new SupplierWaiter<>(ps, sc, fc);
+		return new SupplierWaiter<>(ps, sc, fc).failFast(failFast);
 	}
 
 	/**
@@ -194,7 +218,7 @@ public class OpenShiftWaiters {
 	}
 
 	private Waiter areExactlyNPodsReady(int n, Supplier<List<Pod>> podSupplier) {
-		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsReady(n));
+		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsReady(n)).failFast(failFast);
 	}
 
 	/**
@@ -229,7 +253,7 @@ public class OpenShiftWaiters {
 	}
 
 	private Waiter areExactlyNPodsRunning(int n, Supplier<List<Pod>> podSupplier) {
-		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsRunning(n));
+		return new SupplierWaiter<>(podSupplier, ResourceFunctions.areExactlyNPodsRunning(n)).failFast(failFast);
 	}
 
 	public Waiter areNoPodsPresent(String dcName) {
@@ -251,8 +275,8 @@ public class OpenShiftWaiters {
 		return areNoPodsPresent(ps).reason(reason);
 	}
 
-	private static Waiter areNoPodsPresent(Supplier<List<Pod>> podSupplier) {
-		return new SupplierWaiter<>(podSupplier, List::isEmpty);
+	private Waiter areNoPodsPresent(Supplier<List<Pod>> podSupplier) {
+		return new SupplierWaiter<>(podSupplier, List::isEmpty).failFast(failFast);
 	}
 
 	public Waiter havePodsBeenRestarted(String dcName) {
@@ -273,7 +297,7 @@ public class OpenShiftWaiters {
 		return havePodsBeenRestartedAtLeastNTimes(times, ps).reason(reason);
 	}
 
-	private static Waiter havePodsBeenRestartedAtLeastNTimes(int times, Supplier<List<Pod>> podSupplier) {
-		return new SupplierWaiter<>(podSupplier, ResourceFunctions.haveAnyPodRestartedAtLeastNTimes(times));
+	private Waiter havePodsBeenRestartedAtLeastNTimes(int times, Supplier<List<Pod>> podSupplier) {
+		return new SupplierWaiter<>(podSupplier, ResourceFunctions.haveAnyPodRestartedAtLeastNTimes(times)).failFast(failFast);
 	}
 }

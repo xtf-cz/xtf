@@ -5,6 +5,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.event.Level;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -118,6 +119,17 @@ public interface Waiter {
 	 */
 	default Waiter onTimeout(Runnable runnable) {
 		throw new UnsupportedOperationException("Method onTimeout hasn't been implemented.");
+	}
+
+	/**
+	 * Sets waiters fail fast function that indicates (returns true) if there is an error state and waiting should not
+	 * proceed.
+	 *
+	 * @param failFast returns true if waiting has failed.
+	 * @return this
+	 */
+	default Waiter failFast(BooleanSupplier failFast) {
+		throw new UnsupportedOperationException("Method failFast hasn't been implemented.");
 	}
 
 	/**
