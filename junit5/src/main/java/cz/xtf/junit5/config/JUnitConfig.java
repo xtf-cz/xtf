@@ -13,6 +13,16 @@ public class JUnitConfig {
 	private static final String CI_PASSWORD = "xtf.junit.ci.password";
 	private static final String JENKINS_RERUN = "xtf.junit.jenkins.rerun";
 	private static final String PREBUILDER_SYNCHRONIZED = "xtf.junit.prebuilder.synchronized";
+	private static final String RECORD_DIR = "xtf.record.dir";
+	private static final String RECORD_ALWAYS = "xtf.record.always";
+
+	public static String recordDir() {
+		return XTFConfig.get(RECORD_DIR);
+	}
+
+	public static boolean recordAlways() {
+		return XTFConfig.get(RECORD_ALWAYS) != null && (XTFConfig.get(RECORD_ALWAYS).equals("") || XTFConfig.get(RECORD_ALWAYS).toLowerCase().equals("true"));
+	}
 
 	public static boolean cleanOpenShift() {
 		return Boolean.valueOf(XTFConfig.get(CLEAN_OPENSHIFT, "false"));

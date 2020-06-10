@@ -27,11 +27,13 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.rbac.Role;
 import io.fabric8.kubernetes.api.model.rbac.RoleBinding;
 import io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder;
 import io.fabric8.kubernetes.api.model.rbac.Subject;
 import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
+import io.fabric8.kubernetes.client.AppsAPIGroupClient;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.LocalPortForward;
@@ -90,6 +92,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	private static volatile String routeSuffix;
 
 	public static final String KEEP_LABEL = "xtf.cz/keep";
+	private final AppsAPIGroupClient appsAPIGroupClient;
 
 	/**
 	 * Autoconfigures the client with the default fabric8 client rules
@@ -105,6 +108,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 		if (StringUtils.isNotEmpty(namespace)) {
 			openShiftConfig.setNamespace(namespace);
 		}
+
 
 		return new OpenShift(openShiftConfig);
 	}
@@ -171,6 +175,8 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	public OpenShift(OpenShiftConfig openShiftConfig) {
 		super(openShiftConfig);
+
+		appsAPIGroupClient = new AppsAPIGroupClient(httpClient, openShiftConfig);
 
 		this.waiters = new OpenShiftWaiters(this);
 	}
@@ -316,6 +322,19 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	public List<ImageStream> getImageStreams() {
 		return imageStreams().list().getItems();
+	}
+
+	// StatefulSets
+	public StatefulSet createStatefulSet(StatefulSet statefulSet) {
+		return appsAPIGroupClient.statefulSets().create(statefulSet);
+	}
+
+	public StatefulSet getStatefulSet(String name) {
+		return appsAPIGroupClient.statefulSets().withName(name).get();
+	}
+
+	public List<StatefulSet> getStatefulSets() {
+		return appsAPIGroupClient.statefulSets().list().getItems();
 	}
 
 	public boolean deleteImageStream(ImageStream imageStream) {

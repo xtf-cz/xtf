@@ -111,6 +111,18 @@ public class EventListFilter {
 	}
 
 	/**
+	 * Filter events that are last seen strictly after the date.
+	 */
+	public EventListFilter after(ZonedDateTime date) {
+		stream = stream.filter(e -> e.getLastTimestamp() != null && EventHelper.timestampToZonedDateTime(e.getLastTimestamp()).isAfter(date));
+		return this;
+	}
+
+	public Stream<Event> getStream() {
+		return stream;
+	}
+
+	/**
 	 * Filter events with involved object kind defined in the array (case insensitive).
 	 */
 	public EventListFilter ofReasons(String...reasons) {
