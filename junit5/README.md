@@ -31,6 +31,9 @@ Reports test execution on the fly into one `log/junit-report.xml` file.
 ## Extensions
 Extensions enable better test management. Usable directly on classes and methods.
 
+##### @OpenShiftRecorder
+Record OpenShift state when a test throws an exception or use `xtf.record.always` to record on success. Specify app names (which will be turned into regexes) to filter resources by name. When not specified, everything in test and build namespace will be recorded (regex - `.*`). Use `xtf.record.dir` to set the directory.
+
 ##### @CleanBeforeAll/@CleanBeforeEach
 Cleans namespace specified by `xtf.openshift.namespace` property. Either before all tests or each test execution.
 
