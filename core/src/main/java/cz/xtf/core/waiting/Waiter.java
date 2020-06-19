@@ -1,11 +1,11 @@
 package cz.xtf.core.waiting;
 
 import cz.xtf.core.config.WaitingConfig;
+import cz.xtf.core.waiting.failfast.FailFastCheck;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.event.Level;
 
 import java.util.concurrent.TimeUnit;
-import java.util.function.BooleanSupplier;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -128,7 +128,7 @@ public interface Waiter {
 	 * @param failFast returns true if waiting has failed.
 	 * @return this
 	 */
-	default Waiter failFast(BooleanSupplier failFast) {
+	default Waiter failFast(FailFastCheck failFast) {
 		throw new UnsupportedOperationException("Method failFast hasn't been implemented.");
 	}
 
