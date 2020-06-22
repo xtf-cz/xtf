@@ -12,7 +12,7 @@ import java.util.Arrays;
  * Builder for creating fail fast checks for event
  * You can filter events by name, obj kind, obj name, time,...
  * <p>
- * Builds {@link SupplierFailFastCheck} and provides reason when a check fails - list of filtered events and filter itself
+ * Builds {@link WatchedResourcesSupplier} and provides reason when a check fails - list of filtered events and filter itself
  */
 public class EventFailFastCheckBuilder {
 
@@ -80,7 +80,7 @@ public class EventFailFastCheckBuilder {
 	 */
 	public FailFastBuilder atLeastOneExists() {
 		// function is invoked every time...everytime we get events and filter them
-		failFastBuilder.addFailFastCheck(new SupplierFailFastCheck<>(
+		failFastBuilder.addFailFastCheck(new WatchedResourcesSupplier<>(
 				() -> getFilterEventList().collect(),
 				eventList -> !eventList.isEmpty(),
 				eventList -> failFastReason(eventList, "at least one exists")

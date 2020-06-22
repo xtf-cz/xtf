@@ -7,12 +7,12 @@ public interface FailFastCheck {
 	/**
 	 * @return true if there is some error and waiter can fail immediately
 	 */
-	public boolean shouldFail();
+	public boolean hasFailed();
 
 	/**
-	 * @return reason why {@link FailFastCheck#shouldFail()} have returned {@code true}
+	 * @return reason why {@link FailFastCheck#hasFailed()} have returned {@code true}
 	 */
-	default public String resaon() {
+	default public String reason() {
 		return "reason not specified";
 	}
 }

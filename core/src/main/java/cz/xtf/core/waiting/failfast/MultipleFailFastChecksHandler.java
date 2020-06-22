@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Handler for multiple {@link FailFastCheck} instances.
- * Checks every instance and if one of them fails ({@link FailFastCheck#shouldFail()} returns true) returns {@code true}
+ * Checks every instance and if one of them fails ({@link FailFastCheck#hasFailed()} returns true) returns {@code true}
  * and provide reason of that check.
  */
 public class MultipleFailFastChecksHandler implements FailFastCheck {
@@ -17,10 +17,10 @@ public class MultipleFailFastChecksHandler implements FailFastCheck {
 	}
 
 	@Override
-	public boolean shouldFail() {
+	public boolean hasFailed() {
 		for (FailFastCheck check : checks) {
-			if (check.shouldFail()) {
-				reason = check.resaon();
+			if (check.hasFailed()) {
+				reason = check.reason();
 				return true;
 			}
 		}
@@ -28,7 +28,7 @@ public class MultipleFailFastChecksHandler implements FailFastCheck {
 	}
 
 	@Override
-	public String resaon() {
+	public String reason() {
 		return reason;
 	}
 }

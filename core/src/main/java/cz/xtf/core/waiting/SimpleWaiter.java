@@ -134,9 +134,9 @@ public class SimpleWaiter implements Waiter {
 				.build();
 
 		while (System.currentTimeMillis() < endTime) {
-			if (backoff.next() && failFast.shouldFail()) {
+			if (backoff.next() && failFast.hasFailed()) {
 				logPoint.logEnd(reason + " (fail fast method failure)", System.currentTimeMillis() - startTime, level);
-				throw new WaiterException(failFast.resaon());
+				throw new WaiterException(failFast.reason());
 			}
 			if (failureCondition.getAsBoolean()) {
 				logPoint.logEnd(reason + " (Failure)", System.currentTimeMillis() - startTime, level);

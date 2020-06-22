@@ -148,9 +148,9 @@ public class SupplierWaiter<X> implements Waiter {
 				.build();
 		while (System.currentTimeMillis() < endTime) {
 
-			if (backoff.next() && failFast.shouldFail()) {
+			if (backoff.next() && failFast.hasFailed()) {
 				logPoint.logEnd(reason + " (fail fast method failure)", System.currentTimeMillis() - startTime, level);
-				throw new WaiterException(failFast.resaon());
+				throw new WaiterException(failFast.reason());
 			}
 
 			X x = supplier.get();
