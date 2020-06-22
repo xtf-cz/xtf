@@ -40,6 +40,8 @@ public class SimpleWaiter implements Waiter {
 		this.successCondition = successCondition;
 		this.failureCondition = () -> false;
 
+		this.failFast = () -> false;
+
 		this.onIteration = () -> {};
 		this.onSuccess = () -> {};
 		this.onFailure = () -> {};
