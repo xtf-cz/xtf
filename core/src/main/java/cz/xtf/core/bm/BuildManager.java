@@ -49,4 +49,8 @@ public class BuildManager {
 	public ManagedBuildReference getBuildReference(ManagedBuild managedBuild) {
 		return new ManagedBuildReference(managedBuild.getId(), "latest", openShift.getNamespace());
 	}
+
+	public OpenShift openShift() {
+		return openShift;
+	}
 }

@@ -1,6 +1,6 @@
 package cz.xtf.junit5.extensions;
 
-import cz.xtf.core.config.BuildManagerConfig;
+import cz.xtf.core.bm.BuildManagers;
 import cz.xtf.core.event.helpers.EventHelper;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.openshift.OpenShifts;
@@ -125,7 +125,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 	private void saveISs(ExtensionContext context, String[] objNames) throws IOException {
 		final Path imageStreamsLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "imageStreams.log");
 		try (final ResourcesPrinterHelper<ImageStream> printer = ResourcesPrinterHelper.forISs(imageStreamsLogPath)) {
-			OpenShifts.master(BuildManagerConfig.namespace()).getImageStreams().stream()
+			BuildManagers.get().openShift().getImageStreams().stream()
 					.filter(build -> resourceNameMatches(build.getMetadata().getName(), objNames))
 					.forEach(printer::row);
 		}
@@ -134,7 +134,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 	private void saveBCs(ExtensionContext context, String[] objNames) throws IOException {
 		final Path buildsLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "buildConfigs.log");
 		try (final ResourcesPrinterHelper<BuildConfig> printer = ResourcesPrinterHelper.forBCs(buildsLogPath)) {
-			OpenShifts.master(BuildManagerConfig.namespace()).getBuildConfigs().stream()
+			BuildManagers.get().openShift().getBuildConfigs().stream()
 					.filter(bc -> resourceNameMatches(bc.getMetadata().getName(), objNames))
 					.forEach(printer::row);
 		}
@@ -143,7 +143,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 	private void saveBuilds(ExtensionContext context, String[] objNames) throws IOException {
 		final Path buildsLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "builds.log");
 		try (final ResourcesPrinterHelper<Build> printer = ResourcesPrinterHelper.forBuilds(buildsLogPath)) {
-			OpenShifts.master(BuildManagerConfig.namespace()).getBuilds().stream()
+			BuildManagers.get().openShift().getBuilds().stream()
 					.filter(build -> resourceNameMatches(build.getMetadata().getName(), objNames))
 					.forEach(printer::row);
 		}
@@ -185,10 +185,10 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 					.forEach(printer::row);
 		}
 		// builds namespace (if not same)
-		if (!OpenShifts.master().getNamespace().equals(BuildManagerConfig.namespace())) {
-			final Path eventsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "pods-" + BuildManagerConfig.namespace() + ".log");
+		if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+			final Path eventsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "pods-" + BuildManagers.get().openShift().getNamespace() + ".log");
 			try (final ResourcesPrinterHelper<Pod> printer = ResourcesPrinterHelper.forPods(eventsBMLogPath)) {
-				OpenShifts.master(BuildManagerConfig.namespace()).getPods()
+				BuildManagers.get().openShift().getPods()
 						.stream()
 						.filter(pod -> resourceNameMatches(pod.getMetadata().getName(), objNames))
 						.forEach(printer::row);
@@ -226,8 +226,8 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 				});
 
 		podPrinter.accept(OpenShifts.master());
-		if (!OpenShifts.master().getNamespace().equals(BuildManagerConfig.namespace())) {
-			podPrinter.accept(OpenShifts.master(BuildManagerConfig.namespace()));
+		if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+			podPrinter.accept(BuildManagers.get().openShift());
 		}
 	}
 
@@ -249,10 +249,10 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 			eventPrinter.accept(OpenShifts.master(), printer);
 		}
 		// builds namespace (if not same)
-		if (!OpenShifts.master().getNamespace().equals(BuildManagerConfig.namespace())) {
-			final Path eventsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "events-" + BuildManagerConfig.namespace() + ".log");
+		if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+			final Path eventsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "events-" + BuildManagers.get().openShift().getNamespace() + ".log");
 			try (final ResourcesPrinterHelper<Event> printer = ResourcesPrinterHelper.forEvents(eventsBMLogPath)) {
-				eventPrinter.accept(OpenShifts.master(BuildManagerConfig.namespace()), printer);
+				eventPrinter.accept(BuildManagers.get().openShift(), printer);
 			}
 		}
 	}

@@ -20,125 +20,182 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Function;
 
 public class ResourcesPrinterHelper<X> implements AutoCloseable {
 	private final Path file;
-	private final Function<X, String[]> resourceToCols;
-	private final int[] maxLengths;
+	private final Function<X, LinkedHashMap<String, String>> resourceToCols;
 	private final List<String[]> rows;
+	private int[] maxLengths;
+	private String[] headers = null;
 
-	private ResourcesPrinterHelper(Path file, Function<X, String[]> resourceToCols, String... colNames) {
+	private ResourcesPrinterHelper(Path file, Function<X, LinkedHashMap<String, String>> resourceToCols) {
 		this.file = file;
 		this.resourceToCols = resourceToCols;
-		maxLengths = new int[colNames.length];
 		rows = new ArrayList<>();
-		row(colNames);
 	}
 
 	public static ResourcesPrinterHelper<Event> forEvents(Path filePath) {
-		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getEventCols, "FIRST SEEN", "LAST SEEN", "COUNT", "TYPE", "REASON", "OBJECT", "MESSAGE");
+		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getEventCols);
 	}
 
 	public static ResourcesPrinterHelper<Pod> forPods(Path filePath) {
-		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getPodCols, "NAME", "READY", "STATUS", "RESTARTS");
+		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getPodCols);
 	}
 
 	public static ResourcesPrinterHelper<DeploymentConfig> forDCs(Path filePath) {
-		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getDCsCols, "NAME", "READY");
+		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getDCsCols);
 	}
 
 	public static ResourcesPrinterHelper<Route> forRoutes(Path filePath) {
-		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getRoutesCols, "NAME", "HOST", "SERVICES");
+		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getRoutesCols);
 	}
 
 	public static ResourcesPrinterHelper<Service> forServices(Path filePath) {
-		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getServicesCols, "NAME", "SELECTOR", "PORTS");
+		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getServicesCols);
 	}
 
 	public static ResourcesPrinterHelper<Secret> forSecrets(Path filePath) {
-		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getSecretsCols, "NAME", "TYPE");
+		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getSecretsCols);
 	}
 
 	public static ResourcesPrinterHelper<Build> forBuilds(Path filePath) {
-		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getBuildCols, "NAME", "TYPE", "FROM", "STATUS", "STARTED", "DURATION");
+		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getBuildCols);
 	}
 
 	public static ResourcesPrinterHelper<BuildConfig> forBCs(Path filePath) {
-		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getBCCols, "NAME", "TYPE", "FROM", "LATEST");
+		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getBCCols);
 	}
 
 
 	public static ResourcesPrinterHelper<ImageStream> forISs(Path filePath) {
-		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getISCols, "NAME", "IMAGE REPOSITORY");
+		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getISCols);
 	}
 
 	public static ResourcesPrinterHelper<StatefulSet> forStatefulSet(Path filePath) {
-		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getStatefulSetCols, "NAME", "REPLICAS");
+		return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getStatefulSetCols);
 	}
 
-	private static String[] getStatefulSetCols(StatefulSet statefulSet) {
-		return new String[]{statefulSet.getMetadata().getName(), statefulSet.getStatus().getReadyReplicas() + "/" + statefulSet.getStatus().getReplicas()};
+	private static LinkedHashMap<String, String> getStatefulSetCols(StatefulSet statefulSet) {
+		LinkedHashMap<String, String> map = new LinkedHashMap<>(2);
+		map.put("NAME", statefulSet.getMetadata().getName());
+		map.put("REPLICAS", statefulSet.getStatus().getReadyReplicas() + "/" + statefulSet.getStatus().getReplicas());
+		return map;
 	}
 
-	private static String[] getISCols(ImageStream is) {
-		return new String[]{is.getMetadata().getName(), is.getStatus().getPublicDockerImageRepository()};
+	private static LinkedHashMap<String, String> getISCols(ImageStream is) {
+		LinkedHashMap<String, String> map = new LinkedHashMap<>(2);
+		map.put("NAME", is.getMetadata().getName());
+		map.put("IMAGE REPOSITORY", is.getStatus().getPublicDockerImageRepository());
+		return map;
 	}
 
-	private static String[] getBCCols(BuildConfig bc) {
-		return new String[]{bc.getMetadata().getName(), bc.getSpec().getStrategy().getType(), bc.getSpec().getSource().getType(),
-				String.valueOf(bc.getStatus().getLastVersion())};
+	private static LinkedHashMap<String, String> getBCCols(BuildConfig bc) {
+		LinkedHashMap<String, String> map = new LinkedHashMap<>(4);
+		map.put("NAME", bc.getMetadata().getName());
+		map.put("TYPE", bc.getSpec().getStrategy().getType());
+		map.put("FROM", bc.getSpec().getSource().getType());
+		map.put("LATEST", String.valueOf(bc.getStatus().getLastVersion()));
+		return map;
 	}
 
-	private static String[] getBuildCols(Build build) {
-		return new String[]{build.getMetadata().getName(), build.getSpec().getStrategy().getType(), build.getSpec().getSource().getType(),
-				build.getStatus().getPhase(), build.getStatus().getStartTimestamp(), (build.getStatus().getDuration() / 1000000000) + "s"};
+	private static LinkedHashMap<String, String> getBuildCols(Build build) {
+		LinkedHashMap<String, String> map = new LinkedHashMap<>(6);
+		map.put("NAME", build.getMetadata().getName());
+		map.put("TYPE", build.getSpec().getStrategy().getType());
+		map.put("FROM", build.getSpec().getSource().getType());
+		map.put("STATUS", build.getStatus().getPhase());
+		map.put("STARTED", build.getStatus().getStartTimestamp());
+		map.put("DURATION", build.getStatus().getDuration() == null ? "" : (build.getStatus().getDuration() / 1000000000) + "s");
+		return map;
 	}
 
-	private static String[] getEventCols(Event event) {
-		return new String[]{event.getFirstTimestamp(), event.getLastTimestamp(), String.valueOf(event.getCount()),
-				event.getType(), event.getReason(),
-				event.getInvolvedObject().getKind() + "/" + event.getInvolvedObject().getName().replaceFirst("(.*?)\\..*", "$1"),
-				event.getMessage()};
+	private static LinkedHashMap<String, String> getEventCols(Event event) {
+		LinkedHashMap<String, String> map = new LinkedHashMap<>(7);
+		map.put("FIRST SEEN", event.getFirstTimestamp());
+		map.put("LAST SEEN", event.getLastTimestamp());
+		map.put("COUNT", String.valueOf(event.getCount()));
+		map.put("TYPE", event.getType());
+		map.put("REASON", event.getReason());
+		map.put("OBJECT", event.getInvolvedObject().getKind() + "/" + event.getInvolvedObject().getName().replaceFirst("(.*?)\\..*", "$1"));
+		map.put("MESSAGE", event.getMessage());
+		return map;
 	}
 
-	private static String[] getPodCols(Pod pod) {
+	private static LinkedHashMap<String, String> getPodCols(Pod pod) {
 		int restart = pod.getStatus().getContainerStatuses().stream()
 				.map(ContainerStatus::getRestartCount)
 				.mapToInt(Integer::intValue)
 				.sum();
 		long ready = pod.getStatus().getContainerStatuses().stream().filter(ContainerStatus::getReady).count();
 		long total = pod.getStatus().getContainerStatuses().size();
-		return new String[]{pod.getMetadata().getName(), ready + "/" + total, pod.getStatus().getPhase(), String.valueOf(restart)};
+
+
+		LinkedHashMap<String, String> map = new LinkedHashMap<>(4);
+		map.put("NAME", pod.getMetadata().getName());
+		map.put("READY", ready + "/" + total);
+		map.put("STATUS", pod.getStatus().getPhase());
+		map.put("RESTARTS", String.valueOf(restart));
+		return map;
 	}
 
-	private static String[] getDCsCols(DeploymentConfig dc) {
-		return new String[]{dc.getMetadata().getName(), dc.getStatus().getReadyReplicas() + "/" + dc.getStatus().getReplicas()};
+	private static LinkedHashMap<String, String> getDCsCols(DeploymentConfig dc) {
+		LinkedHashMap<String, String> map = new LinkedHashMap<>(2);
+		map.put("NAME", dc.getMetadata().getName());
+		map.put("READY", dc.getStatus().getReadyReplicas() + "/" + dc.getStatus().getReplicas());
+		return map;
 	}
 
-	private static String[] getRoutesCols(Route route) {
-		return new String[]{route.getMetadata().getName(), route.getSpec().getHost(), route.getSpec().getTo().getName()};
+	private static LinkedHashMap<String, String> getRoutesCols(Route route) {
+		LinkedHashMap<String, String> map = new LinkedHashMap<>(3);
+		map.put("NAME", route.getMetadata().getName());
+		map.put("HOST", route.getSpec().getHost());
+		map.put("SERVICES", route.getSpec().getTo().getName());
+		return map;
 	}
 
-	private static String[] getSecretsCols(Secret secret) {
-		return new String[]{secret.getMetadata().getName(), secret.getType()};
+	private static LinkedHashMap<String, String> getSecretsCols(Secret secret) {
+		LinkedHashMap<String, String> map = new LinkedHashMap<>(2);
+		map.put("NAME", secret.getMetadata().getName());
+		map.put("TYPE", secret.getType());
+		return map;
 	}
 
-	private static String[] getServicesCols(Service service) {
+	private static LinkedHashMap<String, String> getServicesCols(Service service) {
 		final StringBuilder selector = new StringBuilder();
 		service.getSpec().getSelector().forEach((k, v) -> selector.append(k).append("=").append(v).append(";"));
 		final StringBuilder ports = new StringBuilder();
 		service.getSpec().getPorts().stream()
 				.forEach(port -> ports.append(port.getPort()).append("->").append(port.getTargetPort().getIntVal()).append(";"));
-		return new String[]{service.getMetadata().getName(), selector.toString(), ports.toString()};
+
+		LinkedHashMap<String, String> map = new LinkedHashMap<>(3);
+		map.put("NAME", service.getMetadata().getName());
+		map.put("SELECTOR", selector.toString());
+		map.put("PORTS", ports.toString());
+		return map;
 	}
 
 	public void row(X resource) {
 		row(resourceToCols.apply(resource));
 	}
 
-	public void row(String... cols) {
+	public void row(LinkedHashMap<String, String> map) {
+		// first row
+		if (headers == null) {
+			headers = map.keySet().toArray(new String[]{});
+			maxLengths = new int[headers.length];
+			row(headers);
+		}
+		String[] cols = new String[headers.length];
+		for (int i = 0; i < headers.length; i++) {
+			cols[i] = map.get(headers[i]);
+		}
+		row(cols);
+	}
+
+	private void row(String[] cols) {
 		for (int i = 0; i < cols.length; i++) {
 			maxLengths[i] = Math.max(maxLengths[i], cols[i].length());
 		}
@@ -154,18 +211,19 @@ public class ResourcesPrinterHelper<X> implements AutoCloseable {
 		file.getParent().toFile().mkdirs();
 
 		try (final Writer writer = new OutputStreamWriter(new FileOutputStream(file.toFile()), StandardCharsets.UTF_8)) {
-			StringBuilder formatBuilder = new StringBuilder();
-			for (int maxLength : maxLengths) {
-				formatBuilder.append("%-").append(maxLength + 2).append("s");
-			}
-			String format = formatBuilder.toString();
+			if (!rows.isEmpty()) {
+				StringBuilder formatBuilder = new StringBuilder();
+				for (int maxLength : maxLengths) {
+					formatBuilder.append("%-").append(maxLength + 2).append("s");
+				}
+				String format = formatBuilder.toString();
 
-			StringBuilder result = new StringBuilder();
-			for (String[] row : rows) {
-				writer.append(String.format(format, row)).append("\n");
+				StringBuilder result = new StringBuilder();
+				for (String[] row : rows) {
+					writer.append(String.format(format, row)).append("\n");
+				}
+				writer.flush();
 			}
-			writer.flush();
 		}
 	}
-
 }
