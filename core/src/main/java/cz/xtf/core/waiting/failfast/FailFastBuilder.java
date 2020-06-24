@@ -1,12 +1,12 @@
 package cz.xtf.core.waiting.failfast;
 
 
-import cz.xtf.core.config.BuildManagerConfig;
-import cz.xtf.core.config.OpenShiftConfig;
+import cz.xtf.core.bm.BuildManagers;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.openshift.OpenShifts;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -17,7 +17,7 @@ import java.util.List;
  * Example of use:
  * <pre>
  *     FailFastBuilder
- *     		.ofOpenshiftAndBmNamespace()
+ *     		.ofTestAndBuildNamespace()
  *     		.events()
  *     		.after(EventHelper.timeOfLastEventBMOrTestNamespaceOrEpoch())
  *     		.ofNames("my-app.*")
@@ -34,22 +34,20 @@ public class FailFastBuilder {
 	private final List<OpenShift> openShifts = new ArrayList<>();
 	private final List<FailFastCheck> failFastChecks = new ArrayList<>();
 
-	private FailFastBuilder(String... namespaces) {
-		if (namespaces.length == 0) {
-			openShifts.add(OpenShifts.master());
+	private FailFastBuilder(OpenShift... openShifts) {
+		if (openShifts.length == 0) {
+			this.openShifts.add(OpenShifts.master());
 		} else {
-			for (String namespace : namespaces) {
-				openShifts.add(OpenShifts.master(namespace));
-			}
+			this.openShifts.addAll(Arrays.asList(openShifts));
 		}
 	}
 
-	public static FailFastBuilder ofOpenshiftAndBmNamespace() {
-		return ofNamespaces(OpenShiftConfig.namespace(), BuildManagerConfig.namespace());
+	public static FailFastBuilder ofTestAndBuildNamespace() {
+		return ofOpenShifts(OpenShifts.master(), BuildManagers.get().openShift());
 	}
 
-	public static FailFastBuilder ofNamespaces(String... namespaces) {
-		return new FailFastBuilder(namespaces);
+	public static FailFastBuilder ofOpenShifts(OpenShift... openShifts) {
+		return new FailFastBuilder(openShifts);
 	}
 
 	public EventFailFastCheckBuilder events() {
