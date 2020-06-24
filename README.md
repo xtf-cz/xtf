@@ -1,3 +1,5 @@
+dummy line
+
 # XTF
 XTF is framework designed to easy up aspects of testing in OpenShift environment.
 
