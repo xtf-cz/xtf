@@ -22,5 +22,5 @@ public @interface OpenShiftRecorder {
 	 *
 	 * {@see OpenShiftRecorderHandler}
 	 */
-	String[] objNames() default "";
+	String[] resourceNames() default "";
 }

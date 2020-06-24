@@ -56,7 +56,7 @@ import java.util.function.Consumer;
  * </ul>
  * <p>
  * OpenShift state is recorded when a test throws an exception. If {@link JUnitConfig#RECORD_ALWAYS} is true, state is
- * recored also when a test passes.
+ * recorded also when a test passes.
  * <p>
  * Use {@link JUnitConfig#RECORD_DIR} to set the direction of records.
  */
@@ -75,7 +75,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 		try {
 			recordState(context);
 		} catch (Throwable t) {
-			t.printStackTrace(System.err);
+			log.error("Throwable: ", t);
 		} finally {
 			throw throwable;
 		}
@@ -97,7 +97,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 		OpenShiftRecorder methodOpenShiftRecorder = AnnotationSupport.findAnnotation(context.getElement(), OpenShiftRecorder.class).orElse(null);
 		final OpenShiftRecorder openShiftRecorder = methodOpenShiftRecorder != null ? methodOpenShiftRecorder : classOpenShiftRecorder;
 		// annotation or global include in META-INF.services (empty string will be turned into .* and no resource shall be filtered out)
-		String[] objNames = openShiftRecorder != null ? openShiftRecorder.objNames() : new String[]{""};
+		String[] objNames = openShiftRecorder != null ? openShiftRecorder.resourceNames() : new String[]{""};
 
 		savePods(context, objNames);
 		saveDCs(context, objNames);
