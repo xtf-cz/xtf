@@ -1,4 +1,4 @@
-package cz.xtf.core.waiting.helpers;
+package cz.xtf.core.waiting.failfast;
 
 
 import java.util.Random;
@@ -7,7 +7,7 @@ import java.util.Random;
  * Class provide support for exponential time backoff. This is convenient if you need to check some event periodically.
  * The class provides {@code next} method that implements wait (blocking or non-blocking - returns true/false whether code
  * can proceed).
- *
+ * <p>
  * Class wait time grow exponentially up to {@code maxBackoffMillis} time: 1sec, 2 sec, 4 sec, 8 sec,...,{@code maxBackoffMillis}.
  */
 public class ExponentialTimeBackoff {

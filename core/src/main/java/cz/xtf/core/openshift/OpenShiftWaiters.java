@@ -14,6 +14,7 @@ import cz.xtf.core.openshift.helpers.ResourceFunctions;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.SupplierWaiter;
 import cz.xtf.core.waiting.Waiter;
+import cz.xtf.core.waiting.failfast.FailFastCheck;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -22,13 +23,13 @@ import io.fabric8.openshift.api.model.BuildStatus;
 
 public class OpenShiftWaiters {
 	private OpenShift openShift;
-	private BooleanSupplier failFast;
+	private FailFastCheck failFast;
 
 	OpenShiftWaiters(OpenShift openShift) {
 		this(openShift, () -> false);
 	}
 
-	OpenShiftWaiters(OpenShift openShift, BooleanSupplier failFast) {
+	OpenShiftWaiters(OpenShift openShift, FailFastCheck failFast) {
 		this.openShift = openShift;
 		this.failFast = failFast;
 	}
@@ -38,7 +39,7 @@ public class OpenShiftWaiters {
 	 * @param failFast {@link BooleanSupplier} that returns true if waiter should fail due to error state of i.e. OpenShift
 	 * @return
 	 */
-	public static OpenShiftWaiters get(OpenShift openShift, BooleanSupplier failFast) {
+	public static OpenShiftWaiters get(OpenShift openShift, FailFastCheck failFast) {
 		return new OpenShiftWaiters(openShift, failFast);
 	}
 
