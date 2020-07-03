@@ -2,6 +2,7 @@ package cz.xtf.core.bm;
 
 import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
 
+import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
@@ -108,10 +109,10 @@ public abstract class BinaryBuild implements ManagedBuild {
 
 	@Override
 	public void delete(OpenShift openShift) {
-		openShift.imageStreams().withName(is.getMetadata().getName()).cascading(false).withGracePeriod(0).delete();
-		openShift.buildConfigs().withName(bc.getMetadata().getName()).cascading(true).withGracePeriod(0).delete();
+		openShift.imageStreams().withName(is.getMetadata().getName()).withPropagationPolicy(DeletionPropagation.BACKGROUND).delete();
+		openShift.buildConfigs().withName(bc.getMetadata().getName()).withPropagationPolicy(DeletionPropagation.BACKGROUND).delete();
 		final String podName = bc.getMetadata().getName() + "-1-build";
-		openShift.pods().withName(podName).cascading(false).withGracePeriod(0).delete();
+		openShift.pods().withName(podName).withPropagationPolicy(DeletionPropagation.BACKGROUND).delete();
 
 		new SimpleWaiter(() -> openShift.getImageStream(is.getMetadata().getName())  == null, TimeUnit.MILLISECONDS, WaitingConfig.timeout(), "Waiting for old imageStreams deletion").waitFor();
 		new SimpleWaiter(() -> openShift.getBuildConfig(bc.getMetadata().getName())  == null, TimeUnit.MILLISECONDS, WaitingConfig.timeout(), "Waiting for old buildConfigs deletion").waitFor();
