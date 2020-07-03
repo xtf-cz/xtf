@@ -12,7 +12,6 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
 import io.fabric8.kubernetes.api.model.Node;
@@ -28,6 +27,7 @@ import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.autoscaling.v1.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.rbac.Role;
 import io.fabric8.kubernetes.api.model.rbac.RoleBinding;
 import io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder;
@@ -1034,19 +1034,19 @@ public class OpenShift extends DefaultOpenShiftClient {
 
 	// HorizontalPodAutoscalers
 	public HorizontalPodAutoscaler createHorizontalPodAutoscaler(HorizontalPodAutoscaler hpa) {
-		return autoscaling().horizontalPodAutoscalers().create(hpa);
+		return autoscaling().v1().horizontalPodAutoscalers().create(hpa);
 	}
 
 	public HorizontalPodAutoscaler getHorizontalPodAutoscaler(String name) {
-		return autoscaling().horizontalPodAutoscalers().withName(name).get();
+		return autoscaling().v1().horizontalPodAutoscalers().withName(name).get();
 	}
 
 	public List<HorizontalPodAutoscaler> getHorizontalPodAutoscalers() {
-		return autoscaling().horizontalPodAutoscalers().list().getItems();
+		return autoscaling().v1().horizontalPodAutoscalers().list().getItems();
 	}
 
 	public boolean deleteHorizontalPodAutoscaler(HorizontalPodAutoscaler hpa) {
-		return autoscaling().horizontalPodAutoscalers().delete(hpa);
+		return autoscaling().v1().horizontalPodAutoscalers().delete(hpa);
 	}
 
 	// ConfigMaps
@@ -1202,7 +1202,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 		routes().withLabelNotIn(KEEP_LABEL, "", "true").delete();
 		pods().withLabelNotIn(KEEP_LABEL, "", "true").withGracePeriod(0).delete();
 		persistentVolumeClaims().withLabelNotIn(KEEP_LABEL, "", "true").delete();
-		autoscaling().horizontalPodAutoscalers().withLabelNotIn(KEEP_LABEL, "", "true").delete();
+		autoscaling().v1().horizontalPodAutoscalers().withLabelNotIn(KEEP_LABEL, "", "true").delete();
 		configMaps().withLabelNotIn(KEEP_LABEL, "", "true").delete();
 		getUserSecrets().forEach(this::deleteSecret);
 		getUserServiceAccounts().forEach(this::deleteServiceAccount);
@@ -1235,7 +1235,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 		removables.addAll(routes().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
 		removables.addAll(pods().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
 		removables.addAll(persistentVolumeClaims().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
-		removables.addAll(autoscaling().horizontalPodAutoscalers().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
+		removables.addAll(autoscaling().v1().horizontalPodAutoscalers().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
 		removables.addAll(configMaps().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
 		removables.addAll(getUserSecrets());
 		removables.addAll(getUserServiceAccounts());
@@ -1269,7 +1269,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	// Waiting
 
 	/**
-	 * Use {@link OpenShiftWaiters#get(OpenShift, BooleanSupplier)} instead.
+	 * Use {@link OpenShiftWaiters#get(OpenShift, cz.xtf.core.waiting.failfast.FailFastCheck)} instead.
 	 */
 	@Deprecated
 	public OpenShiftWaiters waiters() {
