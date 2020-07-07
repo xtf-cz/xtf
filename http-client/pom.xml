@@ -5,7 +5,7 @@
 	<parent>
 		<artifactId>parent</artifactId>
 		<groupId>cz.xtf</groupId>
-		<version>0.17-SNAPSHOT</version>
+		<version>0.17</version>
 	</parent>
 
 	<artifactId>http-client</artifactId>
