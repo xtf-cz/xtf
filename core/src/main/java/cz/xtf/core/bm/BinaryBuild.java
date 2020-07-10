@@ -1,40 +1,12 @@
 package cz.xtf.core.bm;
 
-import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
-
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.ArchiveException;
-import org.apache.commons.compress.archivers.ArchiveStreamFactory;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.filefilter.TrueFileFilter;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.DigestOutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.time.Instant;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import cz.xtf.core.config.WaitingConfig;
@@ -56,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class BinaryBuild implements ManagedBuild {
-	private static final String CONTENT_HASH_LABEL_KEY = "xtf.bm/content-hash";
+	static final String CONTENT_HASH_LABEL_KEY = "xtf.bm/content-hash";
 
 	@Getter
 	private final String id;
@@ -66,10 +38,10 @@ public abstract class BinaryBuild implements ManagedBuild {
 	private final String builderImage;
 	private final Map<String, String> envProperties;
 
-	private final ImageStream is;
-	private final BuildConfig bc;
+	final ImageStream is;
+	final BuildConfig bc;
 
-	private String contentHash = null;
+	String contentHash = null;
 
 	public BinaryBuild(String builderImage, Path path, Map<String, String> envProperties, String id) {
 		this.builderImage = builderImage;
@@ -79,26 +51,6 @@ public abstract class BinaryBuild implements ManagedBuild {
 
 		this.is = this.createIsDefinition();
 		this.bc = this.createBcDefinition();
-	}
-
-	@Override
-	public void build(OpenShift openShift) {
-		openShift.imageStreams().create(is);
-		openShift.buildConfigs().create(bc);
-
-		try {
-			PipedOutputStream pos = new PipedOutputStream();
-			PipedInputStream pis = new PipedInputStream(pos);
-
-			ExecutorService executorService = Executors.newSingleThreadExecutor();
-			final Future<?> future = executorService.submit(() -> writeProjectTar(pos));
-
-			openShift.buildConfigs().withName(bc.getMetadata().getName()).instantiateBinary().fromInputStream(pis);
-			future.get();
-		} catch (IOException | InterruptedException | ExecutionException e) {
-			log.error("Exception building {}", id, e);
-			throw new RuntimeException(e);
-		}
 	}
 
 	@Override
@@ -239,48 +191,5 @@ public abstract class BinaryBuild implements ManagedBuild {
 		return new BuildConfigBuilder().withMetadata(metadata).withSpec(bcBuilder.build()).build();
 	}
 
-	private String getContentHash() {
-		if (!isCached() || contentHash == null) {
-			try {
-				MessageDigest md = MessageDigest.getInstance("SHA-256");
-				DigestOutputStream dos = new DigestOutputStream(NULL_OUTPUT_STREAM, md);
-
-				writeProjectTar(dos);
-
-				// kubernetes annotation value must not be longer than 63 chars
-				contentHash = Hex.encodeHexString(dos.getMessageDigest().digest()).substring(0, 63);
-			} catch (NoSuchAlgorithmException e) {
-				throw new RuntimeException(e);
-			}
-		}
-
-		return contentHash;
-	}
-
-	private void writeProjectTar(OutputStream os) {
-		Collection<File> filesToArchive = FileUtils.listFiles(path.toFile(), TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
-		try (TarArchiveOutputStream o = (TarArchiveOutputStream) new ArchiveStreamFactory().createArchiveOutputStream(ArchiveStreamFactory.TAR, os)) {
-			o.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
-			for (File f : filesToArchive) {
-				String tarPath = path.relativize(f.toPath()).toString();
-				log.trace("adding file to tar: {}", tarPath);
-				ArchiveEntry entry = o.createArchiveEntry(f, tarPath);
-
-				// we force the modTime in the tar, so that the resulting tars are binary equal if their contents are
-				TarArchiveEntry tarArchiveEntry = (TarArchiveEntry) entry;
-				tarArchiveEntry.setModTime(Date.from(Instant.EPOCH));
-
-				o.putArchiveEntry(tarArchiveEntry);
-				if (f.isFile()) {
-					try (InputStream i = Files.newInputStream(f.toPath())) {
-						IOUtils.copy(i, o);
-					}
-				}
-				o.closeArchiveEntry();
-			}
-			o.finish();
-		} catch (ArchiveException | IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+	abstract String getContentHash();
 }
