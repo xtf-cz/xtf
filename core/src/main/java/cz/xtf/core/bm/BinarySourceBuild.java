@@ -10,7 +10,7 @@ import io.fabric8.openshift.api.model.BuildConfigSpecBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class BinarySourceBuild extends BinaryBuild {
+public class BinarySourceBuild extends BinaryBuildFromSources {
 	public BinarySourceBuild(String builderImage, Path path, Map<String, String> envProperties, String id) {
 		super(builderImage, path, envProperties, id);
 	}
