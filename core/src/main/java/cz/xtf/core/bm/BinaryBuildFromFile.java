@@ -32,15 +32,15 @@ public class BinaryBuildFromFile extends BinaryBuild {
 		super(builderImage, path, envProperties, id);
 	}
 
-	void configureBuildStrategy(BuildConfigSpecBuilder builder, String builderImage, List<EnvVar> env) {
+	protected void configureBuildStrategy(BuildConfigSpecBuilder builder, String builderImage, List<EnvVar> env) {
 		builder.withNewStrategy().withType("Source").withNewSourceStrategy().withEnv(env).withForcePull(true).withNewFrom().withKind("DockerImage").withName(builderImage).endFrom().endSourceStrategy().endStrategy();
 	}
 
-	String getImage(BuildConfig bc) {
+	protected String getImage(BuildConfig bc) {
 		return bc.getSpec().getStrategy().getSourceStrategy().getFrom().getName();
 	}
 
-	List<EnvVar> getEnv(BuildConfig buildConfig) {
+	protected List<EnvVar> getEnv(BuildConfig buildConfig) {
 		return buildConfig.getSpec().getStrategy().getSourceStrategy().getEnv();
 	}
 
@@ -59,7 +59,7 @@ public class BinaryBuildFromFile extends BinaryBuild {
 
 	}
 
-	String getContentHash() {
+	protected String getContentHash() {
 		if (!isCached() || contentHash == null) {
 			try (InputStream i = Files.newInputStream(getPath())) {
 				MessageDigest md = MessageDigest.getInstance("SHA-256");

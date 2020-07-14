@@ -16,17 +16,17 @@ public class BinarySourceBuild extends BinaryBuildFromSources {
 	}
 
 	@Override
-	void configureBuildStrategy(BuildConfigSpecBuilder builder, String builderImage, List<EnvVar> env) {
+	protected void configureBuildStrategy(BuildConfigSpecBuilder builder, String builderImage, List<EnvVar> env) {
 		builder.withNewStrategy().withType("Source").withNewSourceStrategy().withEnv(env).withForcePull(true).withNewFrom().withKind("DockerImage").withName(builderImage).endFrom().endSourceStrategy().endStrategy();
 	}
 
 	@Override
-	String getImage(BuildConfig bc) {
+	protected String getImage(BuildConfig bc) {
 		return bc.getSpec().getStrategy().getSourceStrategy().getFrom().getName();
 	}
 
 	@Override
-	List<EnvVar> getEnv(BuildConfig buildConfig) {
+	protected List<EnvVar> getEnv(BuildConfig buildConfig) {
 		return buildConfig.getSpec().getStrategy().getSourceStrategy().getEnv();
 	}
 }

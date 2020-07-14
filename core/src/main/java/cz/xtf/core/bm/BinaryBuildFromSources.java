@@ -65,7 +65,7 @@ abstract public class BinaryBuildFromSources extends BinaryBuild {
 		}
 	}
 
-	String getContentHash() {
+	protected String getContentHash() {
 		if (!isCached() || contentHash == null) {
 			try {
 				MessageDigest md = MessageDigest.getInstance("SHA-256");

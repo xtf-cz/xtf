@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class BinaryBuild implements ManagedBuild {
-	static final String CONTENT_HASH_LABEL_KEY = "xtf.bm/content-hash";
+	static private final String CONTENT_HASH_LABEL_KEY = "xtf.bm/content-hash";
 
 	@Getter
 	private final String id;
@@ -38,10 +38,10 @@ public abstract class BinaryBuild implements ManagedBuild {
 	private final String builderImage;
 	private final Map<String, String> envProperties;
 
-	final ImageStream is;
-	final BuildConfig bc;
+	protected final ImageStream is;
+	protected final BuildConfig bc;
 
-	String contentHash = null;
+	protected String contentHash = null;
 
 	public BinaryBuild(String builderImage, Path path, Map<String, String> envProperties, String id) {
 		this.builderImage = builderImage;
@@ -79,11 +79,13 @@ public abstract class BinaryBuild implements ManagedBuild {
 		return isPresence || bcPresence;
 	}
 
-	abstract List<EnvVar> getEnv(BuildConfig bc);
+	protected abstract List<EnvVar> getEnv(BuildConfig bc);
 
-	abstract void configureBuildStrategy(BuildConfigSpecBuilder builder, String builderImage, List<EnvVar> envs);
+	protected abstract void configureBuildStrategy(BuildConfigSpecBuilder builder, String builderImage, List<EnvVar> envs);
 
-	abstract String getImage(BuildConfig bc);
+	protected abstract String getImage(BuildConfig bc);
+
+	protected abstract String getContentHash();
 
 	protected boolean isCached(){
 		return true;
@@ -190,6 +192,4 @@ public abstract class BinaryBuild implements ManagedBuild {
 
 		return new BuildConfigBuilder().withMetadata(metadata).withSpec(bcBuilder.build()).build();
 	}
-
-	abstract String getContentHash();
 }
