@@ -1067,7 +1067,14 @@ public class OpenShift extends DefaultOpenShiftClient {
 	}
 
 	// Templates
+	private void updateTemplateApiVersion(Template template) {
+		if (OpenShifts.getVersion().startsWith("3")) {
+			template.setApiVersion("template.openshift.io/v1");
+		}
+	}
+
 	public Template createTemplate(Template template) {
+		updateTemplateApiVersion(template);
 		return templates().create(template);
 	}
 
@@ -1084,6 +1091,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 	}
 
 	public boolean deleteTemplate(Template template) {
+		updateTemplateApiVersion(template);
 		return templates().delete(template);
 	}
 
