@@ -228,7 +228,14 @@ public class OpenShifts {
 		}
 	}
 
+	/**
+	 * Returns {@link OpenShiftConfig#version()}. If not available then access OpenShift endpoint for a version. Be aware
+	 * that this operation requires admin role for OpenShift 4 unlike to OpenShift 3.
+	 */
 	public static String getVersion() {
+		if (StringUtils.isNotEmpty(OpenShiftConfig.version())) {
+			return OpenShiftConfig.version();
+		}
 		final String ocp3UrlVersion = OpenShiftConfig.url() + "/version/openshift";
 		if (Https.getCode(ocp3UrlVersion) == 200) { // for OCP 3
 			String content = Https.httpsGetContent(ocp3UrlVersion);
