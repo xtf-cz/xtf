@@ -5,7 +5,11 @@ import cz.xtf.core.image.Image;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
+import cz.xtf.core.waiting.failfast.FailFastCheck;
+import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamTag;
+import io.fabric8.openshift.api.model.NamedTagEventList;
+import io.fabric8.openshift.api.model.TagEventCondition;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.StringUtils;
@@ -51,7 +55,7 @@ public class ImageMetadata {
 			return false;
 		}, "Giving OpenShift instance time to download image metadata.");
 
-		metadataWaiter.waitFor();
+		metadataWaiter.failFast(new ImageStreamFailFastCheck(openShift, image.getRepo(), image)).waitFor();
 
 		return new ImageMetadata(ModelNode.fromJSONString(new Gson().toJson(imageStreamTagSupplier.get().getImage().getDockerImageMetadata().getAdditionalProperties())));
 	}
@@ -119,5 +123,43 @@ public class ImageMetadata {
 		}
 
 		return result;
+	}
+
+	private static final class ImageStreamFailFastCheck implements FailFastCheck {
+
+		private final OpenShift openShift;
+		private final String imageName;
+		private final Image image;
+		private String reason = "";
+
+		ImageStreamFailFastCheck(OpenShift openShift, String imageName, Image image) {
+			this.openShift = openShift;
+			this.imageName = imageName;
+			this.image = image;
+		}
+
+		@Override
+		public boolean hasFailed() {
+			ImageStream imageStream = openShift.getImageStream(imageName);
+			if (imageStream == null) {
+				return false;
+			}
+			for (NamedTagEventList tag : imageStream.getStatus().getTags()) {
+				if (image.getTag().startsWith(tag.getTag())) {
+					for (TagEventCondition condition : tag.getConditions()) {
+						if (condition.getType().equals("ImportSuccess") && condition.getStatus().equals("False")) {
+							reason = condition.getMessage();
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public String reason() {
+			return reason;
+		}
 	}
 }

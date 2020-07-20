@@ -4,8 +4,11 @@ import cz.xtf.core.image.Image;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
+import cz.xtf.core.waiting.failfast.FailFastCheck;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamTag;
+import io.fabric8.openshift.api.model.NamedTagEventList;
+import io.fabric8.openshift.api.model.TagEventCondition;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Collections;
@@ -76,7 +79,8 @@ public class DockerImageMetadata {
 
 		// wait till metadata are available
 		Waiter metadataWaiter = new SimpleWaiter(() -> DockerImageMetadata.areMetadataForImageReady(openShift.getImageStreamTag(tempName, image.getMajorTag())),
-				"Giving OpenShift instance time to download image metadata.");
+				"Giving OpenShift instance time to download image metadata.")
+				.failFast(new ImageStreamFailFastCheck(openShift, tempName, image));
 		boolean metadataOK = metadataWaiter.waitFor();
 
 		// delete unique image stream and return metadata
@@ -160,5 +164,43 @@ public class DockerImageMetadata {
 		);
 
 		return result;
+	}
+
+	private static final class ImageStreamFailFastCheck implements FailFastCheck{
+
+		private final OpenShift openShift;
+		private final String imageName;
+		private final Image image;
+		private String reason = "";
+
+		ImageStreamFailFastCheck(OpenShift openShift, String imageName, Image image) {
+			this.openShift = openShift;
+			this.imageName = imageName;
+			this.image = image;
+		}
+
+		@Override
+		public boolean hasFailed() {
+			ImageStream imageStream = openShift.getImageStream(imageName);
+			if (imageStream == null) {
+				return false;
+			}
+			for (NamedTagEventList tag : imageStream.getStatus().getTags()) {
+				if (image.getTag().startsWith(tag.getTag())) {
+					for (TagEventCondition condition : tag.getConditions()) {
+						if (condition.getType().equals("ImportSuccess") && condition.getStatus().equals("False")) {
+							reason = condition.getMessage();
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		}
+
+		@Override
+		public String reason() {
+			return reason;
+		}
 	}
 }
