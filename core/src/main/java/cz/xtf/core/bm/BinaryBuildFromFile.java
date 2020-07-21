@@ -7,19 +7,14 @@ import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.BuildConfigSpecBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.DigestOutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
-
-import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
 
 /**
  * Binary build that expect a file on path that shall be uploaded as {@code ROOT.(suffix)}. {@code suffix} is war, jar,...
@@ -62,17 +57,11 @@ public class BinaryBuildFromFile extends BinaryBuild {
 	protected String getContentHash() {
 		if (!isCached() || contentHash == null) {
 			try (InputStream i = Files.newInputStream(getPath())) {
-				MessageDigest md = MessageDigest.getInstance("SHA-256");
-				DigestOutputStream dos = new DigestOutputStream(NULL_OUTPUT_STREAM, md);
-				IOUtils.copy(i, dos);
-
-				// kubernetes annotation value must not be longer than 63 chars
-				contentHash = Hex.encodeHexString(dos.getMessageDigest().digest()).substring(0, 63);
-			} catch (NoSuchAlgorithmException | IOException e) {
+				contentHash = Hex.encodeHexString(DigestUtils.sha256(i)).substring(0, 63);
+			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		}
-
 		return contentHash;
 	}
 }
