@@ -88,7 +88,7 @@ public class ResourcesPrinterHelper<X> implements AutoCloseable {
 	private static LinkedHashMap<String, String> getISCols(ImageStream is) {
 		LinkedHashMap<String, String> map = new LinkedHashMap<>(2);
 		map.put("NAME", is.getMetadata().getName());
-		map.put("IMAGE REPOSITORY", is.getStatus().getPublicDockerImageRepository());
+		map.put("IMAGE REPOSITORY", is.getStatus().getDockerImageRepository());
 		return map;
 	}
 
