@@ -21,6 +21,7 @@ import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.ExtensionContext.Store;
+import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestWatcher;
 import org.junit.platform.commons.support.AnnotationSupport;
@@ -60,7 +61,7 @@ import java.util.function.Consumer;
  * <p>
  * Use {@link JUnitConfig#RECORD_DIR} to set the direction of records.
  */
-public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExceptionHandler, BeforeAllCallback {
+public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExceptionHandler, BeforeAllCallback, LifecycleMethodExecutionExceptionHandler {
 	private static final Logger log = LoggerFactory.getLogger(OpenShiftRecorderHandler.class);
 
 	private static final String TRACK_FROM = "TRACK_FROM";
@@ -72,6 +73,28 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 
 	@Override
 	public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+		try {
+			recordState(context);
+		} catch (Throwable t) {
+			log.error("Throwable: ", t);
+		} finally {
+			throw throwable;
+		}
+	}
+
+	@Override
+	public void handleBeforeAllMethodExecutionException(final ExtensionContext context, final Throwable throwable) throws Throwable {
+		try {
+			recordState(context);
+		} catch (Throwable t) {
+			log.error("Throwable: ", t);
+		} finally {
+			throw throwable;
+		}
+	}
+
+	@Override
+	public void handleBeforeEachMethodExecutionException(final ExtensionContext context, final Throwable throwable) throws Throwable {
 		try {
 			recordState(context);
 		} catch (Throwable t) {
@@ -232,7 +255,13 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 	}
 
 	private String dirNameForTest(ExtensionContext context) {
-		return context.getTestClass().get().getName() + "." + context.getTestMethod().get().getName();
+		// if is test
+		if (context.getTestMethod().isPresent()){
+			return context.getTestClass().get().getName() + "." + context.getTestMethod().get().getName();
+		}
+		else {
+			return context.getTestClass().get().getName();
+		}
 	}
 
 	private void saveEvents(ExtensionContext context, String[] resourceNames) throws IOException {
