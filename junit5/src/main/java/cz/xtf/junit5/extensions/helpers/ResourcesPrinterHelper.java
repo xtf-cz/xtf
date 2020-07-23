@@ -89,6 +89,7 @@ public class ResourcesPrinterHelper<X> implements AutoCloseable {
 		LinkedHashMap<String, String> map = new LinkedHashMap<>(2);
 		map.put("NAME", is.getMetadata().getName());
 		map.put("IMAGE REPOSITORY", is.getStatus().getDockerImageRepository());
+		map.put("PUBLIC IMAGE REPOSITORY", is.getStatus().getPublicDockerImageRepository());
 		return map;
 	}
 
@@ -197,7 +198,9 @@ public class ResourcesPrinterHelper<X> implements AutoCloseable {
 
 	private void row(String[] cols) {
 		for (int i = 0; i < cols.length; i++) {
-			maxLengths[i] = Math.max(maxLengths[i], cols[i].length());
+			if (cols[i] != null) {
+				maxLengths[i] = Math.max(maxLengths[i], cols[i].length());
+			}
 		}
 		rows.add(cols);
 	}
