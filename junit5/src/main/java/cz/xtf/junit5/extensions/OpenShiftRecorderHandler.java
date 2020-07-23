@@ -85,7 +85,9 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 	@Override
 	public void handleBeforeAllMethodExecutionException(final ExtensionContext context, final Throwable throwable) throws Throwable {
 		try {
-			recordState(context);
+			if (JUnitConfig.recordBefore()){
+				recordState(context);
+			}
 		} catch (Throwable t) {
 			log.error("Throwable: ", t);
 		} finally {
@@ -96,7 +98,9 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 	@Override
 	public void handleBeforeEachMethodExecutionException(final ExtensionContext context, final Throwable throwable) throws Throwable {
 		try {
-			recordState(context);
+			if (JUnitConfig.recordBefore()) {
+				recordState(context);
+			}
 		} catch (Throwable t) {
 			log.error("Throwable: ", t);
 		} finally {
