@@ -15,6 +15,7 @@ public class JUnitConfig {
 	private static final String PREBUILDER_SYNCHRONIZED = "xtf.junit.prebuilder.synchronized";
 	private static final String RECORD_DIR = "xtf.record.dir";
 	private static final String RECORD_ALWAYS = "xtf.record.always";
+	private static final String RECORD_BEFORE = "xtf.record.before";
 
 	public static String recordDir() {
 		return XTFConfig.get(RECORD_DIR);
@@ -22,6 +23,10 @@ public class JUnitConfig {
 
 	public static boolean recordAlways() {
 		return XTFConfig.get(RECORD_ALWAYS) != null && (XTFConfig.get(RECORD_ALWAYS).equals("") || XTFConfig.get(RECORD_ALWAYS).toLowerCase().equals("true"));
+	}
+
+	public static boolean recordBefore() {
+		return XTFConfig.get(RECORD_BEFORE) != null && (XTFConfig.get(RECORD_BEFORE).equals("") || XTFConfig.get(RECORD_BEFORE).toLowerCase().equals("true"));
 	}
 
 	public static boolean cleanOpenShift() {
