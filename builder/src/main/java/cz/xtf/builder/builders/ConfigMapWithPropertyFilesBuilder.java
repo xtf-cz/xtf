@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 public class ConfigMapWithPropertyFilesBuilder extends AbstractBuilder<ConfigMap, ConfigMapWithPropertyFilesBuilder> implements EnvironmentConfiguration {
 	private final Map<String, Map<String, String>> fileMap = new HashMap<>();
-	private Map<String, String> config;
+	private Map<String, String> config = new HashMap<>();
 
 	public ConfigMapWithPropertyFilesBuilder(final String name) {
 		super(null, name);
@@ -16,11 +16,14 @@ public class ConfigMapWithPropertyFilesBuilder extends AbstractBuilder<ConfigMap
 
 	@Override
 	public ConfigMap build() {
+		Map<String, String> map = new HashMap<>();
+		map.putAll(config);
+		map.putAll(fileMap.entrySet().stream().collect(Collectors.toMap(
+				Map.Entry::getKey,
+				x -> x.getValue().entrySet().stream().map(y -> y.getKey() + "=" + y.getValue() + "\n").collect(Collectors.joining()))));
 		return new io.fabric8.kubernetes.api.model.ConfigMapBuilder()
 				.withMetadata(metadataBuilder().build())
-				.withData(fileMap.entrySet().stream().collect(Collectors.toMap(
-						Map.Entry::getKey,
-						x -> x.getValue().entrySet().stream().map(y -> y.getKey() + "=" + y.getValue() + "\n").collect(Collectors.joining()))))
+				.withData(map)
 				.build();
 	}
 
@@ -41,7 +44,6 @@ public class ConfigMapWithPropertyFilesBuilder extends AbstractBuilder<ConfigMap
 	}
 
 	public ConfigMapWithPropertyFilesBuilder setFilename(final String filename) {
-		config = new HashMap<String, String>();
 		fileMap.put(filename, config);
 		return this;
 	}
