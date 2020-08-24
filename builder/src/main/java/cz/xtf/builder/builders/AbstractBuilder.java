@@ -36,6 +36,11 @@ public abstract class AbstractBuilder<T, R extends AbstractBuilder> {
 		return getThis();
 	}
 
+	public R addLabels(Map<String, String> labels) {
+		labels.forEach((key, value) -> this.labels.put(key, value));
+		return getThis();
+	}
+
 	public R addAnnotation(String key, String value) {
 		annotations.put(key, value);
 		return getThis();

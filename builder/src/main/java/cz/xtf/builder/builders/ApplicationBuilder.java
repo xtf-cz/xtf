@@ -17,9 +17,12 @@ import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.Route;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -28,21 +31,32 @@ import java.util.stream.Collectors;
 public class ApplicationBuilder {
 
 	public static ApplicationBuilder fromImage(String name, String imageUrl) {
-		ApplicationBuilder appBuilder = new ApplicationBuilder(name);
+		return fromImage(name, imageUrl, Collections.EMPTY_MAP);
+	}
+	public static ApplicationBuilder fromImage(String name, String imageUrl, Map<String, String> labels) {
+		ApplicationBuilder appBuilder = new ApplicationBuilder(name, labels);
 		appBuilder.deploymentConfig().onConfigurationChange().podTemplate().container().fromImage(imageUrl);
 
 		return appBuilder;
 	}
 
 	public static ApplicationBuilder fromManagedBuild(String name, ManagedBuildReference mbr) {
-		ApplicationBuilder appBuilder = new ApplicationBuilder(name);
+		return fromManagedBuild(name, mbr, Collections.EMPTY_MAP);
+	}
+
+	public static ApplicationBuilder fromManagedBuild(String name, ManagedBuildReference mbr, Map<String, String> labels) {
+		ApplicationBuilder appBuilder = new ApplicationBuilder(name, labels);
 		appBuilder.deploymentConfig().onImageChange().onConfigurationChange().podTemplate().container().fromImage(mbr.getNamespace(), mbr.getStreamName());
 
 		return appBuilder;
 	}
 
 	public static ApplicationBuilder fromS2IBuild(String name, String imageUrl, String gitRepo) {
-		ApplicationBuilder appBuilder = new ApplicationBuilder(name);
+		return fromS2IBuild(name, imageUrl, gitRepo, Collections.EMPTY_MAP);
+	}
+
+	public static ApplicationBuilder fromS2IBuild(String name, String imageUrl, String gitRepo, Map<String, String> labels) {
+		ApplicationBuilder appBuilder = new ApplicationBuilder(name, labels);
 		appBuilder.buildConfig().onConfigurationChange().gitSource(gitRepo).setOutput(name).sti().forcePull(true).fromDockerImage(imageUrl);
 		appBuilder.imageStream();
 		appBuilder.deploymentConfig().onImageChange().onConfigurationChange().podTemplate().container().fromImage(name);
@@ -62,9 +76,15 @@ public class ApplicationBuilder {
 	private final Set<RoleBuilder> roles = new HashSet<>();
 	private final Set<RoleBindingBuilder> roleBindings = new HashSet<>();
 	private final Set<PVCBuilder> persistentVolumeClaims = new HashSet<>();
+	private final Map<String, String> labels = new HashMap<>();
 
 	public ApplicationBuilder(String name) {
+		this(name, Collections.EMPTY_MAP);
+	}
+
+	public ApplicationBuilder(String name, Map<String, String> labels) {
 		this.applicationName = name;
+		this.labels.putAll(labels);
 	}
 
 	public String getName() {
@@ -82,6 +102,7 @@ public class ApplicationBuilder {
 			builder = orig.get();
 		} else {
 			builder = new ImageStreamBuilder(this, name);
+			builder.addLabels(labels);
 			images.add(builder);
 		}
 
@@ -99,6 +120,7 @@ public class ApplicationBuilder {
 			builder = orig.get();
 		} else {
 			builder = new BuildConfigBuilder(this, name);
+			builder.addLabels(labels);
 			builds.add(builder);
 		}
 
@@ -116,6 +138,7 @@ public class ApplicationBuilder {
 			builder = orig.get();
 		} else {
 			builder = new DeploymentConfigBuilder(this, name);
+			builder.addLabels(labels);
 			deployments.add(builder);
 		}
 
@@ -134,6 +157,7 @@ public class ApplicationBuilder {
 		} else {
 			result = new ServiceBuilder(this, name);
 			result.addContainerSelector("deploymentconfig", applicationName);
+			result.addLabels(labels);
 			services.add(result);
 		}
 
@@ -152,6 +176,7 @@ public class ApplicationBuilder {
 		} else {
 			result = new RouteBuilder(this, name);
 			result.forService(applicationName);
+			result.addLabels(labels);
 			routes.add(result);
 		}
 
@@ -169,6 +194,7 @@ public class ApplicationBuilder {
 			result = orig.get();
 		} else {
 			result = new RoleBuilder(this, name);
+			result.addLabels(labels);
 			roles.add(result);
 		}
 
@@ -186,6 +212,7 @@ public class ApplicationBuilder {
 			result = orig.get();
 		} else {
 			result = new RoleBindingBuilder(this, name);
+			result.addLabels(labels);
 			roleBindings.add(result);
 		}
 
@@ -203,6 +230,7 @@ public class ApplicationBuilder {
 			result = orig.get();
 		} else {
 			result = new ConfigMapWithPropertyFilesBuilder(name);
+			result.addLabels(labels);
 			configMaps.add(result);
 		}
 		return result;
@@ -219,6 +247,7 @@ public class ApplicationBuilder {
 			result = orig.get();
 		} else {
 			result = new SecretBuilder(name);
+			result.addLabels(labels);
 			secrets.add(result);
 		}
 		return result;
@@ -235,6 +264,7 @@ public class ApplicationBuilder {
 			result = orig.get();
 		} else {
 			result = new PVCBuilder(name);
+			result.addLabels(labels);
 			persistentVolumeClaims.add(result);
 		}
 		return result;
