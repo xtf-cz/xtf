@@ -150,11 +150,21 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 	}
 
 	private void saveISs(ExtensionContext context, String[] objNames) throws IOException {
-		final Path imageStreamsLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "imageStreams.log");
-		try (final ResourcesPrinterHelper<ImageStream> printer = ResourcesPrinterHelper.forISs(imageStreamsLogPath)) {
-			BuildManagers.get().openShift().getImageStreams().stream()
+		// master namespace
+		final Path imageStreamsMasterLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "imageStreams-" + OpenShifts.master().getNamespace() + ".log");
+		try (final ResourcesPrinterHelper<ImageStream> printer = ResourcesPrinterHelper.forISs(imageStreamsMasterLogPath)) {
+			OpenShifts.master().getImageStreams().stream()
 					.filter(build -> resourceNameMatches(build.getMetadata().getName(), objNames))
 					.forEach(printer::row);
+		}
+		// builds namespace (if not same)
+		if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+			final Path imageStreamsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "imageStreams-" + BuildManagers.get().openShift().getNamespace() + ".log");
+			try (final ResourcesPrinterHelper<ImageStream> printer = ResourcesPrinterHelper.forISs(imageStreamsBMLogPath)) {
+				BuildManagers.get().openShift().getImageStreams().stream()
+						.filter(build -> resourceNameMatches(build.getMetadata().getName(), objNames))
+						.forEach(printer::row);
+			}
 		}
 	}
 
@@ -168,11 +178,21 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 	}
 
 	private void saveBuilds(ExtensionContext context, String[] objNames) throws IOException {
-		final Path buildsLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "builds.log");
-		try (final ResourcesPrinterHelper<Build> printer = ResourcesPrinterHelper.forBuilds(buildsLogPath)) {
-			BuildManagers.get().openShift().getBuilds().stream()
+		// master namespace
+		final Path buildsMasterLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "builds-" + OpenShifts.master().getNamespace() + ".log");
+		try (final ResourcesPrinterHelper<Build> printer = ResourcesPrinterHelper.forBuilds(buildsMasterLogPath)) {
+			OpenShifts.master().getBuilds().stream()
 					.filter(build -> resourceNameMatches(build.getMetadata().getName(), objNames))
 					.forEach(printer::row);
+		}
+		// builds namespace (if not same)
+		if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+			final Path buildsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "builds-" + BuildManagers.get().openShift().getNamespace() + ".log");
+			try (final ResourcesPrinterHelper<Build> printer = ResourcesPrinterHelper.forBuilds(buildsBMLogPath)) {
+				BuildManagers.get().openShift().getBuilds().stream()
+						.filter(build -> resourceNameMatches(build.getMetadata().getName(), objNames))
+						.forEach(printer::row);
+			}
 		}
 	}
 
