@@ -55,7 +55,7 @@
 		<version.junit5.platform>1.7.0</version.junit5.platform>
 		<version.junit5.jupiter>5.7.0</version.junit5.jupiter>
 		<version.junit5.jupiter.engine>5.7.0</version.junit5.jupiter.engine>
-		<version.assertj-core>3.5.2</version.assertj-core>
+		<version.assertj-core>3.17.2</version.assertj-core>
 		<version.lombok>1.16.22</version.lombok>
 		<version.gson>2.8.5</version.gson>
 
