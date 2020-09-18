@@ -41,7 +41,7 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
 
-		<!-- Depedency version properties -->
+		<!-- Dependency version properties -->
 		<version.httpclient>4.5.12</version.httpclient>
 		<version.openshift-client>4.11.1</version.openshift-client>
 		<version.commons-io>2.8.0</version.commons-io>
@@ -50,7 +50,7 @@
 		<version.commons-codec>1.15</version.commons-codec>
 		<version.slf4j-api>1.7.30</version.slf4j-api>
 		<version.rxjava-string>1.1.1</version.rxjava-string>
-		<version.rxjava>1.3.0</version.rxjava>
+		<version.rxjava>1.3.8</version.rxjava>
 		<version.jboss-dmr>1.3.0.Final</version.jboss-dmr>
 		<version.junit5.platform>1.7.0</version.junit5.platform>
 		<version.junit5.jupiter>5.7.0</version.junit5.jupiter>
