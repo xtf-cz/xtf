@@ -49,15 +49,18 @@ public class OpenShiftBinary {
 
 	// Common method for any oc command call
 	public String execute(String... args) {
+		return execute(true, args);
+	}
+	public String execute(boolean logSTDErr, String... args) {
 		if (ocConfigPath == null) {
-			return executeCommand(ArrayUtils.addAll(new String[] {path}, args));
+			return executeCommand(logSTDErr, ArrayUtils.addAll(new String[] {path}, args));
 		} else {
-			return executeCommand(ArrayUtils.addAll(new String[] {path, "--config=" + ocConfigPath}, args));
+			return executeCommand(logSTDErr, ArrayUtils.addAll(new String[] {path, "--config=" + ocConfigPath}, args));
 		}
 	}
 
 	// Internal
-	private String executeCommand(String... args) {
+	private String executeCommand(boolean logSTDErr, String... args) {
 		ProcessBuilder pb = new ProcessBuilder(args);
 
 		pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
@@ -86,7 +89,7 @@ public class OpenShiftBinary {
 
 			if (result == 0) {
 				return out.get();
-			} else {
+			} else if (logSTDErr){
 				log.error("Failed while executing (code {}): {}", result, Arrays.toString(args));
 				log.error(err.get());
 			}
