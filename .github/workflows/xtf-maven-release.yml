@@ -1,0 +1,36 @@
+name: XTF Maven Release
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - '**'
+jobs:
+
+  test:
+    name: Deploy to Maven repos
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+          java-package: jdk
+          architecture: x64
+      - name: Maven Package
+        run: mvn install -B -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+      - name: Maven Verify
+        run: mvn -B clean verify
+      - name: maven-settings-xml-action
+        uses: whelk-io/maven-settings-xml-action@v12
+        with:
+          servers: '[{ "id": "bintray-xtf-cz-xtf", "username": "${env.BINTRAY_USER}", "password": "${env.BINTRAY_API_KEY}" },{ "id": "oss-jfrog-snapshots", "username": "${env.BINTRAY_USER}", "password": "${env.BINTRAY_API_KEY}" }]'
+      - name: Maven Deploy
+        run: mvn -X deploy -DskipTests
+        env:
+          BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
+          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
+
