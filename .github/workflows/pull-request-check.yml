@@ -2,14 +2,16 @@ name: XTF CI - Pull Reqeust check
 
 on:
   push:
-    branches-ignore:
-      - 'master'
-      - 'release*'
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 
 jobs:
 
   test:
-    name: Unit Test
+    name: Build and CheckStyle 
     runs-on: ubuntu-latest
 
     steps:
@@ -18,7 +20,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 8
-	  java-package: jdk
+          java-package: jdk
           architecture: x64
       - name: Maven Package
         run: mvn install -B -DskipTests=true -Dmaven.javadoc.skip=true -B -V
