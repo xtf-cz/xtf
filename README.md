@@ -1,5 +1,7 @@
 # XTF
-XTF is framework designed to easy up aspects of testing in OpenShift environment.
+XTF is framework designed to easy up aspects of testing in OpenShift environment. 
+
+
 
 ## Modules
 ### Core
