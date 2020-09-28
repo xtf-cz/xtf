@@ -4,25 +4,25 @@ import cz.xtf.builder.builders.BuildConfigBuilder;
 import io.fabric8.openshift.api.model.BuildStrategyBuilder;
 
 public abstract class BuildStrategy {
-	private final BuildConfigBuilder parent;
+    private final BuildConfigBuilder parent;
 
-	private final BuildStrategyBuilder builder;
+    private final BuildStrategyBuilder builder;
 
-	protected BuildStrategy(BuildConfigBuilder parent, String type) {
-		this.parent = parent;
+    protected BuildStrategy(BuildConfigBuilder parent, String type) {
+        this.parent = parent;
 
-		builder = new BuildStrategyBuilder();
-		builder.withType(type);
-	}
+        builder = new BuildStrategyBuilder();
+        builder.withType(type);
+    }
 
-	public BuildConfigBuilder buildConfig() {
-		return parent;
-	}
+    public BuildConfigBuilder buildConfig() {
+        return parent;
+    }
 
-	public final io.fabric8.openshift.api.model.BuildStrategy build() {
-		buildStrategy(builder);
-		return builder.build();
-	}
+    public final io.fabric8.openshift.api.model.BuildStrategy build() {
+        buildStrategy(builder);
+        return builder.build();
+    }
 
-	protected abstract void buildStrategy(BuildStrategyBuilder builder);
+    protected abstract void buildStrategy(BuildStrategyBuilder builder);
 }

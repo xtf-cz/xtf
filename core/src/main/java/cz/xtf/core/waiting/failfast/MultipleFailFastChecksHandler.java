@@ -1,6 +1,5 @@
 package cz.xtf.core.waiting.failfast;
 
-
 import java.util.List;
 
 /**
@@ -9,26 +8,26 @@ import java.util.List;
  * and provide reason of that check.
  */
 public class MultipleFailFastChecksHandler implements FailFastCheck {
-	private final List<FailFastCheck> checks;
-	private String reason;
+    private final List<FailFastCheck> checks;
+    private String reason;
 
-	MultipleFailFastChecksHandler(List<FailFastCheck> checks) {
-		this.checks = checks;
-	}
+    MultipleFailFastChecksHandler(List<FailFastCheck> checks) {
+        this.checks = checks;
+    }
 
-	@Override
-	public boolean hasFailed() {
-		for (FailFastCheck check : checks) {
-			if (check.hasFailed()) {
-				reason = check.reason();
-				return true;
-			}
-		}
-		return false;
-	}
+    @Override
+    public boolean hasFailed() {
+        for (FailFastCheck check : checks) {
+            if (check.hasFailed()) {
+                reason = check.reason();
+                return true;
+            }
+        }
+        return false;
+    }
 
-	@Override
-	public String reason() {
-		return reason;
-	}
+    @Override
+    public String reason() {
+        return reason;
+    }
 }

@@ -12,35 +12,38 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BuildManagers {
-	private static BuildManager bm;
+    private static BuildManager bm;
 
-	public static BuildManager get() {
-		if (bm == null) {
-			synchronized (BuildManager.class) {
-				if (bm == null) {
-					String buildNamespace = BuildManagerConfig.namespace();
+    public static BuildManager get() {
+        if (bm == null) {
+            synchronized (BuildManager.class) {
+                if (bm == null) {
+                    String buildNamespace = BuildManagerConfig.namespace();
 
-					bm = new BuildManager(OpenShifts.master(buildNamespace));
+                    bm = new BuildManager(OpenShifts.master(buildNamespace));
 
-					// If the build namespace is in a separate namespace to "master" namespace, we assume it is a shared namespace
-					if (!BuildManagerConfig.namespace().equals(OpenShiftConfig.namespace())) {
-						OpenShift admin = OpenShifts.admin(buildNamespace);
+                    // If the build namespace is in a separate namespace to "master" namespace, we assume it is a shared namespace
+                    if (!BuildManagerConfig.namespace().equals(OpenShiftConfig.namespace())) {
+                        OpenShift admin = OpenShifts.admin(buildNamespace);
 
-						try {
-							if (admin.getResourceQuota("max-running-builds") == null) {
-								ResourceQuota rq = new ResourceQuotaBuilder()
-										.withNewMetadata().withName("max-running-builds").endMetadata()
-										.withNewSpec().addToHard("pods", new Quantity(String.format("%d", BuildManagerConfig.maxRunningBuilds()))).endSpec()
-										.build();
-								admin.createResourceQuota(rq);
-							}
-						} catch (KubernetesClientException e) {
-							log.warn("Attempt to add hard resource quota on {} namespace failed!", buildNamespace);
-						}
-					}
-				}
-			}
-		}
-		return bm;
-	}
+                        try {
+                            if (admin.getResourceQuota("max-running-builds") == null) {
+                                ResourceQuota rq = new ResourceQuotaBuilder()
+                                        .withNewMetadata().withName("max-running-builds").endMetadata()
+                                        .withNewSpec()
+                                        .addToHard("pods",
+                                                new Quantity(String.format("%d", BuildManagerConfig.maxRunningBuilds())))
+                                        .endSpec()
+                                        .build();
+                                admin.createResourceQuota(rq);
+                            }
+                        } catch (KubernetesClientException e) {
+                            log.warn("Attempt to add hard resource quota on {} namespace failed!", buildNamespace);
+                        }
+                    }
+                }
+            }
+        }
+        return bm;
+    }
 }

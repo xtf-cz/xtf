@@ -1,11 +1,11 @@
 package cz.xtf.builder.db;
 
 public abstract class DefaultAuxiliary implements OpenShiftAuxiliary {
-	protected final String symbolicName;
+    protected final String symbolicName;
 
-	public DefaultAuxiliary(final String symbolicName) {
-		this.symbolicName = symbolicName;
-	}
+    public DefaultAuxiliary(final String symbolicName) {
+        this.symbolicName = symbolicName;
+    }
 
-	abstract public String getDeploymentConfigName();
+    abstract public String getDeploymentConfigName();
 }
