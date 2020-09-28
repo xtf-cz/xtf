@@ -20,6 +20,8 @@ jobs:
           java-version: 8
           java-package: jdk
           architecture: x64
+      - name: Check well-formatted code
+        run: mvn -B formatter:validate impsort:check
       - name: Maven Package
         run: mvn install -B -DskipTests=true -Dmaven.javadoc.skip=true -B -V
       - name: Maven Verify
