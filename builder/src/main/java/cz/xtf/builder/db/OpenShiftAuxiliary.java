@@ -5,11 +5,11 @@ import cz.xtf.builder.builders.DeploymentConfigBuilder;
 
 public interface OpenShiftAuxiliary {
 
-	default DeploymentConfigBuilder configureDeployment(ApplicationBuilder appBuilder) {
-		return configureDeployment(appBuilder, true);
-	}
+    default DeploymentConfigBuilder configureDeployment(ApplicationBuilder appBuilder) {
+        return configureDeployment(appBuilder, true);
+    }
 
-	DeploymentConfigBuilder configureDeployment(ApplicationBuilder appBuilder, boolean synchronous);
+    DeploymentConfigBuilder configureDeployment(ApplicationBuilder appBuilder, boolean synchronous);
 
-	void configureApplicationDeployment(DeploymentConfigBuilder dcBuilder);
+    void configureApplicationDeployment(DeploymentConfigBuilder dcBuilder);
 }

@@ -4,5 +4,5 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 public interface CustomResourceDefinitionContextProvider {
 
-	CustomResourceDefinitionContext getContext();
+    CustomResourceDefinitionContext getContext();
 }

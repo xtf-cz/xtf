@@ -8,49 +8,49 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class BuildManager {
-	private final OpenShift openShift;
+    private final OpenShift openShift;
 
-	public BuildManager(OpenShift openShift) {
-		this.openShift = openShift;
+    public BuildManager(OpenShift openShift) {
+        this.openShift = openShift;
 
-		if (openShift.getProject(openShift.getNamespace()) == null) {
-			openShift.createProjectRequest();
-			openShift.waiters().isProjectReady().waitFor();
-		}
-		if (OpenShiftConfig.pullSecret() != null) {
-			openShift.setupPullSecret(OpenShiftConfig.pullSecret());
-		}
+        if (openShift.getProject(openShift.getNamespace()) == null) {
+            openShift.createProjectRequest();
+            openShift.waiters().isProjectReady().waitFor();
+        }
+        if (OpenShiftConfig.pullSecret() != null) {
+            openShift.setupPullSecret(OpenShiftConfig.pullSecret());
+        }
 
-		openShift.addRoleToGroup("system:image-puller", "ClusterRole",  "system:authenticated");
-	}
+        openShift.addRoleToGroup("system:image-puller", "ClusterRole", "system:authenticated");
+    }
 
-	public ManagedBuildReference deploy(ManagedBuild managedBuild) {
-		if (BuildManagerConfig.forceRebuild()) {
-			log.info("Force rebuilding is enabled... Building '{}' ...", managedBuild.getId());
-			managedBuild.delete(openShift);
-			managedBuild.build(openShift);
-		} else if (!managedBuild.isPresent(openShift)) {
-			log.info("Managed build '{}' is not present... Building...", managedBuild.getId());
-			managedBuild.build(openShift);
-		} else if (managedBuild.needsUpdate(openShift)) {
-			log.info("Managed build '{}' is not up to date... Building...", managedBuild.getId());
-			managedBuild.update(openShift);
-		} else {
-			log.info("Managed build '{}' is up to date.", managedBuild.getId());
-		}
+    public ManagedBuildReference deploy(ManagedBuild managedBuild) {
+        if (BuildManagerConfig.forceRebuild()) {
+            log.info("Force rebuilding is enabled... Building '{}' ...", managedBuild.getId());
+            managedBuild.delete(openShift);
+            managedBuild.build(openShift);
+        } else if (!managedBuild.isPresent(openShift)) {
+            log.info("Managed build '{}' is not present... Building...", managedBuild.getId());
+            managedBuild.build(openShift);
+        } else if (managedBuild.needsUpdate(openShift)) {
+            log.info("Managed build '{}' is not up to date... Building...", managedBuild.getId());
+            managedBuild.update(openShift);
+        } else {
+            log.info("Managed build '{}' is up to date.", managedBuild.getId());
+        }
 
-		return getBuildReference(managedBuild);
-	}
+        return getBuildReference(managedBuild);
+    }
 
-	public Waiter hasBuildCompleted(ManagedBuild managedBuild) {
-		return managedBuild.hasCompleted(openShift);
-	}
+    public Waiter hasBuildCompleted(ManagedBuild managedBuild) {
+        return managedBuild.hasCompleted(openShift);
+    }
 
-	public ManagedBuildReference getBuildReference(ManagedBuild managedBuild) {
-		return new ManagedBuildReference(managedBuild.getId(), "latest", openShift.getNamespace());
-	}
+    public ManagedBuildReference getBuildReference(ManagedBuild managedBuild) {
+        return new ManagedBuildReference(managedBuild.getId(), "latest", openShift.getNamespace());
+    }
 
-	public OpenShift openShift() {
-		return openShift;
-	}
+    public OpenShift openShift() {
+        return openShift;
+    }
 }

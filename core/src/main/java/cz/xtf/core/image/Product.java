@@ -3,36 +3,37 @@ package cz.xtf.core.image;
 import cz.xtf.core.config.XTFConfig;
 
 public class Product {
-	private final String id;
+    private final String id;
 
-	public Product(String id) {
-		this.id = id;
-	}
+    public Product(String id) {
+        this.id = id;
+    }
 
-	public Image image() {
-		return Image.resolve(id.replaceAll("\\..*", ""));
-	}
+    public Image image() {
+        return Image.resolve(id.replaceAll("\\..*", ""));
+    }
 
-	public String property(String propertyId) {
-		return resolveDefaultingProperty("properties." + propertyId);
-	}
+    public String property(String propertyId) {
+        return resolveDefaultingProperty("properties." + propertyId);
+    }
 
-	public String version() {
-		return resolveDefaultingProperty("version");
-	}
+    public String version() {
+        return resolveDefaultingProperty("version");
+    }
 
-	public String templatesRepo() {
-		return resolveDefaultingProperty("templates.repo");
-	}
+    public String templatesRepo() {
+        return resolveDefaultingProperty("templates.repo");
+    }
 
-	public String templatesBranch() {
-		return resolveDefaultingProperty("templates.branch");
-	}
+    public String templatesBranch() {
+        return resolveDefaultingProperty("templates.branch");
+    }
 
-	private String resolveDefaultingProperty(String propertyId) {
-		String value = XTFConfig.get("xtf." + id + "." + propertyId);
-		String defaultingValue = id.contains(".") ? XTFConfig.get("xtf." + id.replaceAll("\\..*", "") + "." + propertyId) : null;
+    private String resolveDefaultingProperty(String propertyId) {
+        String value = XTFConfig.get("xtf." + id + "." + propertyId);
+        String defaultingValue = id.contains(".") ? XTFConfig.get("xtf." + id.replaceAll("\\..*", "") + "." + propertyId)
+                : null;
 
-		return value != null ? value : defaultingValue;
-	}
+        return value != null ? value : defaultingValue;
+    }
 }
