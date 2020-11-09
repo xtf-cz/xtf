@@ -3,11 +3,11 @@ package cz.xtf.junit5.extensions;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.ZonedDateTime;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.ExtensionContext.Store;
@@ -19,13 +19,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cz.xtf.core.bm.BuildManagers;
-import cz.xtf.core.event.helpers.EventHelper;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.openshift.OpenShifts;
 import cz.xtf.junit5.annotations.OpenShiftRecorder;
 import cz.xtf.junit5.config.JUnitConfig;
+import cz.xtf.junit5.extensions.helpers.EventsFilterBuilder;
+import cz.xtf.junit5.extensions.helpers.ResourcesFilterBuilder;
 import cz.xtf.junit5.extensions.helpers.ResourcesPrinterHelper;
+import cz.xtf.junit5.extensions.helpers.ResourcesTimestampHelper;
 import io.fabric8.kubernetes.api.model.Event;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
@@ -39,8 +42,8 @@ import io.fabric8.openshift.api.model.Route;
 /**
  * Record OpenShift isolated state relative to a test.
  * Resources are filtered by name provided via {@link OpenShiftRecorder} annotation. Names are turned into regexes
- * by adding {@code .*} as a suffix. If no name is provided, all resources in namespaces (BM and normal) are considered;
- * regex is {@code .*}.
+ * by adding {@code .*} as a suffix. If no name is provided, resources in namespaces (BM and master) are filtered automatically
+ * by recording what resources are seen before test and so on.
  * <p>
  * Recorded resources:
  * <ul>
@@ -57,20 +60,143 @@ import io.fabric8.openshift.api.model.Route;
  * <li>events</li>
  * </ul>
  * <p>
- * OpenShift state is recorded when a test throws an exception. If {@link JUnitConfig#RECORD_ALWAYS} is true, state is
+ * OpenShift state is recorded when a test throws an exception. If {@link JUnitConfig#recordAlways()} is true, state is
  * recorded also when a test passes.
  * <p>
- * Use {@link JUnitConfig#RECORD_DIR} to set the direction of records.
+ * Use {@link JUnitConfig#recordDir()} ()} to set the direction of records.
  */
-public class OpenShiftRecorderHandler
-        implements TestWatcher, TestExecutionExceptionHandler, BeforeAllCallback, LifecycleMethodExecutionExceptionHandler {
+public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExceptionHandler, BeforeAllCallback,
+        BeforeEachCallback, LifecycleMethodExecutionExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(OpenShiftRecorderHandler.class);
 
-    private static final String TRACK_FROM = "TRACK_FROM";
+    private static final String FILTER_FOR_BEFORE_ALL_DONE = "RESOURCES_FOR_BEFORE_ALL_RECORDED";
+
+    private static final String POD_FILTER_MASTER = "POD_FILTER_MASTER";
+    private static final String DC_FILTER_MASTER = "DC_FILTER_MASTER";
+    private static final String BUILD_FILTER_MASTER = "BUILD_FILTER_MASTER";
+    private static final String BC_FILTER_MASTER = "BC_FILTER_MASTER";
+    private static final String IS_FILTER_MASTER = "IS_FILTER_MASTER";
+    private static final String SS_FILTER_MASTER = "SS_FILTER_MASTER";
+    private static final String ROUTE_FILTER_MASTER = "ROUTE_FILTER_MASTER";
+    private static final String SERVICE_FILTER_MASTER = "SERVICE_FILTER_MASTER";
+    private static final String EVENT_FILTER_MASTER = "EVENT_FILTER_MASTER";
+
+    private static final String POD_FILTER_BUILDS = "POD_FILTER_BUILDS";
+    private static final String BUILD_FILTER_BUILDS = "BUILD_METHOD_FILTER_BUILDS";
+    private static final String BC_FILTER_BUILDS = "BC_FILTER_BUILDS";
+    private static final String IS_FILTER_BUILDS = "IS_FILTER_BUILDS";
+    private static final String EVENT_FILTER_BUILDS = "EVENT_FILTER_BUILDS";
 
     @Override
-    public void beforeAll(ExtensionContext extensionContext) throws Exception {
-        getClassStore(extensionContext).put(TRACK_FROM, EventHelper.timeOfLastEventBMOrTestNamespaceOrEpoch());
+    public void beforeAll(ExtensionContext context) {
+        Store classStore = getClassStore(context);
+        OpenShift master = OpenShifts.master();
+        OpenShift bm = BuildManagers.get().openShift();
+
+        initClassFilter(context, POD_FILTER_MASTER, master, Pod.class);
+        initClassFilter(context, DC_FILTER_MASTER, master, DeploymentConfig.class);
+        initClassFilter(context, BUILD_FILTER_MASTER, master, Build.class);
+        initClassFilter(context, BC_FILTER_MASTER, master, BuildConfig.class);
+        initClassFilter(context, IS_FILTER_MASTER, master, ImageStream.class);
+        initClassFilter(context, SS_FILTER_MASTER, master, StatefulSet.class);
+        initClassFilter(context, ROUTE_FILTER_MASTER, master, Route.class);
+        initClassFilter(context, SERVICE_FILTER_MASTER, master, Service.class);
+        classStore.put(EVENT_FILTER_MASTER,
+                new EventsFilterBuilder().setExcludedUntil(ResourcesTimestampHelper.timeOfLastEvent(master)));
+
+        initClassFilter(context, POD_FILTER_BUILDS, bm, Pod.class);
+        initClassFilter(context, BUILD_FILTER_BUILDS, bm, Build.class);
+        initClassFilter(context, BC_FILTER_BUILDS, bm, BuildConfig.class);
+        initClassFilter(context, IS_FILTER_BUILDS, bm, ImageStream.class);
+        classStore.put(EVENT_FILTER_BUILDS,
+                new EventsFilterBuilder().setExcludedUntil(ResourcesTimestampHelper.timeOfLastEvent(bm)));
+
+        classStore.put(FILTER_FOR_BEFORE_ALL_DONE, new AtomicBoolean(false));
+    }
+
+    private void initClassFilter(ExtensionContext context, String key, OpenShift openShift,
+            Class<? extends HasMetadata> resourceClass) {
+        Store classStore = getClassStore(context);
+        classStore.put(key, new ResourcesFilterBuilder()
+                .setExcludedUntil(ResourcesTimestampHelper.timeOfLastResourceOf(openShift, resourceClass)));
+    }
+
+    private void updateClassFilterBeforeAllResources(ExtensionContext context, String key, OpenShift openShift,
+            Class<? extends HasMetadata> resourceClass) {
+        Store classStore = getClassStore(context);
+        classStore.get(key, ResourcesFilterBuilder.class)
+                .setIncludedAlwaysWindow(
+                        classStore.get(key, ResourcesFilterBuilder.class).getExcludedUntil(),
+                        ResourcesTimestampHelper.timeOfLastResourceOf(openShift, resourceClass))
+                .setExcludedUntil(null);
+    }
+
+    private void initMethodFilter(ExtensionContext context, String key, OpenShift openShift,
+            Class<? extends HasMetadata> resourceClass) {
+        Store classStore = getClassStore(context);
+        Store methodStore = getMethodStore(context);
+        try {
+            methodStore.put(key, classStore.get(key, ResourcesFilterBuilder.class)
+                    .clone()
+                    .setExcludedUntil(ResourcesTimestampHelper.timeOfLastResourceOf(openShift, resourceClass)));
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext context) throws Exception {
+        Store classStore = getClassStore(context);
+        Store methodStore = getMethodStore(context);
+        OpenShift master = OpenShifts.master();
+        OpenShift bm = BuildManagers.get().openShift();
+        if (!classStore.get(FILTER_FOR_BEFORE_ALL_DONE, AtomicBoolean.class).get()) {
+            // so far filters have filtered everything until _BEFORE_ALL_ - TIME_1
+            // now we are before _BEFORE_EACH_ and implicitly _BEFORE_ALL_ is successful
+            // set filter in a way everything created between TIME_1 and now will be captured - alwaysIncludedWindow
+            // excluded until is set below
+
+            //master
+            updateClassFilterBeforeAllResources(context, POD_FILTER_MASTER, master, Pod.class);
+            updateClassFilterBeforeAllResources(context, DC_FILTER_MASTER, master, DeploymentConfig.class);
+            updateClassFilterBeforeAllResources(context, BUILD_FILTER_MASTER, master, Build.class);
+            updateClassFilterBeforeAllResources(context, BC_FILTER_MASTER, master, BuildConfig.class);
+            updateClassFilterBeforeAllResources(context, IS_FILTER_MASTER, master, ImageStream.class);
+            updateClassFilterBeforeAllResources(context, SS_FILTER_MASTER, master, StatefulSet.class);
+            updateClassFilterBeforeAllResources(context, ROUTE_FILTER_MASTER, master, Route.class);
+            updateClassFilterBeforeAllResources(context, SERVICE_FILTER_MASTER, master, Service.class);
+            updateClassFilterBeforeAllResources(context, EVENT_FILTER_MASTER, master, Event.class);
+
+            // builds
+            updateClassFilterBeforeAllResources(context, POD_FILTER_BUILDS, bm, Pod.class);
+            updateClassFilterBeforeAllResources(context, BUILD_FILTER_BUILDS, bm, Build.class);
+            updateClassFilterBeforeAllResources(context, BC_FILTER_BUILDS, bm, BuildConfig.class);
+            updateClassFilterBeforeAllResources(context, IS_FILTER_BUILDS, bm, ImageStream.class);
+            updateClassFilterBeforeAllResources(context, EVENT_FILTER_BUILDS, bm, Event.class);
+
+            classStore.get(FILTER_FOR_BEFORE_ALL_DONE, AtomicBoolean.class).set(true);
+        }
+
+        // RESOURCE_FILTERs are setup and now we are setting filter for specific tests
+        // need to clone (shallow) it, since tests may run ina a parallel way
+
+        // master
+        initMethodFilter(context, POD_FILTER_MASTER, master, Pod.class);
+        initMethodFilter(context, DC_FILTER_MASTER, master, DeploymentConfig.class);
+        initMethodFilter(context, BUILD_FILTER_MASTER, master, Build.class);
+        initMethodFilter(context, BC_FILTER_MASTER, master, BuildConfig.class);
+        initMethodFilter(context, IS_FILTER_MASTER, master, ImageStream.class);
+        initMethodFilter(context, SS_FILTER_MASTER, master, StatefulSet.class);
+        initMethodFilter(context, ROUTE_FILTER_MASTER, master, Route.class);
+        initMethodFilter(context, SERVICE_FILTER_MASTER, master, Service.class);
+        initMethodFilter(context, EVENT_FILTER_MASTER, master, Event.class);
+
+        // builds
+        initMethodFilter(context, POD_FILTER_BUILDS, bm, Pod.class);
+        initMethodFilter(context, BUILD_FILTER_BUILDS, bm, Build.class);
+        initMethodFilter(context, BC_FILTER_BUILDS, bm, BuildConfig.class);
+        initMethodFilter(context, IS_FILTER_BUILDS, bm, ImageStream.class);
+        initMethodFilter(context, EVENT_FILTER_BUILDS, bm, Event.class);
     }
 
     @Override
@@ -124,45 +250,62 @@ public class OpenShiftRecorderHandler
     }
 
     private void recordState(ExtensionContext context) throws IOException {
+        savePods(context, getFilter(context, POD_FILTER_MASTER), getFilter(context, POD_FILTER_BUILDS));
+        saveDCs(context, getFilter(context, DC_FILTER_MASTER));
+        saveBuilds(context, getFilter(context, BUILD_FILTER_MASTER), getFilter(context, BUILD_FILTER_BUILDS));
+        saveBCs(context, getFilter(context, BC_FILTER_MASTER), getFilter(context, BC_FILTER_BUILDS));
+        saveISs(context, getFilter(context, IS_FILTER_MASTER), getFilter(context, IS_FILTER_BUILDS));
+        saveStatefulsets(context, getFilter(context, SS_FILTER_MASTER));
+        saveRoutes(context, getFilter(context, ROUTE_FILTER_MASTER));
+        saveServices(context, getFilter(context, SERVICE_FILTER_MASTER));
+        saveSecrets(context);
+        savePodLogs(context, getFilter(context, POD_FILTER_MASTER), getFilter(context, POD_FILTER_BUILDS));
+        saveEvents(context, getFilter(context, EVENT_FILTER_MASTER), getFilter(context, EVENT_FILTER_BUILDS));
+    }
+
+    private <E extends HasMetadata> ResourcesFilterBuilder<E> getFilter(ExtensionContext context, String key) {
         OpenShiftRecorder classOpenShiftRecorder = AnnotationSupport
                 .findAnnotation(context.getRequiredTestClass(), OpenShiftRecorder.class).orElse(null);
         OpenShiftRecorder methodOpenShiftRecorder = AnnotationSupport
                 .findAnnotation(context.getElement(), OpenShiftRecorder.class).orElse(null);
-        final OpenShiftRecorder openShiftRecorder = methodOpenShiftRecorder != null ? methodOpenShiftRecorder
+        OpenShiftRecorder openShiftRecorder = methodOpenShiftRecorder != null ? methodOpenShiftRecorder
                 : classOpenShiftRecorder;
+
         // annotation or global include in META-INF.services (empty string will be turned into .* and no resource shall be filtered out)
-        String[] objNames = openShiftRecorder != null ? openShiftRecorder.resourceNames() : new String[] { "" };
+        String[] resourceNames = openShiftRecorder != null ? openShiftRecorder.resourceNames() : null;
 
-        savePods(context, objNames);
-        saveDCs(context, objNames);
-        saveBuilds(context, objNames);
-        saveBCs(context, objNames);
-        saveISs(context, objNames);
-        saveStatefulsets(context, objNames);
-        saveRoutes(context, objNames);
-        saveServices(context, objNames);
-        saveSecrets(context, objNames);
-        savePodLogs(context, objNames);
-        saveEvents(context, objNames);
-
+        ResourcesFilterBuilder<E> filter = context.getTestMethod().isPresent()
+                ? (ResourcesFilterBuilder<E>) getMethodStore(context).get(key, ResourcesFilterBuilder.class)
+                : (ResourcesFilterBuilder<E>) getClassStore(context).get(key, ResourcesFilterBuilder.class);
+        if (resourceNames != null && !(resourceNames.length == 1 && resourceNames[0].equals(""))) {
+            // list of resource names is present - filter by names
+            filter.filterByResourceNames();
+            filter.setResourceNames(resourceNames);
+        } else {
+            filter.filterByLastSeenResources();
+        }
+        return filter;
     }
 
-    private void saveStatefulsets(ExtensionContext context, String[] objNames) throws IOException {
+    private void saveStatefulsets(ExtensionContext context, ResourcesFilterBuilder<StatefulSet> masterFilter)
+            throws IOException {
         final Path StatefulSetsLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "statefulSets.log");
+
         try (final ResourcesPrinterHelper<StatefulSet> printer = ResourcesPrinterHelper.forStatefulSet(StatefulSetsLogPath)) {
             OpenShifts.master().getStatefulSets().stream()
-                    .filter(build -> resourceNameMatches(build.getMetadata().getName(), objNames))
+                    .filter(masterFilter.build())
                     .forEach(printer::row);
         }
     }
 
-    private void saveISs(ExtensionContext context, String[] objNames) throws IOException {
+    private void saveISs(ExtensionContext context, ResourcesFilterBuilder<ImageStream> masterFilter,
+            ResourcesFilterBuilder<ImageStream> buildsFilter) throws IOException {
         // master namespace
         final Path imageStreamsMasterLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
                 "imageStreams-" + OpenShifts.master().getNamespace() + ".log");
         try (final ResourcesPrinterHelper<ImageStream> printer = ResourcesPrinterHelper.forISs(imageStreamsMasterLogPath)) {
             OpenShifts.master().getImageStreams().stream()
-                    .filter(build -> resourceNameMatches(build.getMetadata().getName(), objNames))
+                    .filter(masterFilter.build())
                     .forEach(printer::row);
         }
         // builds namespace (if not same)
@@ -171,28 +314,38 @@ public class OpenShiftRecorderHandler
                     "imageStreams-" + BuildManagers.get().openShift().getNamespace() + ".log");
             try (final ResourcesPrinterHelper<ImageStream> printer = ResourcesPrinterHelper.forISs(imageStreamsBMLogPath)) {
                 BuildManagers.get().openShift().getImageStreams().stream()
-                        .filter(build -> resourceNameMatches(build.getMetadata().getName(), objNames))
+                        .filter(buildsFilter.build())
                         .forEach(printer::row);
             }
         }
     }
 
-    private void saveBCs(ExtensionContext context, String[] objNames) throws IOException {
-        final Path buildsLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "buildConfigs.log");
-        try (final ResourcesPrinterHelper<BuildConfig> printer = ResourcesPrinterHelper.forBCs(buildsLogPath)) {
+    private void saveBCs(ExtensionContext context, ResourcesFilterBuilder<BuildConfig> masterFilter,
+            ResourcesFilterBuilder<BuildConfig> buildsFilter) throws IOException {
+        final Path bcMasterLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
+                "buildConfigs-" + OpenShifts.master().getNamespace() + ".log");
+        try (final ResourcesPrinterHelper<BuildConfig> printer = ResourcesPrinterHelper.forBCs(bcMasterLogPath)) {
+            OpenShifts.master().getBuildConfigs().stream()
+                    .filter(masterFilter.build())
+                    .forEach(printer::row);
+        }
+        final Path bcBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
+                "buildConfigs-" + BuildManagers.get().openShift().getNamespace() + ".log");
+        try (final ResourcesPrinterHelper<BuildConfig> printer = ResourcesPrinterHelper.forBCs(bcBMLogPath)) {
             BuildManagers.get().openShift().getBuildConfigs().stream()
-                    .filter(bc -> resourceNameMatches(bc.getMetadata().getName(), objNames))
+                    .filter(buildsFilter.build())
                     .forEach(printer::row);
         }
     }
 
-    private void saveBuilds(ExtensionContext context, String[] objNames) throws IOException {
+    private void saveBuilds(ExtensionContext context, ResourcesFilterBuilder<Build> masterFilter,
+            ResourcesFilterBuilder<Build> buildsFilter) throws IOException {
         // master namespace
         final Path buildsMasterLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
                 "builds-" + OpenShifts.master().getNamespace() + ".log");
         try (final ResourcesPrinterHelper<Build> printer = ResourcesPrinterHelper.forBuilds(buildsMasterLogPath)) {
             OpenShifts.master().getBuilds().stream()
-                    .filter(build -> resourceNameMatches(build.getMetadata().getName(), objNames))
+                    .filter(masterFilter.build())
                     .forEach(printer::row);
         }
         // builds namespace (if not same)
@@ -201,13 +354,13 @@ public class OpenShiftRecorderHandler
                     "builds-" + BuildManagers.get().openShift().getNamespace() + ".log");
             try (final ResourcesPrinterHelper<Build> printer = ResourcesPrinterHelper.forBuilds(buildsBMLogPath)) {
                 BuildManagers.get().openShift().getBuilds().stream()
-                        .filter(build -> resourceNameMatches(build.getMetadata().getName(), objNames))
+                        .filter(buildsFilter.build())
                         .forEach(printer::row);
             }
         }
     }
 
-    private void saveSecrets(ExtensionContext context, String[] objNames) throws IOException {
+    private void saveSecrets(ExtensionContext context) throws IOException {
         final Path secretsLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "secrets.log");
         try (final ResourcesPrinterHelper<Secret> printer = ResourcesPrinterHelper.forSecrets(secretsLogPath)) {
             OpenShifts.master().getSecrets()
@@ -215,52 +368,53 @@ public class OpenShiftRecorderHandler
         }
     }
 
-    private void saveServices(ExtensionContext context, String[] objNames) throws IOException {
+    private void saveServices(ExtensionContext context, ResourcesFilterBuilder<Service> masterFilter) throws IOException {
         final Path servicesLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "services.log");
         try (final ResourcesPrinterHelper<Service> printer = ResourcesPrinterHelper.forServices(servicesLogPath)) {
             OpenShifts.master().getServices().stream()
-                    .filter(service -> resourceNameMatches(service.getMetadata().getName(), objNames))
+                    .filter(masterFilter.build())
                     .forEach(printer::row);
         }
     }
 
-    private void saveRoutes(ExtensionContext context, String[] objNames) throws IOException {
+    private void saveRoutes(ExtensionContext context, ResourcesFilterBuilder<Route> masterFilter) throws IOException {
         final Path routesLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "routes.log");
         try (final ResourcesPrinterHelper<Route> printer = ResourcesPrinterHelper.forRoutes(routesLogPath)) {
             OpenShifts.master().getRoutes().stream()
-                    .filter(route -> resourceNameMatches(route.getMetadata().getName(), objNames))
+                    .filter(masterFilter.build())
                     .forEach(printer::row);
         }
     }
 
-    private void savePods(ExtensionContext context, String[] objNames) throws IOException {
+    private void savePods(ExtensionContext context, ResourcesFilterBuilder<Pod> masterFilter,
+            ResourcesFilterBuilder<Pod> buildsFilter) throws IOException {
         // master namespace
         final Path podsMasterLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
                 "pods-" + OpenShifts.master().getNamespace() + ".log");
         try (final ResourcesPrinterHelper<Pod> printer = ResourcesPrinterHelper.forPods(podsMasterLogPath)) {
             OpenShifts.master().getPods()
                     .stream()
-                    .filter(pod -> resourceNameMatches(pod.getMetadata().getName(), objNames))
+                    .filter(masterFilter.build())
                     .forEach(printer::row);
         }
         // builds namespace (if not same)
         if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
-            final Path eventsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
+            final Path podsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
                     "pods-" + BuildManagers.get().openShift().getNamespace() + ".log");
-            try (final ResourcesPrinterHelper<Pod> printer = ResourcesPrinterHelper.forPods(eventsBMLogPath)) {
+            try (final ResourcesPrinterHelper<Pod> printer = ResourcesPrinterHelper.forPods(podsBMLogPath)) {
                 BuildManagers.get().openShift().getPods()
                         .stream()
-                        .filter(pod -> resourceNameMatches(pod.getMetadata().getName(), objNames))
+                        .filter(buildsFilter.build())
                         .forEach(printer::row);
             }
         }
     }
 
-    private void saveDCs(ExtensionContext context, String[] objNames) throws IOException {
+    private void saveDCs(ExtensionContext context, ResourcesFilterBuilder<DeploymentConfig> masterFilter) throws IOException {
         final Path dcsLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "deploymentConfigs.log");
         try (final ResourcesPrinterHelper<DeploymentConfig> printer = ResourcesPrinterHelper.forDCs(dcsLogPath)) {
             OpenShifts.master().getDeploymentConfigs().stream()
-                    .filter(dc -> resourceNameMatches(dc.getMetadata().getName(), objNames))
+                    .filter(masterFilter.build())
                     .forEach(printer::row);
 
         }
@@ -270,10 +424,16 @@ public class OpenShiftRecorderHandler
         return extensionContext.getStore(Namespace.create(extensionContext.getRequiredTestClass()));
     }
 
-    private void savePodLogs(ExtensionContext context, String[] resourceNames) {
-        Consumer<OpenShift> podPrinter = openShift -> openShift.getPods()
+    private Store getMethodStore(ExtensionContext extensionContext) {
+        return extensionContext
+                .getStore(Namespace.create(extensionContext.getRequiredTestClass(), extensionContext.getTestClass()));
+    }
+
+    private void savePodLogs(ExtensionContext context, ResourcesFilterBuilder<Pod> masterFilter,
+            ResourcesFilterBuilder<Pod> buildsFilter) {
+        BiConsumer<OpenShift, ResourcesFilterBuilder<Pod>> podPrinter = (openShift, filter) -> openShift.getPods()
                 .stream()
-                .filter(pod -> resourceNameMatches(pod.getMetadata().getName(), resourceNames))
+                .filter(filter.build())
                 .forEach(pod -> {
                     try {
                         openShift.storePodLog(
@@ -285,61 +445,43 @@ public class OpenShiftRecorderHandler
                     }
                 });
 
-        podPrinter.accept(OpenShifts.master());
+        podPrinter.accept(OpenShifts.master(), masterFilter);
         if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
-            podPrinter.accept(BuildManagers.get().openShift());
+            podPrinter.accept(BuildManagers.get().openShift(), buildsFilter);
         }
     }
 
     private String dirNameForTest(ExtensionContext context) {
         // if is test
         if (context.getTestMethod().isPresent()) {
-            return context.getTestClass().get().getName() + "." + context.getTestMethod().get().getName();
+            return context.getTestClass().get().getName() + "." + context.getDisplayName();
         } else {
             return context.getTestClass().get().getName();
         }
     }
 
-    private void saveEvents(ExtensionContext context, String[] resourceNames) throws IOException {
-        Store classStore = getClassStore(context);
-        BiConsumer<OpenShift, ResourcesPrinterHelper<Event>> eventPrinter = (openShift, printer) -> openShift.getEventList()
-                .filter()
-                .ofObjNames(getRegexResourceNames(resourceNames))
-                .after(classStore.get(TRACK_FROM, ZonedDateTime.class))
-                .getStream()
-                .forEach(printer::row);
-
+    private void saveEvents(ExtensionContext context, ResourcesFilterBuilder<Event> masterFilter,
+            ResourcesFilterBuilder<Event> buildsFilter) throws IOException {
         // master namespace
         final Path eventsMasterLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
                 "events-" + OpenShifts.master().getNamespace() + ".log");
         try (final ResourcesPrinterHelper<Event> printer = ResourcesPrinterHelper.forEvents(eventsMasterLogPath)) {
-            eventPrinter.accept(OpenShifts.master(), printer);
+            OpenShifts.master().getEvents()
+                    .stream()
+                    .filter(masterFilter.build())
+                    .forEach(printer::row);
         }
         // builds namespace (if not same)
         if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
             final Path eventsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
                     "events-" + BuildManagers.get().openShift().getNamespace() + ".log");
             try (final ResourcesPrinterHelper<Event> printer = ResourcesPrinterHelper.forEvents(eventsBMLogPath)) {
-                eventPrinter.accept(BuildManagers.get().openShift(), printer);
+                BuildManagers.get().openShift().getEvents()
+                        .stream()
+                        .filter(buildsFilter.build())
+                        .forEach(printer::row);
             }
         }
-    }
-
-    private boolean resourceNameMatches(String resourceName, String[] resourceNamesLookup) {
-        for (String resourceNameLookup : getRegexResourceNames(resourceNamesLookup)) {
-            if (resourceName.matches(resourceNameLookup)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private String[] getRegexResourceNames(String[] resourceNames) {
-        String[] result = new String[resourceNames.length];
-        for (int i = 0; i < resourceNames.length; i++) {
-            result[i] = resourceNames[i] + ".*";
-        }
-        return result;
     }
 
     private String attachmentsDir() {

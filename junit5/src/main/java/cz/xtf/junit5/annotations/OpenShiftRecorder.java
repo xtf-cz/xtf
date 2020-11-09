@@ -20,7 +20,8 @@ public @interface OpenShiftRecorder {
     /**
      * Resource names for filtering out events, pods,...
      * Will be turned into regex {@code __value__.*}
-     *
+     * <p>
+     * If no value is given resources are filtered automatically by recording what resources are seen before test and so on.
      * {@see OpenShiftRecorderHandler}
      */
     String[] resourceNames() default "";
