@@ -286,8 +286,15 @@ public class OpenShifts {
         if (StringUtils.isNotEmpty(username)) {
             HttpsURLConnection connection = null;
             try {
-                connection = Https.getHttpsConnection(new URL(
-                        OpenShiftConfig.url() + "/oauth/authorize?response_type=token&client_id=openshift-challenging-client"));
+                if (OpenShiftConfig.version().startsWith("3")) {
+                    connection = Https.getHttpsConnection(new URL(
+                            OpenShiftConfig.url()
+                                    + "/oauth/authorize?response_type=token&client_id=openshift-challenging-client"));
+                } else {
+                    connection = Https.getHttpsConnection(new URL("https://oauth-openshift.apps." +
+                            StringUtils.substringBetween(OpenShiftConfig.url(), "api.", ":")
+                            + "/oauth/authorize?response_type=token&client_id=openshift-challenging-client"));
+                }
                 String encoded = Base64.getEncoder()
                         .encodeToString((username + ":" + password).getBytes(StandardCharsets.UTF_8));
                 connection.setRequestProperty("Authorization", "Basic " + encoded);
