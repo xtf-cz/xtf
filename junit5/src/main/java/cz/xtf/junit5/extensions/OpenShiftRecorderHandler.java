@@ -63,7 +63,7 @@ import io.fabric8.openshift.api.model.Route;
  * OpenShift state is recorded when a test throws an exception. If {@link JUnitConfig#recordAlways()} is true, state is
  * recorded also when a test passes.
  * <p>
- * Use {@link JUnitConfig#recordDir()} ()} to set the direction of records.
+ * Use {@link JUnitConfig#recordDir()} ()} to set the directory of records.
  */
 public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExceptionHandler, BeforeAllCallback,
         BeforeEachCallback, LifecycleMethodExecutionExceptionHandler {
@@ -104,12 +104,15 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
         classStore.put(EVENT_FILTER_MASTER,
                 new EventsFilterBuilder().setExcludedUntil(ResourcesTimestampHelper.timeOfLastEvent(master)));
 
-        initClassFilter(context, POD_FILTER_BUILDS, bm, Pod.class);
-        initClassFilter(context, BUILD_FILTER_BUILDS, bm, Build.class);
-        initClassFilter(context, BC_FILTER_BUILDS, bm, BuildConfig.class);
-        initClassFilter(context, IS_FILTER_BUILDS, bm, ImageStream.class);
-        classStore.put(EVENT_FILTER_BUILDS,
-                new EventsFilterBuilder().setExcludedUntil(ResourcesTimestampHelper.timeOfLastEvent(bm)));
+        // builds namespace (if not same)
+        if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+            initClassFilter(context, POD_FILTER_BUILDS, bm, Pod.class);
+            initClassFilter(context, BUILD_FILTER_BUILDS, bm, Build.class);
+            initClassFilter(context, BC_FILTER_BUILDS, bm, BuildConfig.class);
+            initClassFilter(context, IS_FILTER_BUILDS, bm, ImageStream.class);
+            classStore.put(EVENT_FILTER_BUILDS,
+                    new EventsFilterBuilder().setExcludedUntil(ResourcesTimestampHelper.timeOfLastEvent(bm)));
+        }
 
         classStore.put(FILTER_FOR_BEFORE_ALL_DONE, new AtomicBoolean(false));
     }
@@ -167,18 +170,20 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
             updateClassFilterBeforeAllResources(context, SERVICE_FILTER_MASTER, master, Service.class);
             updateClassFilterBeforeAllResources(context, EVENT_FILTER_MASTER, master, Event.class);
 
-            // builds
-            updateClassFilterBeforeAllResources(context, POD_FILTER_BUILDS, bm, Pod.class);
-            updateClassFilterBeforeAllResources(context, BUILD_FILTER_BUILDS, bm, Build.class);
-            updateClassFilterBeforeAllResources(context, BC_FILTER_BUILDS, bm, BuildConfig.class);
-            updateClassFilterBeforeAllResources(context, IS_FILTER_BUILDS, bm, ImageStream.class);
-            updateClassFilterBeforeAllResources(context, EVENT_FILTER_BUILDS, bm, Event.class);
+            // builds namespace (if not same)
+            if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+                updateClassFilterBeforeAllResources(context, POD_FILTER_BUILDS, bm, Pod.class);
+                updateClassFilterBeforeAllResources(context, BUILD_FILTER_BUILDS, bm, Build.class);
+                updateClassFilterBeforeAllResources(context, BC_FILTER_BUILDS, bm, BuildConfig.class);
+                updateClassFilterBeforeAllResources(context, IS_FILTER_BUILDS, bm, ImageStream.class);
+                updateClassFilterBeforeAllResources(context, EVENT_FILTER_BUILDS, bm, Event.class);
+            }
 
             classStore.get(FILTER_FOR_BEFORE_ALL_DONE, AtomicBoolean.class).set(true);
         }
 
         // RESOURCE_FILTERs are setup and now we are setting filter for specific tests
-        // need to clone (shallow) it, since tests may run ina a parallel way
+        // need to clone (shallow) it, since tests may run in a parallel way
 
         // master
         initMethodFilter(context, POD_FILTER_MASTER, master, Pod.class);
@@ -191,12 +196,14 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
         initMethodFilter(context, SERVICE_FILTER_MASTER, master, Service.class);
         initMethodFilter(context, EVENT_FILTER_MASTER, master, Event.class);
 
-        // builds
-        initMethodFilter(context, POD_FILTER_BUILDS, bm, Pod.class);
-        initMethodFilter(context, BUILD_FILTER_BUILDS, bm, Build.class);
-        initMethodFilter(context, BC_FILTER_BUILDS, bm, BuildConfig.class);
-        initMethodFilter(context, IS_FILTER_BUILDS, bm, ImageStream.class);
-        initMethodFilter(context, EVENT_FILTER_BUILDS, bm, Event.class);
+        // builds namespace (if not same)
+        if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+            initMethodFilter(context, POD_FILTER_BUILDS, bm, Pod.class);
+            initMethodFilter(context, BUILD_FILTER_BUILDS, bm, Build.class);
+            initMethodFilter(context, BC_FILTER_BUILDS, bm, BuildConfig.class);
+            initMethodFilter(context, IS_FILTER_BUILDS, bm, ImageStream.class);
+            initMethodFilter(context, EVENT_FILTER_BUILDS, bm, Event.class);
+        }
     }
 
     @Override
@@ -271,14 +278,24 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
         OpenShiftRecorder openShiftRecorder = methodOpenShiftRecorder != null ? methodOpenShiftRecorder
                 : classOpenShiftRecorder;
 
-        // annotation or global include in META-INF.services (empty string will be turned into .* and no resource shall be filtered out)
+        // annotation (openShiftRecorder is not null) or global include in META-INF.services - null
         String[] resourceNames = openShiftRecorder != null ? openShiftRecorder.resourceNames() : null;
 
         ResourcesFilterBuilder<E> filter = context.getTestMethod().isPresent()
                 ? (ResourcesFilterBuilder<E>) getMethodStore(context).get(key, ResourcesFilterBuilder.class)
                 : (ResourcesFilterBuilder<E>) getClassStore(context).get(key, ResourcesFilterBuilder.class);
-        if (resourceNames != null && !(resourceNames.length == 1 && resourceNames[0].equals(""))) {
-            // list of resource names is present - filter by names
+
+        // OpenShiftRecorder (OpenShiftRecorderHandler) may be used in following ways
+        // (1) A test is annotated by @OpenShiftRecorder - OpenShiftRecorder#resourcesNames is set to default value -
+        //     an array of one empty string.
+        // (2) A test is annotated by @OpenShiftRecorder(string [string]*) -
+        //     OpenShiftRecorder#resourcesNames is an array of strings. null value is not allowed in an annotation.
+        // (3) OpenShiftRecorderHandler is defined via SPI in resources/META-INF/services
+        //     the annotation is not found for the test class and resourceNames is null
+        if (resourceNames != null // exclude (3)
+                && !(resourceNames.length == 1 && resourceNames[0].equals("")) // exclude (1)
+        ) {
+            // option (2) list of resource names is present - filter by names
             filter.filterByResourceNames();
             filter.setResourceNames(resourceNames);
         } else {
@@ -329,12 +346,15 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
                     .filter(masterFilter.build())
                     .forEach(printer::row);
         }
-        final Path bcBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
-                "buildConfigs-" + BuildManagers.get().openShift().getNamespace() + ".log");
-        try (final ResourcesPrinterHelper<BuildConfig> printer = ResourcesPrinterHelper.forBCs(bcBMLogPath)) {
-            BuildManagers.get().openShift().getBuildConfigs().stream()
-                    .filter(buildsFilter.build())
-                    .forEach(printer::row);
+        // builds namespace (if not same)
+        if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+            final Path bcBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
+                    "buildConfigs-" + BuildManagers.get().openShift().getNamespace() + ".log");
+            try (final ResourcesPrinterHelper<BuildConfig> printer = ResourcesPrinterHelper.forBCs(bcBMLogPath)) {
+                BuildManagers.get().openShift().getBuildConfigs().stream()
+                        .filter(buildsFilter.build())
+                        .forEach(printer::row);
+            }
         }
     }
 
