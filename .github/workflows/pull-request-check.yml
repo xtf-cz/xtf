@@ -11,7 +11,7 @@ on:
 jobs:
 
   test:
-    name: Build and CheckStyle 
+    name: Build and CheckStyle
     runs-on: ubuntu-latest
 
     steps:
@@ -23,7 +23,7 @@ jobs:
           java-package: jdk
           architecture: x64
       - name: Check well-formatted code
-          run: mvn -B formatter:validate impsort:check
+        run: mvn -B formatter:validate impsort:check
       - name: Maven Package
         run: mvn install -B -DskipTests=true -Dmaven.javadoc.skip=true -B -V
       - name: Maven Verify
