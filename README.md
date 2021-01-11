@@ -1,5 +1,5 @@
 # XTF
-XTF is framework designed to easy up aspects of testing in OpenShift environment.
+XTF is a framework designed to ease up aspects of testing in OpenShift environment.
 
 
 ## Modules
@@ -7,12 +7,12 @@ XTF is framework designed to easy up aspects of testing in OpenShift environment
 Core concepts of XTF framework used by other modules.
 
 #### Configuration
-While framework itself doesn't require any configuration it can easy up some repetative settings in tests. Setup of XTF can be done in 4 ways with priority from top to down:
+While the framework itself doesn't require any configuration, it can ease up some repetitive settings in tests. Setup of XTF can be done in 4 ways with priority from top to down:
 
 * System properties 
 * Environment variables
 * `test.properties` file in root of the project designed to contain user specific setup. You can use `-Dxtf.test_properties.path` property to specify the location for the desired user specific setup.
-* `global-test.properties` file in root of the project designed to contain shared setup. You can use `-Dxtf.global_test_properties.path` property to specify the location for the desired user specific setup.
+* `global-test.properties` file in root of the project designed to contain a shared setup. You can use `-Dxtf.global_test_properties.path` property to specify the location for the desired user specific setup.
 
 The mapping between system properties and environment variables is done by lower casing environment variable, replacing `_` with `.` and adding `xtf.` before the result.
 
@@ -21,7 +21,7 @@ Example: `OPENSHIFT_MASTER_URL` is mapped to `xtf.openshift.master.url`.
 #### OpenShift
 [OpenShift](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/openshift/OpenShift.java) class is entry point for communicating with OpenShift. It extends `OpenShiftNamespaceClient` from Fabric8 client as is meant to be used within one namespace where tests are executed.
 
-`OpenShift` class extends upstream version with several shortcuts. Eg. using deploymentconfig name only for retrieving any `Pod` or its log. This is usefull in test cases where we know that we have only one pod created by dc or we don't care which one will we get. The class itself also provides access to OpenShift specific `Waiters`.
+`OpenShift` class extends upstream version with several shortcuts. Eg. using deploymentconfig name only for retrieving any `Pod` or its log. This is useful in test cases where we know that we have only one pod created by dc or we don't care which one will we get. The class itself also provides access to OpenShift specific `Waiters`.
 
 ##### Configuration:
 Take a look at [OpenShiftConfig](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/config/OpenShiftConfig.java) class to see possible configurations. Enabling some them will allow you to instantiate as `OpenShift openShift = OpenShifts.master()`.
@@ -51,7 +51,7 @@ XTF provides two different implementations ([SimpleWaiter](https://github.com/xt
 `Https.doesUrlReturnsOK("http://example.com").timeOut(TimeUnit.MINUTES, 10).waitFor();`
 
 #### BuildManager
-[BuildManager](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/bm/BuildManager.java) cachces test builds in one namespace so they can be reused. After first time specified ManagedBuild succeds only the reference is returned but build is already present.
+[BuildManager](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/bm/BuildManager.java) caches test builds in one namespace so they can be reused. After first time specified ManagedBuild succeeds only the reference is returned but build is already present.
 
 ```
 BuildManager bm = new BuildManagers.get();
@@ -62,7 +62,7 @@ bm.hasBuildCompleted().waitFor();
 ```
 
 #### Image
-Wrapper class for url specified images. It's puprose is to parse them or turn them into ImageStream objects.
+Wrapper class for url specified images. Its purpose is to parse them or turn them into ImageStream objects.
 
 ##### Specifying images
 Every image that is set in `global-test.properties` using xtf.{foo}.image can be accessed by using `Images.get(foo)`.
@@ -90,4 +90,4 @@ xtf.foo.v2.version=1.0.3
 Retrieving an instance with this metadata: `Produts.resolve("product");`
 
 ### JUnit5
-JUnit5 module provides number of extensions and listeners designed to easy up OpenShift images test management. See [JUnit5](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/SimpleWaiter.java) for more informations. 
+JUnit5 module provides number of extensions and listeners designed to easy up OpenShift images test management. See [JUnit5](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/SimpleWaiter.java) for more information. 
