@@ -52,7 +52,7 @@ public class OpenShiftBinary {
         if (ocConfigPath == null) {
             return executeCommand(ArrayUtils.addAll(new String[] { path }, args));
         } else {
-            return executeCommand(ArrayUtils.addAll(new String[] { path, "--config=" + ocConfigPath }, args));
+            return executeCommand(ArrayUtils.addAll(new String[] { path, "--kubeconfig=" + ocConfigPath }, args));
         }
     }
 
