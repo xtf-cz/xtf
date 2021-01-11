@@ -253,7 +253,7 @@ public class OpenShift extends DefaultOpenShiftClient {
     }
 
     /**
-     * Calls rectreateProject(namespace).
+     * Calls recreateProject(namespace).
      *
      * @see OpenShift#recreateProject(String)
      */
@@ -265,7 +265,7 @@ public class OpenShift extends DefaultOpenShiftClient {
      * Creates or recreates project specified by name.
      *
      * @param name name of a project to be created
-     * @return ProjectRequest instatnce
+     * @return ProjectRequest instance
      */
     public ProjectRequest recreateProject(String name) {
         return recreateProject(new ProjectRequestBuilder().withNewMetadata().withName(name).endMetadata().build());
@@ -274,7 +274,7 @@ public class OpenShift extends DefaultOpenShiftClient {
     /**
      * Creates or recreates project specified by projectRequest instance.
      *
-     * @return ProjectRequest instatnce
+     * @return ProjectRequest instance
      */
     public ProjectRequest recreateProject(ProjectRequest projectRequest) {
         boolean deleted = deleteProject(projectRequest.getMetadata().getName());
@@ -287,7 +287,7 @@ public class OpenShift extends DefaultOpenShiftClient {
     }
 
     /**
-     * Tries to retreive project with name 'name'. Swallows KubernetesClientException
+     * Tries to retrieve project with name 'name'. Swallows KubernetesClientException
      * if project doesn't exist or isn't accessible for user.
      *
      * @param name name of requested project.
