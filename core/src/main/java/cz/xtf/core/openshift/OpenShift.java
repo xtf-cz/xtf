@@ -93,6 +93,12 @@ public class OpenShift extends DefaultOpenShiftClient {
     private static volatile String routeSuffix;
 
     public static final String KEEP_LABEL = "xtf.cz/keep";
+    /**
+     * This label is supposed to be used for any resource created by the XTF to easily distinguish which resources have
+     * been created by XTF automation.
+     * NOTE: at the moment only place where this is used is for labeling namespaces. Other usages may be added in the future.
+     */
+    public static final String XTF_MANAGED_LABEL = "xtf.cz/managed";
     private final AppsAPIGroupClient appsAPIGroupClient;
 
     /**
