@@ -32,6 +32,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
@@ -78,6 +79,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
     private static final String IS_FILTER_MASTER = "IS_FILTER_MASTER";
     private static final String SS_FILTER_MASTER = "SS_FILTER_MASTER";
     private static final String ROUTE_FILTER_MASTER = "ROUTE_FILTER_MASTER";
+    private static final String CONFIGMAP_FILTER_MASTER = "CONFIGMAP_FILTER_MASTER";
     private static final String SERVICE_FILTER_MASTER = "SERVICE_FILTER_MASTER";
     private static final String EVENT_FILTER_MASTER = "EVENT_FILTER_MASTER";
 
@@ -100,6 +102,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
         initClassFilter(context, IS_FILTER_MASTER, master, ImageStream.class);
         initClassFilter(context, SS_FILTER_MASTER, master, StatefulSet.class);
         initClassFilter(context, ROUTE_FILTER_MASTER, master, Route.class);
+        initClassFilter(context, CONFIGMAP_FILTER_MASTER, master, ConfigMap.class);
         initClassFilter(context, SERVICE_FILTER_MASTER, master, Service.class);
         classStore.put(EVENT_FILTER_MASTER,
                 new EventsFilterBuilder().setExcludedUntil(ResourcesTimestampHelper.timeOfLastEvent(master)));
@@ -167,6 +170,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
             updateClassFilterBeforeAllResources(context, IS_FILTER_MASTER, master, ImageStream.class);
             updateClassFilterBeforeAllResources(context, SS_FILTER_MASTER, master, StatefulSet.class);
             updateClassFilterBeforeAllResources(context, ROUTE_FILTER_MASTER, master, Route.class);
+            updateClassFilterBeforeAllResources(context, CONFIGMAP_FILTER_MASTER, master, ConfigMap.class);
             updateClassFilterBeforeAllResources(context, SERVICE_FILTER_MASTER, master, Service.class);
             updateClassFilterBeforeAllResources(context, EVENT_FILTER_MASTER, master, Event.class);
 
@@ -193,6 +197,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
         initMethodFilter(context, IS_FILTER_MASTER, master, ImageStream.class);
         initMethodFilter(context, SS_FILTER_MASTER, master, StatefulSet.class);
         initMethodFilter(context, ROUTE_FILTER_MASTER, master, Route.class);
+        initMethodFilter(context, CONFIGMAP_FILTER_MASTER, master, Route.class);
         initMethodFilter(context, SERVICE_FILTER_MASTER, master, Service.class);
         initMethodFilter(context, EVENT_FILTER_MASTER, master, Event.class);
 
@@ -264,6 +269,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
         saveISs(context, getFilter(context, IS_FILTER_MASTER), getFilter(context, IS_FILTER_BUILDS));
         saveStatefulsets(context, getFilter(context, SS_FILTER_MASTER));
         saveRoutes(context, getFilter(context, ROUTE_FILTER_MASTER));
+        saveConfigMaps(context, getFilter(context, CONFIGMAP_FILTER_MASTER));
         saveServices(context, getFilter(context, SERVICE_FILTER_MASTER));
         saveSecrets(context);
         savePodLogs(context, getFilter(context, POD_FILTER_MASTER), getFilter(context, POD_FILTER_BUILDS));
@@ -401,6 +407,15 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
         final Path routesLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "routes.log");
         try (final ResourcesPrinterHelper<Route> printer = ResourcesPrinterHelper.forRoutes(routesLogPath)) {
             OpenShifts.master().getRoutes().stream()
+                    .filter(masterFilter.build())
+                    .forEach(printer::row);
+        }
+    }
+
+    private void saveConfigMaps(ExtensionContext context, ResourcesFilterBuilder<ConfigMap> masterFilter) throws IOException {
+        final Path configMapsLogPath = Paths.get(attachmentsDir(), dirNameForTest(context), "configMaps.log");
+        try (final ResourcesPrinterHelper<ConfigMap> printer = ResourcesPrinterHelper.forConfigMaps(configMapsLogPath)) {
+            OpenShifts.master().getConfigMaps().stream()
                     .filter(masterFilter.build())
                     .forEach(printer::row);
         }

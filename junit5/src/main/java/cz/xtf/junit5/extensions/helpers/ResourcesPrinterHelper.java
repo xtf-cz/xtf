@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Function;
 
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -50,6 +51,10 @@ public class ResourcesPrinterHelper<X> implements AutoCloseable {
 
     public static ResourcesPrinterHelper<Route> forRoutes(Path filePath) {
         return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getRoutesCols);
+    }
+
+    public static ResourcesPrinterHelper<ConfigMap> forConfigMaps(Path filePath) {
+        return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getConfigMapCols);
     }
 
     public static ResourcesPrinterHelper<Service> forServices(Path filePath) {
@@ -153,6 +158,12 @@ public class ResourcesPrinterHelper<X> implements AutoCloseable {
         map.put("NAME", route.getMetadata().getName());
         map.put("HOST", route.getSpec().getHost());
         map.put("SERVICES", route.getSpec().getTo().getName());
+        return map;
+    }
+
+    private static LinkedHashMap<String, String> getConfigMapCols(ConfigMap configMap) {
+        LinkedHashMap<String, String> map = new LinkedHashMap<>(1);
+        map.put("NAME", configMap.getMetadata().getName());
         return map;
     }
 
