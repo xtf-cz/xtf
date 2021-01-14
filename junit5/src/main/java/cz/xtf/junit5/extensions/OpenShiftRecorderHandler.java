@@ -108,7 +108,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
                 new EventsFilterBuilder().setExcludedUntil(ResourcesTimestampHelper.timeOfLastEvent(master)));
 
         // builds namespace (if not same)
-        if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+        if (!isMasterAndBuildNamespaceSame()) {
             initClassFilter(context, POD_FILTER_BUILDS, bm, Pod.class);
             initClassFilter(context, BUILD_FILTER_BUILDS, bm, Build.class);
             initClassFilter(context, BC_FILTER_BUILDS, bm, BuildConfig.class);
@@ -175,7 +175,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
             updateClassFilterBeforeAllResources(context, EVENT_FILTER_MASTER, master, Event.class);
 
             // builds namespace (if not same)
-            if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+            if (!isMasterAndBuildNamespaceSame()) {
                 updateClassFilterBeforeAllResources(context, POD_FILTER_BUILDS, bm, Pod.class);
                 updateClassFilterBeforeAllResources(context, BUILD_FILTER_BUILDS, bm, Build.class);
                 updateClassFilterBeforeAllResources(context, BC_FILTER_BUILDS, bm, BuildConfig.class);
@@ -202,7 +202,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
         initMethodFilter(context, EVENT_FILTER_MASTER, master, Event.class);
 
         // builds namespace (if not same)
-        if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+        if (!isMasterAndBuildNamespaceSame()) {
             initMethodFilter(context, POD_FILTER_BUILDS, bm, Pod.class);
             initMethodFilter(context, BUILD_FILTER_BUILDS, bm, Build.class);
             initMethodFilter(context, BC_FILTER_BUILDS, bm, BuildConfig.class);
@@ -262,18 +262,24 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
     }
 
     private void recordState(ExtensionContext context) throws IOException {
-        savePods(context, getFilter(context, POD_FILTER_MASTER), getFilter(context, POD_FILTER_BUILDS));
+        savePods(context, getFilter(context, POD_FILTER_MASTER),
+                !isMasterAndBuildNamespaceSame() ? getFilter(context, POD_FILTER_BUILDS) : null);
         saveDCs(context, getFilter(context, DC_FILTER_MASTER));
-        saveBuilds(context, getFilter(context, BUILD_FILTER_MASTER), getFilter(context, BUILD_FILTER_BUILDS));
-        saveBCs(context, getFilter(context, BC_FILTER_MASTER), getFilter(context, BC_FILTER_BUILDS));
-        saveISs(context, getFilter(context, IS_FILTER_MASTER), getFilter(context, IS_FILTER_BUILDS));
+        saveBuilds(context, getFilter(context, BUILD_FILTER_MASTER),
+                !isMasterAndBuildNamespaceSame() ? getFilter(context, BUILD_FILTER_BUILDS) : null);
+        saveBCs(context, getFilter(context, BC_FILTER_MASTER),
+                !isMasterAndBuildNamespaceSame() ? getFilter(context, BC_FILTER_BUILDS) : null);
+        saveISs(context, getFilter(context, IS_FILTER_MASTER),
+                !isMasterAndBuildNamespaceSame() ? getFilter(context, IS_FILTER_BUILDS) : null);
         saveStatefulsets(context, getFilter(context, SS_FILTER_MASTER));
         saveRoutes(context, getFilter(context, ROUTE_FILTER_MASTER));
         saveConfigMaps(context, getFilter(context, CONFIGMAP_FILTER_MASTER));
         saveServices(context, getFilter(context, SERVICE_FILTER_MASTER));
         saveSecrets(context);
-        savePodLogs(context, getFilter(context, POD_FILTER_MASTER), getFilter(context, POD_FILTER_BUILDS));
-        saveEvents(context, getFilter(context, EVENT_FILTER_MASTER), getFilter(context, EVENT_FILTER_BUILDS));
+        savePodLogs(context, getFilter(context, POD_FILTER_MASTER),
+                !isMasterAndBuildNamespaceSame() ? getFilter(context, POD_FILTER_BUILDS) : null);
+        saveEvents(context, getFilter(context, EVENT_FILTER_MASTER),
+                !isMasterAndBuildNamespaceSame() ? getFilter(context, EVENT_FILTER_BUILDS) : null);
     }
 
     private <E extends HasMetadata> ResourcesFilterBuilder<E> getFilter(ExtensionContext context, String key) {
@@ -332,7 +338,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
                     .forEach(printer::row);
         }
         // builds namespace (if not same)
-        if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+        if (!isMasterAndBuildNamespaceSame()) {
             final Path imageStreamsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
                     "imageStreams-" + BuildManagers.get().openShift().getNamespace() + ".log");
             try (final ResourcesPrinterHelper<ImageStream> printer = ResourcesPrinterHelper.forISs(imageStreamsBMLogPath)) {
@@ -353,7 +359,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
                     .forEach(printer::row);
         }
         // builds namespace (if not same)
-        if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+        if (!isMasterAndBuildNamespaceSame()) {
             final Path bcBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
                     "buildConfigs-" + BuildManagers.get().openShift().getNamespace() + ".log");
             try (final ResourcesPrinterHelper<BuildConfig> printer = ResourcesPrinterHelper.forBCs(bcBMLogPath)) {
@@ -375,7 +381,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
                     .forEach(printer::row);
         }
         // builds namespace (if not same)
-        if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+        if (!isMasterAndBuildNamespaceSame()) {
             final Path buildsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
                     "builds-" + BuildManagers.get().openShift().getNamespace() + ".log");
             try (final ResourcesPrinterHelper<Build> printer = ResourcesPrinterHelper.forBuilds(buildsBMLogPath)) {
@@ -433,7 +439,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
                     .forEach(printer::row);
         }
         // builds namespace (if not same)
-        if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+        if (!isMasterAndBuildNamespaceSame()) {
             final Path podsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
                     "pods-" + BuildManagers.get().openShift().getNamespace() + ".log");
             try (final ResourcesPrinterHelper<Pod> printer = ResourcesPrinterHelper.forPods(podsBMLogPath)) {
@@ -481,7 +487,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
                 });
 
         podPrinter.accept(OpenShifts.master(), masterFilter);
-        if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+        if (!isMasterAndBuildNamespaceSame()) {
             podPrinter.accept(BuildManagers.get().openShift(), buildsFilter);
         }
     }
@@ -507,7 +513,7 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
                     .forEach(printer::row);
         }
         // builds namespace (if not same)
-        if (!OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace())) {
+        if (!isMasterAndBuildNamespaceSame()) {
             final Path eventsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
                     "events-" + BuildManagers.get().openShift().getNamespace() + ".log");
             try (final ResourcesPrinterHelper<Event> printer = ResourcesPrinterHelper.forEvents(eventsBMLogPath)) {
@@ -521,5 +527,9 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 
     private String attachmentsDir() {
         return JUnitConfig.recordDir() != null ? JUnitConfig.recordDir() : System.getProperty("user.dir");
+    }
+
+    private boolean isMasterAndBuildNamespaceSame() {
+        return OpenShifts.master().getNamespace().equals(BuildManagers.get().openShift().getNamespace());
     }
 }
