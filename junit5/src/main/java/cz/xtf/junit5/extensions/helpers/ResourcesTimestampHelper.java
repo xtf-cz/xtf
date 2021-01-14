@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import cz.xtf.core.openshift.OpenShift;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -68,6 +69,10 @@ public class ResourcesTimestampHelper {
         return lastCreationTime(openShift.getRoutes());
     }
 
+    public static ZonedDateTime timeOfLastConfigMap(OpenShift openShift) {
+        return lastCreationTime(openShift.getConfigMaps());
+    }
+
     public static ZonedDateTime timeOfLastService(OpenShift openShift) {
         return lastCreationTime(openShift.getServices());
     }
@@ -101,6 +106,8 @@ public class ResourcesTimestampHelper {
             return timeOfLastSS(openShift);
         } else if (resourceClass.equals(Route.class)) {
             return timeOfLastRoute(openShift);
+        } else if (resourceClass.equals(ConfigMap.class)) {
+            return timeOfLastConfigMap(openShift);
         } else if (resourceClass.equals(Service.class)) {
             return timeOfLastService(openShift);
         } else if (resourceClass.equals(Event.class)) {
