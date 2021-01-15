@@ -1,4 +1,4 @@
-name: XTF CI - Pull Reqeust check
+name: XTF CI - Pull Request check
 
 on:
   push:
