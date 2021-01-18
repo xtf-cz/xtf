@@ -1079,6 +1079,17 @@ public class OpenShift extends DefaultOpenShiftClient {
         return configMaps().list().getItems();
     }
 
+    /**
+     * Retrieves all configmaps but "kube-root-ca.crt" which is created out of the box.
+     *
+     * @return List of configmaps created by user
+     */
+    public List<ConfigMap> getUserConfigMaps() {
+        return configMaps().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems().stream()
+                .filter(cm -> !cm.getMetadata().getName().equals("kube-root-ca.crt"))
+                .collect(Collectors.toList());
+    }
+
     public boolean deleteConfigMap(ConfigMap configMap) {
         return configMaps().delete(configMap);
     }
@@ -1197,8 +1208,9 @@ public class OpenShift extends DefaultOpenShiftClient {
      * Deletes all* resources in namespace. Doesn't wait till all are deleted. <br/>
      * <br/>
      * <p>
-     * * Only user created secrets, service accounts and role bindings are deleted. Default will remain.
+     * * Only user created configmaps, secrets, service accounts and role bindings are deleted. Default will remain.
      *
+     * @see #getUserConfigMaps()
      * @see #getUserSecrets()
      * @see #getUserServiceAccounts()
      * @see #getUserRoleBindings()
@@ -1229,7 +1241,7 @@ public class OpenShift extends DefaultOpenShiftClient {
         pods().withLabelNotIn(KEEP_LABEL, "", "true").withGracePeriod(0).delete();
         persistentVolumeClaims().withLabelNotIn(KEEP_LABEL, "", "true").delete();
         autoscaling().v1().horizontalPodAutoscalers().withLabelNotIn(KEEP_LABEL, "", "true").delete();
-        configMaps().withLabelNotIn(KEEP_LABEL, "", "true").delete();
+        getUserConfigMaps().forEach(this::deleteConfigMap);
         getUserSecrets().forEach(this::deleteSecret);
         getUserServiceAccounts().forEach(this::deleteServiceAccount);
         getUserRoleBindings().forEach(this::deleteRoleBinding);
@@ -1264,7 +1276,7 @@ public class OpenShift extends DefaultOpenShiftClient {
         removables.addAll(persistentVolumeClaims().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
         removables.addAll(autoscaling().v1().horizontalPodAutoscalers().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list()
                 .getItems());
-        removables.addAll(configMaps().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
+        removables.addAll(getUserConfigMaps());
         removables.addAll(getUserSecrets());
         removables.addAll(getUserServiceAccounts());
         removables.addAll(getUserRoleBindings());
