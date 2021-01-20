@@ -44,7 +44,7 @@
 
         <!-- Dependency version properties -->
         <version.httpclient>4.5.12</version.httpclient>
-        <version.openshift-client>4.11.1</version.openshift-client>
+        <version.openshift-client>4.13.0</version.openshift-client>
         <version.commons-io>2.8.0</version.commons-io>
         <version.commons-lang3>3.11</version.commons-lang3>
         <version.commons-compress>1.20</version.commons-compress>
