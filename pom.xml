@@ -4,7 +4,7 @@
     <groupId>cz.xtf</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.21</version>
+    <version>0.22-SNAPSHOT</version>
     <name>XTF</name>
 
     <modules>
@@ -19,7 +19,7 @@
         <connection>scm:git:git@github.com:xtf-cz/xtf.git</connection>
         <developerConnection>scm:git:git@github.com:xtf-cz/xtf.git</developerConnection>
         <url>http://github.com/xtf-cz/xtf.git</url>
-        <tag>0.21</tag>
+        <tag>${project.version}</tag>
     </scm>
 
     <distributionManagement>
