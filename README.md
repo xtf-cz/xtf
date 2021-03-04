@@ -1,6 +1,8 @@
 # XTF
 XTF is framework designed to easy up aspects of testing in OpenShift environment.
 
+XTF is open source project and managed in best effort mode by anyone who is interested in or is using this project. 
+There is no dedicated maintainer and there is not set time in which given XTF issue will be fixed.
 
 ## Modules
 ### Core
