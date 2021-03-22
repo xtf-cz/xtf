@@ -32,6 +32,10 @@ import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.Route;
+import io.fabric8.openshift.api.model.operatorhub.v1.OperatorGroup;
+import io.fabric8.openshift.api.model.operatorhub.v1alpha1.ClusterServiceVersion;
+import io.fabric8.openshift.api.model.operatorhub.v1alpha1.InstallPlan;
+import io.fabric8.openshift.api.model.operatorhub.v1alpha1.Subscription;
 
 /**
  * Record OpenShift isolated state relative to a test.
@@ -213,6 +217,10 @@ public class OpenShiftRecorderService {
                 !isMasterAndBuildNamespaceSame() ? getFilter(context, BUILD_FILTER_MASTER) : null);
         saveEvents(context, getFilter(context, EVENT_FILTER_MASTER),
                 !isMasterAndBuildNamespaceSame() ? getFilter(context, EVENT_FILTER_BUILDS) : null);
+        saveClusterServiceVersions(context);
+        saveInstallPlans(context);
+        saveOperatorGroups(context);
+        saveSubscriptions(context);
     }
 
     private boolean isFilterInitializationComplete(ExtensionContext context) {
@@ -518,6 +526,39 @@ public class OpenShiftRecorderService {
         buildPrinter.accept(OpenShifts.master(), masterFilter);
         if (!isMasterAndBuildNamespaceSame()) {
             buildPrinter.accept(BuildManagers.get().openShift(), buildsFilter);
+        }
+    }
+
+    protected void saveClusterServiceVersions(ExtensionContext context) throws IOException {
+        final Path logPath = Paths.get(attachmentsDir(), dirNameForTest(context), "clusterServiceVersions.log");
+        try (final ResourcesPrinterHelper<ClusterServiceVersion> printer = ResourcesPrinterHelper
+                .forClusterServiceVersion(logPath)) {
+            OpenShifts.admin().operatorHub().clusterServiceVersions().inNamespace(OpenShifts.master().getNamespace())
+                    .list().getItems().stream().forEach(printer::row);
+        }
+    }
+
+    protected void saveInstallPlans(ExtensionContext context) throws IOException {
+        final Path logPath = Paths.get(attachmentsDir(), dirNameForTest(context), "installPlans.log");
+        try (final ResourcesPrinterHelper<InstallPlan> printer = ResourcesPrinterHelper.forInstallPlan(logPath)) {
+            OpenShifts.admin().operatorHub().installPlans().inNamespace(OpenShifts.master().getNamespace())
+                    .list().getItems().stream().forEach(printer::row);
+        }
+    }
+
+    protected void saveOperatorGroups(ExtensionContext context) throws IOException {
+        final Path logPath = Paths.get(attachmentsDir(), dirNameForTest(context), "operatorGroups.log");
+        try (final ResourcesPrinterHelper<OperatorGroup> printer = ResourcesPrinterHelper.forOperatorGroup(logPath)) {
+            OpenShifts.admin().operatorHub().operatorGroups().inNamespace(OpenShifts.master().getNamespace())
+                    .list().getItems().stream().forEach(printer::row);
+        }
+    }
+
+    protected void saveSubscriptions(ExtensionContext context) throws IOException {
+        final Path logPath = Paths.get(attachmentsDir(), dirNameForTest(context), "subscriptions.log");
+        try (final ResourcesPrinterHelper<Subscription> printer = ResourcesPrinterHelper.forSubscription(logPath)) {
+            OpenShifts.admin().operatorHub().subscriptions().inNamespace(OpenShifts.master().getNamespace())
+                    .list().getItems().stream().forEach(printer::row);
         }
     }
 
