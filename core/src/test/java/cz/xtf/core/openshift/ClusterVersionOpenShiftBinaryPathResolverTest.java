@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,16 +28,19 @@ public class ClusterVersionOpenShiftBinaryPathResolverTest {
     public void resolveTest() {
         final String ocpVersion = "4.8.14";
         setOCPVersion(ocpVersion);
+        final String systemType = SystemUtils.IS_OS_MAC ? "mac" : "linux";
         testDownloadedVersion("https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/" + ocpVersion
-                + "/openshift-client-linux.tar.gz", ocpVersion);
+                + "/openshift-client-" + systemType + ".tar.gz", ocpVersion);
     }
 
     @Test
     public void resolveNotFoundVersionTest() {
         final String ocpVersion = "1.1.1";
         setOCPVersion(ocpVersion);
+        final String systemType = SystemUtils.IS_OS_MAC ? "mac" : "linux";
         testDownloadedVersion(
-                "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/stable/openshift-client-linux.tar.gz",
+                "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/stable/openshift-client-" + systemType
+                        + ".tar.gz",
                 ocpVersion);
     }
 

@@ -295,6 +295,17 @@ JUnit5 module provides a number of extensions and listeners designed to easy up 
 See [JUnit5](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/SimpleWaiter.java) for 
 more information.
 
+### Helm
+
+You can use `HelmBinary.execute()` method to run Helm against your cluster. Following Helm properties are introduced:
+
+| Property name | Type | Description | Default value |
+----------------|------|-------------|---------------|
+| `xtf.helm.clients.url` | `String` | URL from which version specified by `xtf.helm.client.version` | `https://mirror.openshift.com/pub/openshift-v4/clients/helm` |
+| `xtf.helm.client.version` | `String` | Version of the Helm client to be downloaded (from `http://[xtf.clients.url]/[xtf.client.version`) | `latest` |
+| `xtf.helm.binary.path` | `String` | Path to existing Helm client binary. If absent, it will be downloaded using combination of `xtf.helm.clients.url` and `xtf.helm.client.version` parameters | |
+
 ## Releasing XTF
 Have a look to the [release documentation](RELEASE.md) to learn about the process that defines how to release XTF to 
 the community.
+
