@@ -1,6 +1,6 @@
 package cz.xtf.core.openshift;
 
-enum ClusterVersionInfoFactory {
+public enum ClusterVersionInfoFactory {
     INSTANCE;
 
     private volatile ClusterVersionInfo clusterVersionInfo;
@@ -10,7 +10,7 @@ enum ClusterVersionInfoFactory {
     }
 
     //just for reloading version on tests
-    ClusterVersionInfo getClusterVersionInfo(boolean reload) {
+    public ClusterVersionInfo getClusterVersionInfo(boolean reload) {
         if (reload) {
             clusterVersionInfo = null;
         }

@@ -76,7 +76,7 @@
         <version.junit5.jupiter.engine>5.7.0</version.junit5.jupiter.engine>
         <version.junit5.jupiter.system.stubs>2.0.1</version.junit5.jupiter.system.stubs>
         <version.assertj-core>3.17.2</version.assertj-core>
-        <version.lombok>1.18.12</version.lombok>
+        <version.lombok>1.18.22</version.lombok>
         <version.gson>2.8.9</version.gson>
         <version.guava>31.1-jre</version.guava>
 

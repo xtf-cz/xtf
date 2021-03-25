@@ -19,7 +19,7 @@ import io.fabric8.openshift.client.OpenShiftHandlers;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-class ClusterVersionInfo {
+public class ClusterVersionInfo {
     // version must be in format major.minor.micro (4.8.13) or major.minor (4.8)
     private static final Pattern versionPattern = Pattern
             .compile("^(\\d+\\.\\d+)(\\.\\d+)?(-\\d+\\.nightly-\\d{4}-\\d{2}-\\d{2}-\\d{6})?$");
@@ -41,7 +41,7 @@ class ClusterVersionInfo {
     /**
      * @return full version of OpenShift cluster as detected or configured or null
      */
-    String getOpenshiftVersion() {
+    public String getOpenshiftVersion() {
         return openshiftVersion;
     }
 
