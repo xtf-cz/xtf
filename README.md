@@ -68,7 +68,7 @@ Wrapper class for url specified images. Its purpose is to parse them or turn the
 In some images Maven needs to be activated, for example on RHEL7 via script `/opt/rh/rh-maven35/enable`. 
 This can be controlled by properties.
 
- * `xtf.maven.script` - path to Maven activation script. Defaults to `/opt/rh/rh-maven35/enable` if not set.
+ * `xtf.maven.activation_script` - path to Maven activation script. Defaults to `/opt/rh/rh-maven35/enable` if not set.
 
 Not setting these options might result in faulty results from `ImageContent#mavenVersion()`.
 
