@@ -143,8 +143,7 @@ public class ImageContent {
      * In RHEL7, maven needs to be added to path via enable script. This is a default behaviour of this method.
      * Behaviour can be changed by changing XTFConfig properties.
      * <ul>
-     * <li><i>xtf.maven.script.disabled</i> - set to "true" if maven enabling should not be done
-     * <li><i>xtf.maven.script</i> - set to path to maven enable script. Default: <code>/opt/rh/rh-maven35/enable</code>
+     * <li><i>xtf.maven.activation_script</i> - set to path to maven enable script. Default: <code>/opt/rh/rh-maven35/enable</code>
      * </ul>
      *
      * @return version of Maven in the image.
@@ -174,7 +173,7 @@ public class ImageContent {
      * @return
      */
     private String getMavenActivationScript(String mavenScriptPath) {
-        String mavenEnableScript = XTFConfig.get("xtf.maven.script", "/opt/rh/rh-maven35/enable");
+        String mavenEnableScript = XTFConfig.get("xtf.maven.activation_script", "/opt/rh/rh-maven35/enable");
         return "echo . " + mavenEnableScript + " >> " + mavenScriptPath;
     }
 
