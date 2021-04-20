@@ -1,5 +1,13 @@
 package cz.xtf.testhelpers.image;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BooleanSupplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import cz.xtf.core.config.WaitingConfig;
 import cz.xtf.core.config.XTFConfig;
 import cz.xtf.core.openshift.OpenShift;
@@ -11,14 +19,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BooleanSupplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ImageContent {
     public static final String RED_HAT_RELEASE_KEY_2 = "199e2f91fd431d51";
