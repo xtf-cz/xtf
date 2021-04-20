@@ -1,5 +1,17 @@
 package cz.xtf.testhelpers.image;
 
+import cz.xtf.core.config.WaitingConfig;
+import cz.xtf.core.config.XTFConfig;
+import cz.xtf.core.openshift.OpenShift;
+import cz.xtf.core.openshift.PodShell;
+import cz.xtf.core.openshift.helpers.ResourceParsers;
+import cz.xtf.core.waiting.SimpleWaiter;
+import io.fabric8.kubernetes.api.model.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -7,22 +19,6 @@ import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import cz.xtf.core.config.WaitingConfig;
-import cz.xtf.core.openshift.OpenShift;
-import cz.xtf.core.openshift.PodShell;
-import cz.xtf.core.openshift.helpers.ResourceParsers;
-import cz.xtf.core.waiting.SimpleWaiter;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodSpec;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 
 public class ImageContent {
     public static final String RED_HAT_RELEASE_KEY_2 = "199e2f91fd431d51";
@@ -142,13 +138,26 @@ public class ImageContent {
                 .replaceAll("openjdk version \"([0-9]+\\.[0-9]+\\.[0-9]+).*", "$1");
     }
 
+    /**
+     * Will return maven version in format X.Y.Z.
+     * In RHEL7, maven needs to be added to path via enable script. This is a default behaviour of this method.
+     * Behaviour can be changed by changing XTFConfig properties.
+     * <ul>
+     * <li><i>xtf.maven.script.disabled</i> - set to "true" if maven enabling should not be done
+     * <li><i>xtf.maven.script</i> - set to path to maven enable script. Default: <code>/opt/rh/rh-maven35/enable</code>
+     * </ul>
+     *
+     * @return version of Maven in the image.
+     */
     public String mavenVersion() {
+        // Construct a temporary script and run it. Maven version is parsed from the output.
         final String mavenScriptPath = "/tmp/maven-version.sh";
 
         if (!mavenScriptInstalled) {
-            shell.executeWithBash("echo . /opt/rh/rh-maven35/enable >> " + mavenScriptPath);
-            shell.executeWithBash("echo mvn --version >> " + mavenScriptPath);
+            String mavenActivationScript = getMavenActivationScript(mavenScriptPath);
+            shell.executeWithBash(mavenActivationScript);
 
+            shell.executeWithBash("echo mvn --version >> " + mavenScriptPath);
             shell.executeWithBash("chmod 777 " + mavenScriptPath);
 
             mavenScriptInstalled = true;
@@ -156,6 +165,17 @@ public class ImageContent {
 
         return shell.executeWithBash(mavenScriptPath).getOutput().replaceAll("\n", "")
                 .replaceAll(".*Apache Maven ([0-9]+\\.[0-9]+\\.[0-9]+) .*", "$1");
+    }
+
+    /**
+     * Return script for adding maven activation command to maven script.
+     *
+     * @param mavenScriptPath
+     * @return
+     */
+    private String getMavenActivationScript(String mavenScriptPath) {
+        String mavenEnableScript = XTFConfig.get("xtf.maven.script", "/opt/rh/rh-maven35/enable");
+        return "echo . " + mavenEnableScript + " >> " + mavenScriptPath;
     }
 
     public List<RpmPackage> rpms() {
