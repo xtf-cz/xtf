@@ -64,6 +64,14 @@ bm.hasBuildCompleted().waitFor();
 #### Image
 Wrapper class for url specified images. Its purpose is to parse them or turn them into ImageStream objects.
 
+##### Specifying Maven
+In some images Maven needs to be activated, for example on RHEL7 via script `/opt/rh/rh-maven35/enable`. 
+This can be controlled by properties.
+
+ * `xtf.maven.script` - path to Maven activation script. Defaults to `/opt/rh/rh-maven35/enable` if not set.
+
+Not setting these options might result in faulty results from `ImageContent#mavenVersion()`.
+
 ##### Specifying images
 Every image that is set in `global-test.properties` using xtf.{foo}.image can be accessed by using `Images.get(foo)`.
 
