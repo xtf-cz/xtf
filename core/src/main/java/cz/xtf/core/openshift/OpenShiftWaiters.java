@@ -35,9 +35,10 @@ public class OpenShiftWaiters {
     }
 
     /**
-     * @param openShift
+     * @param openShift openshift client
      * @param failFast {@link BooleanSupplier} that returns true if waiter should fail due to error state of i.e. OpenShift
-     * @return
+     *
+     * @return returns Openshift waiters
      */
     public static OpenShiftWaiters get(OpenShift openShift, FailFastCheck failFast) {
         return new OpenShiftWaiters(openShift, failFast);

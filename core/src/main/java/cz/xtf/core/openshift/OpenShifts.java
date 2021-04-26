@@ -239,6 +239,8 @@ public class OpenShifts {
     /**
      * Returns {@link OpenShiftConfig#version()}. If not available then access OpenShift endpoint for a version. Be aware
      * that this operation requires admin role for OpenShift 4 unlike to OpenShift 3.
+     *
+     * @return Openshift cluster version
      */
     public static String getVersion() {
         if (StringUtils.isNotEmpty(OpenShiftConfig.version())) {

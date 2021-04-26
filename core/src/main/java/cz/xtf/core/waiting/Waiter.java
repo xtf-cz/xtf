@@ -161,12 +161,12 @@ public interface Waiter {
         }
 
         /**
-         * Logs start of waiting using the selected logging {@param level}. Its time and reason in case
+         * Logs start of waiting using the selected logging <code>{@param level}</code>. Its time and reason in case
          * of {@link LogPoint#START} or {@link LogPoint#BOTH}.
          *
          * @param reason reason of waiting
          * @param millis waiting timeout on condition
-         * @param level logging severity of {@param reason} log
+         * @param level logging severity of <code>{@param reason}</code> log
          */
         public void logStart(String reason, long millis, Level level) {
             if (this.equals(START) || this.equals(BOTH))
@@ -175,7 +175,7 @@ public interface Waiter {
         }
 
         /**
-         * Logs end of waiting using the selected logging {@param level}. Its time and reason in case
+         * Logs end of waiting using the selected logging <code>{@param level}</code>. Its time and reason in case
          * of {@link LogPoint#END} or {@link LogPoint#BOTH}
          *
          * @param reason reason of waiting
