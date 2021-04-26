@@ -22,6 +22,7 @@ public final class OpenShiftConfig {
     }
 
     /**
+     * @return returns token
      * @deprecated Use masterToken {@link #masterToken()}
      */
     @Deprecated

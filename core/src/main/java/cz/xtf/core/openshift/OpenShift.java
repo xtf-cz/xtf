@@ -103,8 +103,9 @@ public class OpenShift extends DefaultOpenShiftClient {
 
     /**
      * Autoconfigures the client with the default fabric8 client rules
-     * 
-     * @return
+     *
+     * @param namespace set namespace to the Openshift client instance
+     * @return this Openshift client instance
      */
     public static OpenShift get(String namespace) {
         Config kubeconfig = Config.autoConfigure(null);
@@ -196,7 +197,7 @@ public class OpenShift extends DefaultOpenShiftClient {
      * Convenient method to create pull secret for authenticated image registries.
      * The secret content must be provided in "dockerconfigjson" formar.
      *
-     * E.g.: {"auths":{"registry.redhat.io":{"auth":"<REDACTED_TOKEN>"}}}
+     * E.g.: {@code {"auths":{"registry.redhat.io":{"auth":"<REDACTED_TOKEN>"}}}}
      *
      * Linking Secret to ServiceAccount is based on OpenShift documentation:
      * https://docs.openshift.com/container-platform/4.2/openshift_images/managing-images/using-image-pull-secrets.html
@@ -261,6 +262,7 @@ public class OpenShift extends DefaultOpenShiftClient {
     /**
      * Calls recreateProject(namespace).
      *
+     * @return project request
      * @see OpenShift#recreateProject(String)
      */
     public ProjectRequest recreateProject() {
@@ -279,7 +281,8 @@ public class OpenShift extends DefaultOpenShiftClient {
 
     /**
      * Creates or recreates project specified by projectRequest instance.
-     *
+     * 
+     * @param projectRequest project request instance
      * @return ProjectRequest instance
      */
     public ProjectRequest recreateProject(ProjectRequest projectRequest) {
@@ -720,6 +723,8 @@ public class OpenShift extends DefaultOpenShiftClient {
      *
      * @param name name of deploymentConfig
      * @param envVars environment variables
+     *
+     * @return deployment config
      */
     public DeploymentConfig updateDeploymentConfigEnvVars(String name, Map<String, String> envVars) {
         DeploymentConfig dc = getDeploymentConfig(name);
@@ -828,6 +833,8 @@ public class OpenShift extends DefaultOpenShiftClient {
      *
      * @param name name of buildConfig
      * @param envVars environment variables
+     *
+     * @return build config
      */
     public BuildConfig updateBuildConfigEnvVars(String name, Map<String, String> envVars) {
         BuildConfig bc = getBuildConfig(name);
@@ -951,7 +958,10 @@ public class OpenShift extends DefaultOpenShiftClient {
     /**
      * Most of the groups are `system:*` wide therefore use `kind: ClusterRole`
      *
-     * @Deprecated use method {@link #addRoleToGroup(String, String, String)}
+     * @param roleName role name
+     * @param groupName group name
+     * @return role binging
+     * @deprecated use method {@link #addRoleToGroup(String, String, String)}
      *
      */
     @Deprecated
@@ -1181,6 +1191,8 @@ public class OpenShift extends DefaultOpenShiftClient {
 
     /**
      * Use {@link OpenShift#getEventList()} instead
+     *
+     * @return list of events
      */
     @Deprecated
     public List<Event> getEvents() {
@@ -1211,11 +1223,14 @@ public class OpenShift extends DefaultOpenShiftClient {
 
     // Clean up function
     /**
-     * Deletes all* resources in namespace. Doesn't wait till all are deleted. <br/>
-     * <br/>
-     * <p>
+     * <pre>
+     * Deletes all* resources in namespace. Doesn't wait till all are deleted.
+     *
      * * Only user created configmaps, secrets, service accounts and role bindings are deleted. Default will remain.
      *
+     * </pre>
+     *
+     * @return waiter (for cleaning all resources)
      * @see #getUserConfigMaps()
      * @see #getUserSecrets()
      * @see #getUserServiceAccounts()
@@ -1317,6 +1332,8 @@ public class OpenShift extends DefaultOpenShiftClient {
 
     /**
      * Use {@link OpenShiftWaiters#get(OpenShift, cz.xtf.core.waiting.failfast.FailFastCheck)} instead.
+     *
+     * @return standard openshift waiters (with default fail fast checks)
      */
     @Deprecated
     public OpenShiftWaiters waiters() {

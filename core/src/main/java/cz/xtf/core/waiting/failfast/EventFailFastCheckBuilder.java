@@ -29,6 +29,9 @@ public class EventFailFastCheckBuilder {
 
     /**
      * Regexes to match event involved object name.
+     *
+     * @param name event names (regexes)
+     * @return this
      */
     public EventFailFastCheckBuilder ofNames(String... name) {
         this.names = name;
@@ -37,6 +40,9 @@ public class EventFailFastCheckBuilder {
 
     /**
      * Array of demanded reasons of events (case in-sensitive). One of them must be equal.
+     *
+     * @param reasons event reasons
+     * @return this
      */
     public EventFailFastCheckBuilder ofReasons(String... reasons) {
         this.reasons = reasons;
@@ -46,6 +52,9 @@ public class EventFailFastCheckBuilder {
     /**
      * Array of demanded types of events (case in-sensitive). One of them must be equal.
      * For example: {@code Warning}, {@code Normal}, ...
+     *
+     * @param types event types
+     * @return this
      */
     public EventFailFastCheckBuilder ofTypes(String... types) {
         this.types = types;
@@ -55,6 +64,9 @@ public class EventFailFastCheckBuilder {
     /**
      * Array of demanded object kinds of events (case in-sensitive). One of them must be equal.
      * For example: {@code persistentvolume}, {@code pod}, ...
+     *
+     * @param kinds event kinds
+     * @return this
      */
     public EventFailFastCheckBuilder ofKinds(String... kinds) {
         this.kinds = kinds;
@@ -64,8 +76,8 @@ public class EventFailFastCheckBuilder {
     /**
      * Regexes for demanded messages. One of them must match.
      *
-     * @param messages
-     * @return
+     * @param messages event messages
+     * @return this
      */
     public EventFailFastCheckBuilder ofMessages(String... messages) {
         this.messages = messages;
@@ -74,6 +86,8 @@ public class EventFailFastCheckBuilder {
 
     /**
      * If at least one event exist (after filtration), final function returns true.
+     * 
+     * @return this
      */
     public FailFastBuilder atLeastOneExists() {
         // function is invoked every time...everytime we get events and filter them
@@ -123,6 +137,9 @@ public class EventFailFastCheckBuilder {
 
     /**
      * Consider event after certain time.
+     *
+     * @param after event time
+     * @return this
      */
     public EventFailFastCheckBuilder after(ZonedDateTime after) {
         this.after = after;

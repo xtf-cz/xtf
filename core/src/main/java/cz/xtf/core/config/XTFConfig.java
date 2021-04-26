@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Loads properties stored in several different ways. Possible options, with top to down overriding are: </br>
+ * Loads properties stored in several different ways. Possible options, with top to down overriding are: <br />
  *
  * <ul>
  * <li><i>global-test.properties</i> on project root path</li>
