@@ -6,6 +6,8 @@
     <packaging>pom</packaging>
     <version>0.22-SNAPSHOT</version>
     <name>XTF</name>
+    <description>XTF is a framework designed to ease up aspects of testing in OpenShift environment.</description>
+    <url>https://github.com/xtf-cz/xtf/</url>
 
     <modules>
         <module>core</module>
@@ -22,7 +24,7 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-    
+
     <scm>
         <connection>scm:git:git@github.com:xtf-cz/xtf.git</connection>
         <developerConnection>scm:git:git@github.com:xtf-cz/xtf.git</developerConnection>
