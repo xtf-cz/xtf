@@ -29,10 +29,15 @@ jobs:
       - name: maven-settings-xml-action
         uses: whelk-io/maven-settings-xml-action@v12
         with:
-          servers: '[{ "id": "bintray-xtf-cz-xtf", "username": "${env.BINTRAY_USER}", "password": "${env.BINTRAY_API_KEY}" },{ "id": "oss-jfrog-snapshots", "username": "${env.BINTRAY_USER}", "password": "${env.BINTRAY_API_KEY}" }]'
-      - name: Maven Deploy
-        run: mvn -X deploy -DskipTests
+          servers: '[{ "id": "jboss-releases-repository", "username": "${env.JBOSS_REPO_USER}", "password": "${env.JBOSS_REPO_PASSWORD}" },{ "id": "jboss-snapshots-repository", "username": "${env.JBOSS_REPO_USER}", "password": "${env.JBOSS_REPO_PASSWORD}" }]'
+      - name: Import GPG Key
+        uses: crazy-max/ghaction-import-gpg@v1
         env:
-          BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
-          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      - name: Maven Deploy
+        run: mvn -X deploy -DskipTests -Prelease
+        env:
+          JBOSS_REPO_PASSWORD: ${{ secrets.JBOSS_REPO_PASSWORD }}
+          JBOSS_REPO_USER: ${{ secrets.JBOSS_REPO_USER }}
 
