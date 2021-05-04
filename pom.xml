@@ -32,6 +32,14 @@
         <tag>${project.version}</tag>
     </scm>
 
+    <developers>
+        <developer>
+            <id>mnovak1</id>
+            <name>Miroslav Novak</name>
+            <organization>Red Hat</organization>
+        </developer>
+    </developers>
+
     <distributionManagement>
         <repository>
             <id>bintray-xtf-cz-xtf</id>
