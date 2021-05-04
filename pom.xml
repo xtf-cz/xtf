@@ -34,14 +34,14 @@
 
     <distributionManagement>
         <repository>
-            <id>bintray-xtf-cz-xtf</id>
-            <name>xtf-cz-xtf</name>
-            <url>https://api.bintray.com/maven/xtf-cz/xtf/cz.xtf.utilities/;publish=1</url>
+            <id>jboss-releases-repository</id>
+            <name>JBoss Releases Repository</name>
+            <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2</url>
         </repository>
         <snapshotRepository>
-            <id>oss-jfrog-snapshots</id>
-            <name>oss-jfrog-artifactory-snapshots</name>
-            <url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>
+            <id>jboss-snapshots-repository</id>
+            <name>JBoss Snapshots Repository</name>
+            <url>https://repository.jboss.org/nexus/content/repositories/snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 
