@@ -1,6 +1,5 @@
 package cz.xtf.builder.db;
 
-import cz.xtf.builder.builders.pod.ContainerBuilder;
 import cz.xtf.builder.builders.pod.PersistentVolumeClaim;
 import cz.xtf.core.image.Image;
 
@@ -37,12 +36,11 @@ public class MySQL extends AbstractSQLDatabase {
     }
 
     @Override
-    protected void configureContainer(ContainerBuilder containerBuilder) {
-        if (withLivenessProbe)
-            containerBuilder.addLivenessProbe().setInitialDelay(30).createTcpProbe("3306");
-        if (withReadinessProbe)
-            containerBuilder.addReadinessProbe().setInitialDelaySeconds(5).createExecProbe("/bin/sh", "-i", "-c",
-                    "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'");
+    protected ProbeSettings getProbeSettings() {
+        return new ProbeSettings(30,
+                String.valueOf(getPort()),
+                5,
+                "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'");
     }
 
     @Override

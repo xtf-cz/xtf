@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 
 import org.apache.commons.io.IOUtils;
 
+import cz.xtf.builder.builders.pod.ContainerBuilder;
 import cz.xtf.builder.builders.pod.PersistentVolumeClaim;
 
 public abstract class AbstractSQLDatabase extends AbstractDatabase implements SQLExecutor {
@@ -76,6 +77,33 @@ public abstract class AbstractSQLDatabase extends AbstractDatabase implements SQ
         return new SQLExecutorImpl(String.format(getJDBCConnectionStringPattern(), hostname, port, getDbName()), getUsername(),
                 getPassword());
     }
+
+    @Override
+    protected void configureContainer(ContainerBuilder containerBuilder) {
+        ProbeSettings settings = getProbeSettings();
+        configureContainer(containerBuilder, settings);
+    }
+
+    private void configureContainer(ContainerBuilder containerBuilder, ProbeSettings settings) {
+        if (withLivenessProbe) {
+            containerBuilder.addLivenessProbe()
+                    .setInitialDelay(settings.getLivenessInitialDelaySeconds())
+                    .createTcpProbe(settings.getLivenessTcpProbe());
+        }
+        if (withReadinessProbe) {
+            containerBuilder.addReadinessProbe()
+                    .setInitialDelaySeconds(settings.getReadinessInitialDelaySeconds())
+                    .createExecProbe("/bin/sh", "-i", "-c",
+                            settings.getReadinessProbeCommand());
+        }
+    }
+
+    /**
+     * Get readiness and liveness probes settings. Override this for custom probe settings.
+     */
+    protected ProbeSettings getProbeSettings() {
+        throw new UnsupportedOperationException("Specify settings for your database");
+    };
 
     protected abstract String getJDBCConnectionStringPattern();
 }

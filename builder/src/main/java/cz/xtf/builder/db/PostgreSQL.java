@@ -2,7 +2,6 @@ package cz.xtf.builder.db;
 
 import java.util.Map;
 
-import cz.xtf.builder.builders.pod.ContainerBuilder;
 import cz.xtf.builder.builders.pod.PersistentVolumeClaim;
 import cz.xtf.core.image.Image;
 
@@ -42,13 +41,11 @@ public class PostgreSQL extends AbstractSQLDatabase {
         return 5432;
     }
 
-    @Override
-    protected void configureContainer(ContainerBuilder containerBuilder) {
-        if (withLivenessProbe)
-            containerBuilder.addLivenessProbe().setInitialDelay(300).createTcpProbe("5432");
-        if (withReadinessProbe)
-            containerBuilder.addReadinessProbe().setInitialDelaySeconds(5).createExecProbe("/bin/sh", "-i", "-c",
-                    "psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'");
+    protected ProbeSettings getProbeSettings() {
+        return new ProbeSettings(300,
+                String.valueOf(getPort()),
+                5,
+                "psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'");
     }
 
     @Override
