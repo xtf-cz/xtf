@@ -2,12 +2,12 @@ name: XTF Maven Release
 
 on:
   push:
-    tags:
+    branches:
       - '**'
 jobs:
 
   test:
-    name: Deploy to JBoss Release Maven repo
+    name: Deploy to JBoss Snapshots Maven repo
     runs-on: ubuntu-latest
 
     steps:
@@ -28,13 +28,8 @@ jobs:
         uses: whelk-io/maven-settings-xml-action@v12
         with:
           servers: '[{ "id": "jboss-releases-repository", "username": "${env.JBOSS_REPO_USER}", "password": "${env.JBOSS_REPO_PASSWORD}" },{ "id": "jboss-snapshots-repository", "username": "${env.JBOSS_REPO_USER}", "password": "${env.JBOSS_REPO_PASSWORD}" }]'
-      - name: Import GPG Key
-        uses: crazy-max/ghaction-import-gpg@v1
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - name: Maven Deploy
-        run: mvn -X deploy -DskipTests -Prelease
+        run: mvn -X deploy -DskipTests
         env:
           JBOSS_REPO_PASSWORD: ${{ secrets.JBOSS_REPO_PASSWORD }}
           JBOSS_REPO_USER: ${{ secrets.JBOSS_REPO_USER }}
