@@ -45,8 +45,9 @@ public class OpenShiftWaiters {
     }
 
     /**
-     * Creates waiter for latest build completion with preconfigured timeout 10 minutes,
-     * 5 seconds interval check and both logging points.
+     * Creates waiter for latest build completion with a build timeout which is preconfigured to be up to 10 minutes
+     * (but can also be customized by setting {@code xtf.waiting.build.timeout}), 5 seconds interval check and both
+     * logging points.
      *
      * @param buildConfigName build name to wait upon
      * @return Waiter instance
@@ -58,15 +59,17 @@ public class OpenShiftWaiters {
                 .orElse(null);
         String reason = "Waiting for completion of latest build " + buildConfigName;
 
-        return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES, 10, reason)
-                .logPoint(Waiter.LogPoint.BOTH)
-                .failFast(failFast)
-                .interval(5_000);
+        return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES,
+                WaitingConfig.buildTimeout(), reason)
+                        .logPoint(Waiter.LogPoint.BOTH)
+                        .failFast(failFast)
+                        .interval(5_000);
     }
 
     /**
-     * Creates waiter for build completion with preconfigured timeout 10 minutes,
-     * 5 seconds interval check and both logging points.
+     * Creates waiter for build completion with a build timeout which is preconfigured to be up to 10 minutes (but can
+     * also be customized by setting {@code xtf.waiting.build.timeout}), 5 seconds interval check and both logging
+     * points.
      *
      * @param build to be waited upon.
      * @return Waiter instance
@@ -75,10 +78,11 @@ public class OpenShiftWaiters {
         Supplier<String> supplier = () -> openShift.getBuild(build.getMetadata().getName()).getStatus().getPhase();
         String reason = "Waiting for completion of build " + build.getMetadata().getName();
 
-        return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES, 10, reason)
-                .logPoint(Waiter.LogPoint.BOTH)
-                .failFast(failFast)
-                .interval(5_000);
+        return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES,
+                WaitingConfig.buildTimeout(), reason)
+                        .logPoint(Waiter.LogPoint.BOTH)
+                        .failFast(failFast)
+                        .interval(5_000);
     }
 
     /**
