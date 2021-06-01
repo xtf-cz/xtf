@@ -59,7 +59,7 @@ public class OpenShiftWaiters {
                 .orElse(null);
         String reason = "Waiting for completion of latest build " + buildConfigName;
 
-        return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES,
+        return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MILLISECONDS,
                 WaitingConfig.buildTimeout(), reason)
                         .logPoint(Waiter.LogPoint.BOTH)
                         .failFast(failFast)
@@ -78,7 +78,7 @@ public class OpenShiftWaiters {
         Supplier<String> supplier = () -> openShift.getBuild(build.getMetadata().getName()).getStatus().getPhase();
         String reason = "Waiting for completion of build " + build.getMetadata().getName();
 
-        return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MINUTES,
+        return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MILLISECONDS,
                 WaitingConfig.buildTimeout(), reason)
                         .logPoint(Waiter.LogPoint.BOTH)
                         .failFast(failFast)
