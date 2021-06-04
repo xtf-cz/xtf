@@ -60,7 +60,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
 
         <!-- Dependency version properties -->
-        <version.httpclient>4.5.12</version.httpclient>
+        <version.httpclient>4.5.13</version.httpclient>
         <version.openshift-client>4.13.3</version.openshift-client>
         <version.commons-io>2.8.0</version.commons-io>
         <version.commons-lang3>3.11</version.commons-lang3>
