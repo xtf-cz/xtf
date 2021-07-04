@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
@@ -23,6 +24,10 @@ import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.Route;
+import io.fabric8.openshift.api.model.operatorhub.v1.OperatorGroup;
+import io.fabric8.openshift.api.model.operatorhub.v1alpha1.ClusterServiceVersion;
+import io.fabric8.openshift.api.model.operatorhub.v1alpha1.InstallPlan;
+import io.fabric8.openshift.api.model.operatorhub.v1alpha1.Subscription;
 
 public class ResourcesPrinterHelper<X> implements AutoCloseable {
     private final Path file;
@@ -186,6 +191,72 @@ public class ResourcesPrinterHelper<X> implements AutoCloseable {
         map.put("NAME", service.getMetadata().getName());
         map.put("SELECTOR", selector.toString());
         map.put("PORTS", ports.toString());
+        return map;
+    }
+
+    public static ResourcesPrinterHelper<ClusterServiceVersion> forClusterServiceVersion(Path filePath) {
+        return new ResourcesPrinterHelper<>(filePath,
+                ResourcesPrinterHelper::getClusterServiceVersionCols);
+    }
+
+    private static LinkedHashMap<String, String> getClusterServiceVersionCols(ClusterServiceVersion csv) {
+        LinkedHashMap<String, String> map = new LinkedHashMap<>(5);
+        map.put("NAME", csv.getMetadata().getName());
+        map.put("CREATED", csv.getMetadata().getCreationTimestamp());
+        map.put("PHASE", csv.getStatus().getPhase());
+        map.put("REASON", csv.getStatus().getReason());
+        map.put("MESSAGE", csv.getStatus().getMessage());
+        return map;
+    }
+
+    public static ResourcesPrinterHelper<InstallPlan> forInstallPlan(Path filePath) {
+        return new ResourcesPrinterHelper<>(filePath,
+                ResourcesPrinterHelper::getInstallPlanCols);
+    }
+
+    private static LinkedHashMap<String, String> getInstallPlanCols(InstallPlan ip) {
+        LinkedHashMap<String, String> map = new LinkedHashMap<>(6);
+        map.put("NAME", ip.getMetadata().getName());
+        map.put("CREATED", ip.getMetadata().getCreationTimestamp());
+        map.put("PHASE", ip.getStatus().getPhase());
+        map.put("CATALOG SOURCES", ip.getStatus().getCatalogSources().toString());
+        map.put("CSVS", ip.getSpec().getClusterServiceVersionNames().toString());
+        map.put("CONDITIONS", ip.getStatus().getConditions()
+                .stream()
+                .filter(cond -> "True".equalsIgnoreCase(cond.getStatus()))
+                .map(cond -> cond.getType())
+                .collect(Collectors.joining(",", "[", "]")));
+        return map;
+    }
+
+    public static ResourcesPrinterHelper<OperatorGroup> forOperatorGroup(Path filePath) {
+        return new ResourcesPrinterHelper<>(filePath,
+                ResourcesPrinterHelper::getOperatorGroupCols);
+    }
+
+    private static LinkedHashMap<String, String> getOperatorGroupCols(OperatorGroup og) {
+        LinkedHashMap<String, String> map = new LinkedHashMap<>(3);
+        map.put("NAME", og.getMetadata().getName());
+        map.put("TARGET NAMESPACE", og.getSpec().getTargetNamespaces().toString());
+        map.put("NAMESPACES", og.getStatus().getNamespaces().toString());
+        return map;
+    }
+
+    public static ResourcesPrinterHelper<Subscription> forSubscription(Path filePath) {
+        return new ResourcesPrinterHelper<>(filePath,
+                ResourcesPrinterHelper::getSubscriptionCols);
+    }
+
+    private static LinkedHashMap<String, String> getSubscriptionCols(Subscription subscription) {
+        LinkedHashMap<String, String> map = new LinkedHashMap<>(8);
+        map.put("NAME", subscription.getMetadata().getName());
+        map.put("SOURCE", subscription.getSpec().getSource());
+        map.put("CHANNEL", subscription.getSpec().getChannel());
+        map.put("STARTING CSV", subscription.getSpec().getStartingCSV());
+        map.put("INSTALLED CSV", subscription.getStatus().getInstalledCSV());
+        map.put("CURRENT CSV", subscription.getStatus().getCurrentCSV());
+        map.put("STATE", subscription.getStatus().getState());
+        map.put("REASON", subscription.getStatus().getReason());
         return map;
     }
 
