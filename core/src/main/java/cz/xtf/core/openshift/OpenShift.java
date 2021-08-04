@@ -1096,13 +1096,14 @@ public class OpenShift extends DefaultOpenShiftClient {
     }
 
     /**
-     * Retrieves all configmaps but "kube-root-ca.crt" which is created out of the box.
+     * Retrieves all configmaps but "kube-root-ca.crt" and "openshift-service-ca.crt" which are created out of the box.
      *
      * @return List of configmaps created by user
      */
     public List<ConfigMap> getUserConfigMaps() {
         return configMaps().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems().stream()
                 .filter(cm -> !cm.getMetadata().getName().equals("kube-root-ca.crt"))
+                .filter(cm -> !cm.getMetadata().getName().equals("openshift-service-ca.crt"))
                 .collect(Collectors.toList());
     }
 
