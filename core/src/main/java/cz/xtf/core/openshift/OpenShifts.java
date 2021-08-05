@@ -36,7 +36,7 @@ public class OpenShifts {
     private static OpenShift adminUtil;
     private static OpenShift masterUtil;
 
-    private static String openShiftBinaryPath;
+    private static volatile String openShiftBinaryPath;
 
     public static OpenShift admin() {
         if (adminUtil == null) {
@@ -88,12 +88,17 @@ public class OpenShifts {
 
     public static String getBinaryPath() {
         if (openShiftBinaryPath == null) {
-            if (OpenShiftConfig.binaryPath() != null) {
-                openShiftBinaryPath = OpenShiftConfig.binaryPath();
-            } else {
-                openShiftBinaryPath = OpenShifts.downloadOpenShiftBinary(OpenShifts.getVersion());
+            synchronized (OpenShifts.class) {
+                if (openShiftBinaryPath == null) {
+                    if (OpenShiftConfig.binaryPath() != null) {
+                        openShiftBinaryPath = OpenShiftConfig.binaryPath();
+                    } else {
+                        openShiftBinaryPath = OpenShifts.downloadOpenShiftBinary(OpenShifts.getVersion());
+                    }
+                }
             }
         }
+
         return openShiftBinaryPath;
     }
 
