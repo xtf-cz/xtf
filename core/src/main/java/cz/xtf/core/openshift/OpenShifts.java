@@ -90,8 +90,6 @@ public class OpenShifts {
         if (openShiftBinaryPath == null) {
             if (OpenShiftConfig.binaryPath() != null) {
                 openShiftBinaryPath = OpenShiftConfig.binaryPath();
-            } else if (StringUtils.isNotEmpty(OpenShiftConfig.version())) {
-                openShiftBinaryPath = OpenShifts.downloadOpenShiftBinary(OpenShiftConfig.version());
             } else {
                 openShiftBinaryPath = OpenShifts.downloadOpenShiftBinary(OpenShifts.getVersion());
             }
