@@ -1,7 +1,7 @@
 package cz.xtf.junit5.listeners;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.launcher.TestExecutionListener;
@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TestExecutionLogger implements TestExecutionListener {
-    private Map<String, Long> executionTimes = new HashMap<>();
+    private Map<String, Long> executionTimes = new ConcurrentHashMap<>();
 
     @Override
     public void executionSkipped(TestIdentifier testIdentifier, String reason) {
