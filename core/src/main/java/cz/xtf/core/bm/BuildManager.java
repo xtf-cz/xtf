@@ -5,6 +5,8 @@ import cz.xtf.core.config.OpenShiftConfig;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.openshift.OpenShifts;
 import cz.xtf.core.waiting.Waiter;
+import io.fabric8.kubernetes.api.builder.Visitor;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,8 +28,14 @@ public class BuildManager {
                 // Otherwise you can see:
                 // $ oc label namespace <name> "label1=foo"
                 // Error from server (Forbidden): namespaces "<name>" is forbidden: User "<user>" cannot patch resource "namespaces" in API group "" in the namespace "<name>"
-                OpenShifts.admin().namespaces().withName(openShift.getNamespace()).edit().editMetadata().addToLabels(
-                        OpenShift.XTF_MANAGED_LABEL, "true").endMetadata().done();
+                OpenShifts.admin().namespaces().withName(openShift.getNamespace())
+                        .edit(new Visitor<NamespaceBuilder>() {
+                            @Override
+                            public void visit(NamespaceBuilder builder) {
+                                builder.editMetadata()
+                                        .addToLabels(OpenShift.XTF_MANAGED_LABEL, "true");
+                            }
+                        });
             } catch (KubernetesClientException e) {
                 // We weren't able to assign a label to the new project. Let's just print warning since this information
                 // is not critical to the tests execution. Possible cause for this are insufficient permissions since
