@@ -33,6 +33,7 @@ import cz.xtf.core.event.EventList;
 import cz.xtf.core.openshift.crd.CustomResourceDefinitionContextProvider;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
+import io.fabric8.kubernetes.api.builder.Visitor;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Endpoints;
@@ -54,6 +55,7 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
+import io.fabric8.kubernetes.api.model.ServiceAccountBuilder;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.autoscaling.v1.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.rbac.Role;
@@ -215,11 +217,20 @@ public class OpenShift extends DefaultOpenShiftClient {
                 .withData(Collections.singletonMap(".dockerconfigjson", Base64.getEncoder().encodeToString(secret.getBytes())))
                 .build();
         secrets().createOrReplace(pullSecret);
-        serviceAccounts().withName("default").edit()
-                .addToImagePullSecrets(new LocalObjectReferenceBuilder().withName(pullSecret.getMetadata().getName()).build())
-                .done();
-        serviceAccounts().withName("builder").edit()
-                .addToSecrets(new ObjectReferenceBuilder().withName(pullSecret.getMetadata().getName()).build()).done();
+        serviceAccounts().withName("default").edit(new Visitor<ServiceAccountBuilder>() {
+            @Override
+            public void visit(ServiceAccountBuilder builder) {
+                builder.addToImagePullSecrets(
+                        new LocalObjectReferenceBuilder().withName(pullSecret.getMetadata().getName()).build());
+            }
+        });
+
+        serviceAccounts().withName("builder").edit(new Visitor<ServiceAccountBuilder>() {
+            @Override
+            public void visit(ServiceAccountBuilder builder) {
+                builder.addToSecrets(new ObjectReferenceBuilder().withName(pullSecret.getMetadata().getName()).build());
+            }
+        });
     }
 
     // General functions
@@ -1178,7 +1189,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 
     // Events
     public EventList getEventList() {
-        return new EventList(events().list().getItems());
+        return new EventList(v1().events().list().getItems());
     }
 
     /**
@@ -1188,7 +1199,7 @@ public class OpenShift extends DefaultOpenShiftClient {
      */
     @Deprecated
     public List<Event> getEvents() {
-        return events().list().getItems();
+        return v1().events().list().getItems();
     }
 
     // Port Forward
