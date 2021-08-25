@@ -224,10 +224,17 @@ public class OpenShifts {
         try {
             URL requestUrl = new URL(ocUrl);
 
-            if (trustAll) {
-                Https.copyHttpsURLToFile(requestUrl, ocTarFile, 20_000, 300_000);
+            File cachedOcTarFile = getOcFromCache(version, ocUrl, ocTarFile);
+
+            if (!OpenShiftConfig.isBinaryCacheEnabled() || !cachedOcTarFile.exists()) {
+                if (trustAll) {
+                    Https.copyHttpsURLToFile(requestUrl, ocTarFile, 20_000, 300_000);
+                } else {
+                    FileUtils.copyURLToFile(requestUrl, ocTarFile, 20_000, 300_000);
+                }
+                saveOcOnCache(version, ocUrl, ocTarFile);
             } else {
-                FileUtils.copyURLToFile(requestUrl, ocTarFile, 20_000, 300_000);
+                FileUtils.copyFile(cachedOcTarFile, ocTarFile);
             }
 
             executeCommand("tar", "-xf", ocTarFile.getPath(), "-C", workdir.getPath());
@@ -237,6 +244,47 @@ public class OpenShifts {
         } catch (IOException | InterruptedException e) {
             throw new IllegalStateException("Failed to download and extract oc binary from " + ocUrl, e);
         }
+    }
+
+    /**
+     * Save oc binary in a folder to use as cache to avoid to download it again.
+     * The folder path depends on the OCP version and the download url.
+     * The file can be accessed using {@link #getOcFromCache(String, String, File)}.
+     * It works only if {@link OpenShiftConfig#isBinaryCacheEnabled()}.
+     * 
+     * @param version String, OCP cluster version.
+     * @param ocUrl String, download URL.
+     * @param ocTarFile String, workdir file.
+     * @throws IOException
+     */
+    public static void saveOcOnCache(String version, String ocUrl, File ocTarFile) throws IOException {
+        if (OpenShiftConfig.isBinaryCacheEnabled()) {
+            File cacheRootFile = new File(OpenShiftConfig.binaryCachePath());
+            if (!cacheRootFile.exists() && !cacheRootFile.mkdirs()) {
+                throw new IllegalStateException("Cannot mkdirs " + cacheRootFile);
+            }
+            Path cachePath = getOcCachePath(version, ocUrl);
+            Files.createDirectories(cachePath);
+            FileUtils.copyFile(ocTarFile, new File(cachePath.toFile(), ocTarFile.getName()));
+        }
+    }
+
+    /**
+     * Retrieve the file from the folder populated by {@link #saveOcOnCache(String, String, File)}.
+     * 
+     * @param version String, OCP cluster version.
+     * @param ocUrl String, download URL.
+     * @param ocTarFile String, workdir file.
+     * @return File, reference to the file, if the cache is not populated, the file is not null, but it doesn't exist.
+     * @throws IOException
+     */
+    public static File getOcFromCache(String version, String ocUrl, File ocTarFile) throws IOException {
+        return new File(getOcCachePath(version, ocUrl).toFile(), ocTarFile.getName());
+    }
+
+    private static Path getOcCachePath(String version, String ocUrl) {
+        return Paths.get(OpenShiftConfig.binaryCachePath(), version,
+                Base64.getEncoder().encodeToString(ocUrl.getBytes(StandardCharsets.UTF_8)).replace("=", ""));
     }
 
     /**
