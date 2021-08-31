@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<artifactId>parent</artifactId>
+		<artifactId>xtf-parent</artifactId>
 		<groupId>cz.xtf</groupId>
 		<version>0.24-SNAPSHOT</version>
 	</parent>
