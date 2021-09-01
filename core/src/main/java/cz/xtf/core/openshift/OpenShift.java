@@ -68,8 +68,11 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.LocalPortForward;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.base.OperationContext;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
+import io.fabric8.openshift.api.model.BuildConfigList;
 import io.fabric8.openshift.api.model.BuildRequest;
 import io.fabric8.openshift.api.model.BuildRequestBuilder;
 import io.fabric8.openshift.api.model.DeploymentConfig;
@@ -85,6 +88,9 @@ import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfig;
 import io.fabric8.openshift.client.OpenShiftConfigBuilder;
 import io.fabric8.openshift.client.ParameterValue;
+import io.fabric8.openshift.client.dsl.BuildConfigResource;
+import io.fabric8.openshift.client.dsl.internal.BuildConfigOperationContext;
+import io.fabric8.openshift.client.dsl.internal.build.BuildConfigOperationsImpl;
 import lombok.extern.slf4j.Slf4j;
 import rx.Observable;
 import rx.observables.StringObservable;
@@ -812,6 +818,26 @@ public class OpenShift extends DefaultOpenShiftClient {
     }
 
     // BuildConfigs
+
+    // Workaround for NPE:
+    //    java.lang.NullPointerException: unit == null
+    //    at okhttp3.internal.Util.checkDuration(Util.java:496)
+    //    at okhttp3.OkHttpClient$Builder.readTimeout(OkHttpClient.java:596)
+    //    at io.fabric8.openshift.client.dsl.internal.build.BuildConfigOperationsImpl.submitToApiServerWithRequestBody(BuildConfigOperationsImpl.java:283)
+    //    at io.fabric8.openshift.client.dsl.internal.build.BuildConfigOperationsImpl.fromInputStream(BuildConfigOperationsImpl.java:186)
+    //    at io.fabric8.openshift.client.dsl.internal.build.BuildConfigOperationsImpl.fromInputStream(BuildConfigOperationsImpl.java:167)
+    //    at io.fabric8.openshift.client.dsl.internal.build.BuildConfigOperationsImpl.fromInputStream(BuildConfigOperationsImpl.java:72)
+    //    at cz.xtf.core.bm.BinaryBuildFromSources.build(BinaryBuildFromSources.java:60)
+    //    at cz.xtf.core.bm.BuildManager.deploy(BuildManager.java:62)
+    //    at cz.xtf.junit5.listeners.ManagedBuildPrebuilder.testPlanExecutionStarted(ManagedBuildPrebuilder.java:85)
+    //
+    // kubernetes-client issue will be created
+    @Override
+    public MixedOperation<BuildConfig, BuildConfigList, BuildConfigResource<BuildConfig, Void, Build>> buildConfigs() {
+        return new BuildConfigOperationsImpl(new BuildConfigOperationContext().withTimeoutUnit(TimeUnit.MILLISECONDS),
+                new OperationContext().withOkhttpClient(this.httpClient).withConfig(getConfiguration()));
+    }
+
     public BuildConfig createBuildConfig(BuildConfig buildConfig) {
         return buildConfigs().create(buildConfig);
     }
