@@ -1,5 +1,7 @@
 package cz.xtf.core.config;
 
+import java.nio.file.Paths;
+
 public final class OpenShiftConfig {
     public static final String OPENSHIFT_URL = "xtf.openshift.url";
     public static final String OPENSHIFT_TOKEN = "xtf.openshift.token";
@@ -8,7 +10,7 @@ public final class OpenShiftConfig {
     public static final String OPENSHIFT_BINARY_PATH = "xtf.openshift.binary.path";
     public static final String OPENSHIFT_BINARY_CACHE_ENABLED = "xtf.openshift.binary.cache.enabled";
     public static final String OPENSHIFT_BINARY_CACHE_PATH = "xtf.openshift.binary.cache.path";
-    public static final String OPENSHIFT_BINARY_CACHE_PATH_DEFAULT_VALUE = "/tmp/xtf/oc-cache";
+    public static final String OPENSHIFT_BINARY_CACHE_DEFAULT_FOLDER = "xtf-oc-cache";
     public static final String OPENSHIFT_ADMIN_USERNAME = "xtf.openshift.admin.username";
     public static final String OPENSHIFT_ADMIN_PASSWORD = "xtf.openshift.admin.password";
     public static final String OPENSHIFT_ADMIN_KUBECONFIG = "xtf.openshift.admin.kubeconfig";
@@ -58,7 +60,8 @@ public final class OpenShiftConfig {
     }
 
     public static String binaryCachePath() {
-        return XTFConfig.get(OPENSHIFT_BINARY_CACHE_PATH, OPENSHIFT_BINARY_CACHE_PATH_DEFAULT_VALUE);
+        return XTFConfig.get(OPENSHIFT_BINARY_CACHE_PATH, Paths.get(System.getProperty("java.io.tmpdir"),
+                OPENSHIFT_BINARY_CACHE_DEFAULT_FOLDER).toAbsolutePath().normalize().toString());
     }
 
     public static String adminUsername() {
