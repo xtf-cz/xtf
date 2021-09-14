@@ -30,8 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class OpenShifts {
-    private static final String OCP3_CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v3/clients/";
-    private static final String OCP4_CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v4/clients/oc/";
+    private static final String OCP3_CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v3/clients";
+    private static final String OCP4_CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v4";
 
     private static OpenShift adminUtil;
     private static OpenShift masterUtil;
@@ -177,33 +177,78 @@ public class OpenShifts {
         return System.getProperty("user.home", ".");
     }
 
+    private static String getSystemTypeForOCP3() {
+        String systemType = "linux";
+        if (SystemUtils.IS_OS_MAC) {
+            systemType = "macosx";
+        } else if (isS390x()) {
+            systemType += "-s390x";
+        } else if (isPpc64le()) {
+            systemType += "-ppc64le";
+        }
+        return systemType;
+    }
+
+    private static String getSystemTypeForOCP4() {
+        String systemType = "amd64";
+        if (isS390x()) {
+            systemType = "s390x";
+        } else if (isPpc64le()) {
+            systemType = "ppc64le";
+        }
+        return systemType;
+    }
+
+    private static boolean isPpc64le() {
+        return "ppc64le".equals(SystemUtils.OS_ARCH) || SystemUtils.OS_VERSION.contains("ppc64le");
+    }
+
+    private static boolean isS390x() {
+        return SystemUtils.IS_OS_ZOS || "s390x".equals(SystemUtils.OS_ARCH) || SystemUtils.OS_VERSION.contains("s390x");
+    }
+
+    /**
+     * Creates the URL reading from OCP client mirrors or from the cluster
+     * 
+     * @param version String, OCP version
+     * @return String, the full path of the oc binary client
+     */
     private static String downloadOpenShiftBinary(String version) {
-        String systemType = SystemUtils.IS_OS_MAC ? "macosx" : "linux";
-        String clientLocation = null;
-        String ocFileName = "oc.tar.gz";
+
+        final String clientLocation;
+        final String ocFileName;
 
         if (version.startsWith("3")) {
-            clientLocation = String.format(OCP3_CLIENTS_URL + "%s/%s/", version, systemType);
+            clientLocation = String.format("%s/%s/%s/", OCP3_CLIENTS_URL, version, getSystemTypeForOCP3());
+            ocFileName = "oc.tar.gz";
         } else {
             if (StringUtils.isNotEmpty(OpenShiftConfig.version())) {
-                clientLocation = String.format(OCP4_CLIENTS_URL + "%s/%s/", version, systemType);
+                clientLocation = String.format("%s/%s/clients/ocp/%s/", OCP4_CLIENTS_URL, getSystemTypeForOCP4(), version);
+                ocFileName = SystemUtils.IS_OS_MAC ? "openshift-client-mac.tar.gz" : "openshift-client-linux.tar.gz";
             } else {
-                if (SystemUtils.IS_OS_MAC) {
-                    systemType = "mac";
-                    ocFileName = "oc.zip";
-                } else {
-                    systemType = "linux";
-                    ocFileName = "oc.tar";
-                }
-                final Optional<Route> downloadsRouteOptional = Optional
-                        .ofNullable(admin("openshift-console").getRoute("downloads"));
-                final Route downloads = downloadsRouteOptional
-                        .orElseThrow(() -> new IllegalStateException("We are not able to find download link for OC binary."));
-                clientLocation = String.format("https://" + downloads.getSpec().getHost() + "/amd64/%s/", systemType);
-                return downloadOpenShiftBinaryInternal(version, ocFileName, clientLocation, true);
+                return downloadClientFromClusterRoute(version);
             }
         }
         return downloadOpenShiftBinaryInternal(version, ocFileName, clientLocation, false);
+    }
+
+    /**
+     * Generates the URL reading from 'downloads' route in 'openshift-console' namespace
+     * adding OS architecture and OS system to create the full OC client download URL
+     * 
+     * @param version String, OCP version
+     * @return String, the path returned by {@link #downloadOpenShiftBinaryInternal(String, String, String, boolean)}
+     */
+    private static String downloadClientFromClusterRoute(String version) {
+
+        final Optional<Route> downloadsRouteOptional = Optional
+                .ofNullable(admin("openshift-console").getRoute("downloads"));
+        final Route downloads = downloadsRouteOptional
+                .orElseThrow(() -> new IllegalStateException("We are not able to find download link for OC binary."));
+        final String clientLocation = String.format("https://" + downloads.getSpec().getHost() + "/%s/%s/",
+                getSystemTypeForOCP4(),
+                SystemUtils.IS_OS_MAC ? "mac" : "linux");
+        return downloadOpenShiftBinaryInternal(version, "oc.tar", clientLocation, true);
     }
 
     private static String downloadOpenShiftBinaryInternal(final String version, final String ocFileName,
@@ -223,6 +268,8 @@ public class OpenShifts {
         final String ocUrl = clientLocation + ocFileName;
         try {
             URL requestUrl = new URL(ocUrl);
+
+            log.info("downloading from {} ", ocUrl);
 
             File cachedOcTarFile = getOcFromCache(version, ocUrl, ocTarFile);
 
