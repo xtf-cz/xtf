@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,6 +38,49 @@ public class OpenShiftBinary {
 
     public void login(String url, String username, String password) {
         this.execute("login", url, "--insecure-skip-tls-verify=true", "-u", username, "-p", password);
+    }
+
+    /**
+     * Apply configuration file in the specified namespace.
+     * Delegates to `oc apply --filename='sourcepath' --namespace='namespace'`
+     * 
+     * @param sourcePath path to configration file
+     * @param namespace namespace
+     */
+    public void apply(String namespace, String sourcePath) {
+        this.execute("apply", "--namespace=" + namespace, "--filename=" + sourcePath);
+    }
+
+    /**
+     * Apply configuration file. Delegates to `oc apply --filename='sourcepath`
+     * 
+     * @param sourcePath path to configration file
+     */
+    public void apply(String sourcePath) {
+        this.execute("apply", "--filename=" + sourcePath);
+    }
+
+    /**
+     * Apply configuration files in the order they appear in the list
+     * 
+     * @param sourcePaths list of paths to configuration files
+     */
+    public void apply(List<String> sourcePaths) {
+        for (String sourcePath : sourcePaths) {
+            apply(sourcePath);
+        }
+    }
+
+    /**
+     * Apply configuration files in the order they appear in the list, using supplied namespace.
+     * 
+     * @param namespace namespace in which the configuration files should be applied
+     * @param sourcePaths list of paths to configuration files
+     */
+    public void apply(String namespace, List<String> sourcePaths) {
+        for (String sourcePath : sourcePaths) {
+            apply(namespace, sourcePath);
+        }
     }
 
     public void project(String projectName) {
