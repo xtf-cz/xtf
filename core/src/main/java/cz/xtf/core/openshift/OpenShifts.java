@@ -252,8 +252,14 @@ public class OpenShifts {
     }
 
     private static String downloadOpenShiftBinaryInternal(final String version, final String ocFileName,
-            final String clientLocation, final boolean trustAll) {
+            String clientLocation, final boolean trustAll) {
         int code = Https.httpsGetCode(clientLocation);
+
+        if (version.startsWith("3") && code == 404) {
+            //workaround for ocp 3.11 trying to append "-1" to version to match URL
+            clientLocation = clientLocation.replace(version, version.concat("-1"));
+            code = Https.httpsGetCode(clientLocation);
+        }
 
         if (code != 200) {
             throw new IllegalStateException("Client binary for version " + version + " isn't available at " + clientLocation);
