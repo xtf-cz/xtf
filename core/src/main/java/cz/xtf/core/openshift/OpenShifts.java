@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
@@ -283,8 +284,7 @@ public class OpenShifts {
     }
 
     private static Path getOcCachePath(String version, String ocUrl) {
-        return Paths.get(OpenShiftConfig.binaryCachePath(), version,
-                Base64.getEncoder().encodeToString(ocUrl.getBytes(StandardCharsets.UTF_8)).replace("=", ""));
+        return Paths.get(OpenShiftConfig.binaryCachePath(), version, DigestUtils.md5Hex(ocUrl));
     }
 
     /**

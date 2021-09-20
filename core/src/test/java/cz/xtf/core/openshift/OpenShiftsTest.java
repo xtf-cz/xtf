@@ -3,11 +3,10 @@ package cz.xtf.core.openshift;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Base64;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -27,7 +26,7 @@ public class OpenShiftsTest {
     public static void init() throws URISyntaxException {
         ocTarFile = Paths.get(Thread.currentThread().getContextClassLoader().getResource("oc.tar.gz").toURI()).toFile();
         expected = Paths.get(OpenShiftConfig.binaryCachePath(), version,
-                Base64.getEncoder().encodeToString(ocUrl.getBytes(StandardCharsets.UTF_8)).replace("=", ""));
+                DigestUtils.md5Hex(ocUrl));
     }
 
     @AfterEach
