@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OpenShifts {
     private static final String OCP3_CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v3/clients";
     private static final String OCP4_CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v4";
+    private static final String MAJOR_MINOR_VERSION_REGEXP = "^[1-9]\\d*(\\.[1-9]\\d*)$";
 
     private static OpenShift adminUtil;
     private static OpenShift masterUtil;
@@ -255,6 +256,16 @@ public class OpenShifts {
     private static String downloadOpenShiftBinaryInternal(final String version, final String ocFileName,
             String clientLocation, final boolean trustAll) {
         int code = Https.httpsGetCode(clientLocation);
+
+        if (code == 404 && version.startsWith("4") && version.matches(MAJOR_MINOR_VERSION_REGEXP)) {
+            // workaround for ocp 4, to solve backward compatibility issue between the old
+            // (https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/oc/)
+            // and new (https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/) `oc` client
+            // download locations, see
+            // https://mirror.openshift.com/pub/openshift-v4/clients/oc/$__DEPRECATED_LOCATION__PLEASE_READ__.txt
+            clientLocation = clientLocation.replace(version, "latest-".concat(version));
+            code = Https.httpsGetCode(clientLocation);
+        }
 
         if (version.startsWith("3") && code == 404) {
             //workaround for ocp 3.11 trying to append "-1" to version to match URL
