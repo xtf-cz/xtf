@@ -8,6 +8,7 @@ public final class OpenShiftConfig {
     public static final String OPENSHIFT_VERSION = "xtf.openshift.version";
     public static final String OPENSHIFT_NAMESPACE = "xtf.openshift.namespace";
     public static final String OPENSHIFT_BINARY_PATH = "xtf.openshift.binary.path";
+    public static final String OPENSHIFT_BINARY_URL_CHANNEL = "xtf.openshift.binary.url.channel";
     public static final String OPENSHIFT_BINARY_CACHE_ENABLED = "xtf.openshift.binary.cache.enabled";
     public static final String OPENSHIFT_BINARY_CACHE_PATH = "xtf.openshift.binary.cache.path";
     public static final String OPENSHIFT_BINARY_CACHE_DEFAULT_FOLDER = "xtf-oc-cache";
@@ -53,6 +54,17 @@ public final class OpenShiftConfig {
 
     public static String binaryPath() {
         return XTFConfig.get(OPENSHIFT_BINARY_PATH);
+    }
+
+    /**
+     * Channel configuration for download of OpenShift client from
+     * https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/
+     * Channels are: stable, latest, fast, candidate
+     * 
+     * @return channel as configured in xtf.openshift.binary.url.channel property, or default 'stable'
+     */
+    public static String binaryUrlChannelPath() {
+        return XTFConfig.get(OPENSHIFT_BINARY_URL_CHANNEL, "stable");
     }
 
     public static boolean isBinaryCacheEnabled() {
