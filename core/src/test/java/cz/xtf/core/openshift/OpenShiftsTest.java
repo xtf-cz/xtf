@@ -31,12 +31,15 @@ public class OpenShiftsTest {
 
     @AfterEach
     public void clean() throws IOException {
-        final File directory = Paths.get(OpenShiftConfig.binaryCachePath()).toFile();
+        final File directory = Paths.get(OpenShiftConfig.binaryCachePath(), version).toFile();
         if (directory.exists()) {
             FileUtils.deleteDirectory(directory);
         }
     }
 
+    //
+    // methods tested bellow are deprecated
+    //
     @Test
     public void saveOnCacheTest() throws IOException {
         OpenShifts.saveOcOnCache(version, ocUrl, ocTarFile);
