@@ -10,7 +10,6 @@ import cz.xtf.core.waiting.WaiterException;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Response;
 
 @Slf4j
 public class PodShell {
@@ -71,7 +70,7 @@ public class PodShell {
         private final AtomicBoolean executionDone = new AtomicBoolean(false);
 
         @Override
-        public void onOpen(Response response) {
+        public void onOpen() {
             // DO NOTHING
         }
 

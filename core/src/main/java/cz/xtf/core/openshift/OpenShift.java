@@ -186,7 +186,7 @@ public class OpenShift extends DefaultOpenShiftClient {
     public OpenShift(OpenShiftConfig openShiftConfig) {
         super(openShiftConfig);
 
-        appsAPIGroupClient = new AppsAPIGroupClient(httpClient, openShiftConfig);
+        appsAPIGroupClient = new AppsAPIGroupClient(this);
 
         this.waiters = new OpenShiftWaiters(this);
     }

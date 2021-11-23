@@ -109,8 +109,7 @@ class ClusterVersionInfo {
             // admin is required for operation
             try {
                 NonNamespaceOperation<ClusterVersion, ClusterVersionList, Resource<ClusterVersion>> op = OpenShiftHandlers
-                        .getOperation(ClusterVersion.class, ClusterVersionList.class, OpenShifts.admin().getHttpClient(),
-                                OpenShifts.admin().getConfiguration());
+                        .getOperation(ClusterVersion.class, ClusterVersionList.class, OpenShifts.admin());
                 openshiftVersion = op.withName("version").get().getStatus().getDesired().getVersion();
             } catch (KubernetesClientException kce) {
                 log.warn("xtf.openshift.version isn't configured and automatic version detection failed.", kce);
