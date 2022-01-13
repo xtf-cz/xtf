@@ -47,10 +47,19 @@ class ClusterVersionOpenShiftBinaryPathResolver implements OpenShiftBinaryPathRe
     private String getClientUrlBasedOnOcpVersion(final ClusterVersionInfo versionInfo) {
         Objects.requireNonNull(versionInfo);
 
-        if (versionInfo.getOpenshiftVersion().startsWith("3")) {
+        final String openshiftVersion = versionInfo.getOpenshiftVersion();
+        if (openshiftVersion.startsWith("3")) {
             // OpenShift 3
-            return String.format("%s/%s/%s/oc.tar.gz", OCP3_CLIENTS_URL, versionInfo.getOpenshiftVersion(),
-                    getSystemTypeForOCP3());
+            final String systemTypeForOCP3 = getSystemTypeForOCP3();
+            String downloadUrl = String.format("%s/%s/%s/oc.tar.gz", OCP3_CLIENTS_URL, openshiftVersion,
+                    systemTypeForOCP3);
+            // if the generated download URL is not working (404 or 403 response code) try to concatenate -1 to the version
+            final int code = Https.httpsGetCode(downloadUrl);
+            if (code >= 400 && code < 500) {
+                downloadUrl = String.format("%s/%s-1/%s/oc.tar.gz", OCP3_CLIENTS_URL, openshiftVersion,
+                        systemTypeForOCP3);
+            }
+            return downloadUrl;
         } else {
             // OpenShift 4
 
