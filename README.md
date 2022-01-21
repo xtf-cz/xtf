@@ -157,6 +157,91 @@ xtf.foo.v2.version=1.0.3
 
 Retrieving an instance with this metadata: `Produts.resolve("product");`
 
+#### Service Logs Streaming (SLS)
+This feature allows for you to stream the services output while the test is running; this way you can see immediately 
+what is happening inside the cluster.
+This is of great help when debugging provisioning, specifically on Cloud environments, which instead would require for
+you to access your Pods.
+
+##### Kubernetes/OpenShift implementation
+The SLS OpenShift platform implementation relies upon the following fabric8 Kubernetes Client API features:
+
+- Watching Kubernetes events (see
+  [PodWatchEquivalent.java](https://github.com/fabric8io/kubernetes-client/blob/master/kubernetes-examples/src/main/java/io/fabric8/kubernetes/examples/kubectl/equivalents/PodWatchEquivalent.java))
+- Watching Pod logs (see
+  [PodLogExample.java](https://github.com/fabric8io/kubernetes-client/blob/master/kubernetes-examples/src/main/java/io/fabric8/kubernetes/examples/PodLogExample.java))
+
+The expected behavior is to stream the output of all the containers that are started or terminated in the selected 
+namespaces.
+
+##### Usage
+The SLS feature can be configured and enabled either via annotations or via properties.
+This behavior is provided by 
+[the ServiceLogsStreamingRunner JUnit 5 extension](./junit5/src/main/java/cz/xtf/junit5/extensions/ServiceLogsStreamingRunner.java).
+There are two different ways for enabling the SLS functionality, which are summarized in the following sections, please 
+refer to the [JUnit 5 submodule documentation](./junit5/README.md) in order to read about the extension implementation 
+details.
+
+###### The `@ServiceLogsStreaming` annotation (Developer perspective)
+Usage is as simple as annotating your test with `@ServiceLogsStreaming` e.g.:
+
+```java
+@ServiceLogsStreaming
+@Slf4j
+public class HelloWorldTest {
+  // ...
+}
+```
+
+###### The `xtf.log.streaming.enabled` and `xtf.log.streaming.config` property (Developer/Automation perspective)
+You can enable the SLS feature by setting the `xtf.log.streaming.enabled` property so that it would apply to 
+all the test classes being executed. 
+
+Conversely, if the above property is not set, you can set the `xtf.log.streaming.config` 
+property in order to provide multiple SLS configurations which could map to different test classes. 
+
+The `xtf.log.streaming.config` property value is expected to be a _comma_ (`,`) separated list of _configuration items_,
+each one formatted as a _semi-colon_ (`;`) separated list of _name_ and _value_ pairs for the above mentioned
+attributes, where the name/value separator is expected to be the _equals_ char (`=`). 
+A single _configuration item_ represents a valid source of configuration for a single SLS activation and exposes the 
+following information:
+
+* _**target**_: a regular expression which allows for the testing engine to check whether the current context test class
+    name matches the Service Logs Streaming configuration - **REQUIRED**
+
+* _**filter**_: a string representing a _regex_ to filter out the resources which the Service Logs Streaming activation
+    should be monitoring - **OPTIONAL**
+
+* _**output**_: the base path where the log stream files - one for each executed test class - will be created. 
+  **OPTIONAL**, if not assigned, logs will be streamed to `System.out`. When assigned, XTF will attempt to create the 
+  path in case it doesn't exist and default to `System.out` should any error occur. 
+
+###### Usage examples 
+Given what above, enabling SLS for all test classes is possible by executing the following command: 
+
+```shell
+mvn clean install -Dxtf.log.streaming.enabled=true
+```
+
+Similarly, in order to enable the feature for all test classes whose name is ending with "Test" should
+be as simple as executing something similar to the following command:
+
+```shell
+mvn clean install -Dxtf.log.streaming.config="target=.*Test"
+```
+
+which would differ in case the logs should be streamed to an output file:
+
+```shell
+mvn clean install -Dxtf.log.streaming.config="target=.*Test;output=/home/myuser/sls-logs"
+```
+
+or in case you'd want to provide multiple configuration items to map different test classes, e.g.:
+
+```shell
+mvn clean install -Dxtf.log.streaming.config="target=TestClassA,target=TestClassB.*;output=/home/myuser/sls-logs;filter=.*my-app.*"
+```
+
 ### JUnit5
 JUnit5 module provides a number of extensions and listeners designed to easy up OpenShift images test management. 
 See [JUnit5](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/SimpleWaiter.java) for 
