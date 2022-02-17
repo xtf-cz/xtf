@@ -19,17 +19,25 @@ public @interface SkipFor {
     /**
      * Name or regexp pattern matching name of the image. For example "eap73-openjdk11-openshift-rhel8" or "eap73-openjdk11-.*"
      * <p>
-     * Only one of {@code imageMetadataLabelName} and {@code name} can be presented.
+     * Only one of {@code name}, {@code imageMetadataLabelName} and {@code imageMetadataLabelArchitecture} can be presented.
      */
     String name() default "";
 
     /**
      * Name or regexp pattern matching name in {@code Docker Labels} in image metadata
-     * For example "eap73-openjdk11-openshift-rhel8" or "eap73-openjdk11-.*".
+     * For example "jboss-eap-7/eap73-openjdk11-openshift-rhel8" or "eap73-openjdk11-.*".
      * <p>
-     * Only one of {@code imageMetadataLabelName} and {@code name} can be presented.
+     * Only one of {@code name}, {@code imageMetadataLabelName} and {@code imageMetadataLabelArchitecture} can be presented.
      */
     String imageMetadataLabelName() default "";
+
+    /**
+     * Architecture or regexp pattern matching architecture in {@code Docker Labels} in image metadata
+     * For example "x86_64" or "x86_.*".
+     * <p>
+     * Only one of {@code name}, {@code imageMetadataLabelName} and {@code imageMetadataLabelArchitecture} can be presented.
+     */
+    String imageMetadataLabelArchitecture() default "";
 
     String image();
 
