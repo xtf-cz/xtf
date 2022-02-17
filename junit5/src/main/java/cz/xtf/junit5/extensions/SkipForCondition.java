@@ -35,18 +35,25 @@ public class SkipForCondition implements ExecutionCondition {
     }
 
     public static ConditionEvaluationResult resolve(SkipFor skipFor) {
-        if (skipFor.name().equals("") == skipFor.imageMetadataLabelName().equals("")) {
+        if ((skipFor.name().equals("") == skipFor.imageMetadataLabelName().equals("") == skipFor
+                .imageMetadataLabelArchitecture().equals("")) ||
+                (!skipFor.name().equals("") && !skipFor.imageMetadataLabelName().equals("")
+                        && !skipFor.imageMetadataLabelArchitecture().equals(""))) {
             throw new RuntimeException(
-                    "Only one of 'name' and 'imageMetadataLabelName' can be presented in 'SkipFor' annotation.");
+                    "Only one of 'name','imageMetadataLabelName' and 'imageMetadataLabelArchitecture' can be presented in 'SkipFor' annotation.");
         }
+
         Image image = Image.resolve(skipFor.image());
         Matcher matcher;
 
         if (!skipFor.name().equals("")) {
             matcher = Pattern.compile(skipFor.name()).matcher(image.getRepo());
-        } else {
+        } else if (!skipFor.imageMetadataLabelName().equals("")) {
             DockerImageMetadata metadata = DockerImageMetadata.get(OpenShifts.master(), image);
             matcher = Pattern.compile(skipFor.imageMetadataLabelName()).matcher(metadata.labels().get("name"));
+        } else {
+            DockerImageMetadata metadata = DockerImageMetadata.get(OpenShifts.master(), image);
+            matcher = Pattern.compile(skipFor.imageMetadataLabelArchitecture()).matcher(metadata.labels().get("architecture"));
         }
 
         if (matcher.matches()) {
