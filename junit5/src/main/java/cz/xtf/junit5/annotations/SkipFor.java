@@ -19,7 +19,8 @@ public @interface SkipFor {
     /**
      * Name or regexp pattern matching name of the image. For example "eap73-openjdk11-openshift-rhel8" or "eap73-openjdk11-.*"
      * <p>
-     * Only one of {@code name}, {@code imageMetadataLabelName} and {@code imageMetadataLabelArchitecture} can be presented.
+     * Only one of {@code name}, {@code imageMetadataLabelName}, {@code imageMetadataLabelArchitecture} and
+     * {@code subId} can be presented.
      */
     String name() default "";
 
@@ -27,7 +28,8 @@ public @interface SkipFor {
      * Name or regexp pattern matching name in {@code Docker Labels} in image metadata
      * For example "jboss-eap-7/eap73-openjdk11-openshift-rhel8" or "eap73-openjdk11-.*".
      * <p>
-     * Only one of {@code name}, {@code imageMetadataLabelName} and {@code imageMetadataLabelArchitecture} can be presented.
+     * Only one of {@code name}, {@code imageMetadataLabelName}, {@code imageMetadataLabelArchitecture} and
+     * {@code subId} can be presented.
      */
     String imageMetadataLabelName() default "";
 
@@ -35,9 +37,20 @@ public @interface SkipFor {
      * Architecture or regexp pattern matching architecture in {@code Docker Labels} in image metadata
      * For example "x86_64" or "x86_.*".
      * <p>
-     * Only one of {@code name}, {@code imageMetadataLabelName} and {@code imageMetadataLabelArchitecture} can be presented.
+     * Only one of {@code name}, {@code imageMetadataLabelName}, {@code imageMetadataLabelArchitecture} and
+     * {@code subId} can be presented.
      */
     String imageMetadataLabelArchitecture() default "";
+
+    /**
+     * Name or regexp pattern matching the value of the {@code xtf.<product id>>.subid} XTF property
+     * For example, ".*74.*" will match and skip the annotated test when xtf.eap.subid is set to "74-openjdk11",
+     * "74-openj9-11" or "74".
+     * <p>
+     * Only one of {@code imageMetadataLabelName}, {@code name}, {@code imageMetadataLabelArchitecture} and
+     * {@code subId} can be presented.
+     */
+    String subId() default "";
 
     String image();
 

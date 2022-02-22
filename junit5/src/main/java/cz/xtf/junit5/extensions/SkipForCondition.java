@@ -2,12 +2,15 @@ package cz.xtf.junit5.extensions;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.commons.support.AnnotationSupport;
 
+import cz.xtf.core.config.XTFConfig;
 import cz.xtf.core.image.Image;
 import cz.xtf.core.openshift.OpenShifts;
 import cz.xtf.junit5.annotations.SkipFor;
@@ -35,12 +38,9 @@ public class SkipForCondition implements ExecutionCondition {
     }
 
     public static ConditionEvaluationResult resolve(SkipFor skipFor) {
-        if ((skipFor.name().equals("") == skipFor.imageMetadataLabelName().equals("") == skipFor
-                .imageMetadataLabelArchitecture().equals("")) ||
-                (!skipFor.name().equals("") && !skipFor.imageMetadataLabelName().equals("")
-                        && !skipFor.imageMetadataLabelArchitecture().equals(""))) {
+        if (detectMultipleSkipForCriteria(skipFor)) {
             throw new RuntimeException(
-                    "Only one of 'name','imageMetadataLabelName' and 'imageMetadataLabelArchitecture' can be presented in 'SkipFor' annotation.");
+                    "Only one of 'name', 'imageMetadataLabelName', 'imageMetadataLabelArchitecture' and 'subId' can be presented in 'SkipFor' annotation.");
         }
 
         Image image = Image.resolve(skipFor.image());
@@ -51,11 +51,12 @@ public class SkipForCondition implements ExecutionCondition {
         } else if (!skipFor.imageMetadataLabelName().equals("")) {
             DockerImageMetadata metadata = DockerImageMetadata.get(OpenShifts.master(), image);
             matcher = Pattern.compile(skipFor.imageMetadataLabelName()).matcher(metadata.labels().get("name"));
-        } else {
+        } else if (!skipFor.imageMetadataLabelArchitecture().equals("")) {
             DockerImageMetadata metadata = DockerImageMetadata.get(OpenShifts.master(), image);
             matcher = Pattern.compile(skipFor.imageMetadataLabelArchitecture()).matcher(metadata.labels().get("architecture"));
+        } else {
+            matcher = Pattern.compile(skipFor.subId()).matcher(XTFConfig.get("xtf." + skipFor.image() + ".subid"));
         }
-
         if (matcher.matches()) {
             String reason = skipFor.reason().equals("") ? "" : " (" + skipFor.reason() + ")";
             return ConditionEvaluationResult
@@ -63,5 +64,11 @@ public class SkipForCondition implements ExecutionCondition {
         } else {
             return ConditionEvaluationResult.enabled("Image '" + image.getRepo() + "' is expected to contain tested feature.");
         }
+    }
+
+    private static boolean detectMultipleSkipForCriteria(SkipFor skipFor) {
+        return Stream
+                .of(skipFor.name(), skipFor.imageMetadataLabelName(), skipFor.subId(), skipFor.imageMetadataLabelArchitecture())
+                .filter(c -> StringUtils.isNotBlank(c)).count() > 1;
     }
 }
