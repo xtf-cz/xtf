@@ -1,7 +1,9 @@
 package cz.xtf.core.bm;
 
+import static cz.xtf.core.config.OpenShiftConfig.OPENSHIFT_NAMESPACE;
+
 import cz.xtf.core.config.BuildManagerConfig;
-import cz.xtf.core.config.OpenShiftConfig;
+import cz.xtf.core.config.XTFConfig;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.openshift.OpenShifts;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -23,7 +25,7 @@ public class BuildManagers {
                     bm = new BuildManager(OpenShifts.master(buildNamespace));
 
                     // If the build namespace is in a separate namespace to "master" namespace, we assume it is a shared namespace
-                    if (!BuildManagerConfig.namespace().equals(OpenShiftConfig.namespace())) {
+                    if (!BuildManagerConfig.namespace().equals(XTFConfig.get(OPENSHIFT_NAMESPACE))) {
                         OpenShift admin = OpenShifts.admin(buildNamespace);
 
                         try {

@@ -52,7 +52,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ServiceLogsStreamingRunner implements BeforeAllCallback, AfterAllCallback {
-    private static final OpenShift openShift = OpenShifts.master();
     private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create("cz", "xtf", "junit",
             "extensions", "ServiceLogsRunner");
 
@@ -247,6 +246,7 @@ public class ServiceLogsStreamingRunner implements BeforeAllCallback, AfterAllCa
         ServiceLogs serviceLogs;
 
         // namespaces
+        OpenShift openShift = OpenShifts.master();
         final String masterNamespace = openShift.getNamespace();
         final String buildsNamespace = BuildManagers.get().openShift().getNamespace();
         final List<String> uniqueNamespaces = new ArrayList<>();

@@ -27,7 +27,13 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+
+import cz.xtf.core.config.TestCaseContext;
 import cz.xtf.core.config.WaitingConfig;
 import cz.xtf.core.event.EventList;
 import cz.xtf.core.openshift.crd.CustomResourceDefinitionContextProvider;
@@ -40,6 +46,8 @@ import io.fabric8.kubernetes.api.model.Endpoints;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.Event;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResourceList;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.LocalObjectReferenceBuilder;
@@ -95,6 +103,13 @@ public class OpenShift extends DefaultOpenShiftClient {
     private static volatile String routeSuffix;
 
     public static final String KEEP_LABEL = "xtf.cz/keep";
+
+    /**
+     * Used to cache created Openshift clients for given test case.
+     */
+    public static final Multimap<String, OpenShift> testcaseToOpenshiftClientMap = Multimaps
+            .synchronizedListMultimap(ArrayListMultimap.create());
+
     /**
      * This label is supposed to be used for any resource created by the XTF to easily distinguish which resources have
      * been created by XTF automation.
@@ -120,7 +135,7 @@ public class OpenShift extends DefaultOpenShiftClient {
             openShiftConfig.setNamespace(namespace);
         }
 
-        return new OpenShift(openShiftConfig);
+        return get(openShiftConfig);
     }
 
     public static OpenShift get(Path kubeconfigPath, String namespace) {
@@ -135,7 +150,7 @@ public class OpenShift extends DefaultOpenShiftClient {
                 openShiftConfig.setNamespace(namespace);
             }
 
-            return new OpenShift(openShiftConfig);
+            return get(openShiftConfig);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -152,7 +167,7 @@ public class OpenShift extends DefaultOpenShiftClient {
 
         setupTimeouts(openShiftConfig);
 
-        return new OpenShift(openShiftConfig);
+        return get(openShiftConfig);
     }
 
     public static OpenShift get(String masterUrl, String namespace, String token) {
@@ -165,7 +180,27 @@ public class OpenShift extends DefaultOpenShiftClient {
 
         setupTimeouts(openShiftConfig);
 
-        return new OpenShift(openShiftConfig);
+        return get(openShiftConfig);
+    }
+
+    private static OpenShift get(OpenShiftConfig openShiftConfig) {
+        OpenShift openshift;
+        if (testcaseToOpenshiftClientMap.get(TestCaseContext.getTestCaseForCurrentThread()).size() > 0) {
+            // check that such client config already exists in some of the clients
+            Optional<OpenShift> optionalOpenShift = testcaseToOpenshiftClientMap
+                    .get(TestCaseContext.getTestCaseForCurrentThread()).stream()
+                    .filter(oc -> isEqualOpenshiftConfig(openShiftConfig, oc.getConfiguration()))
+                    .findFirst();
+
+            if (optionalOpenShift.isPresent()) {
+                return optionalOpenShift.get();
+            }
+        }
+
+        openshift = new OpenShift(openShiftConfig);
+        testcaseToOpenshiftClientMap.put(TestCaseContext.getTestCaseForCurrentThread(),
+                openshift);
+        return openshift;
     }
 
     private static void setupTimeouts(OpenShiftConfig config) {
@@ -676,6 +711,7 @@ public class OpenShift extends DefaultOpenShiftClient {
                 }
             }
         }
+        log.info("generateHostname returns namespace: " + routeName + "-" + getNamespace() + "." + routeSuffix);
         return routeName + "-" + getNamespace() + "." + routeSuffix;
     }
 
@@ -894,7 +930,8 @@ public class OpenShift extends DefaultOpenShiftClient {
     }
 
     public boolean deleteServiceAccount(ServiceAccount serviceAccount) {
-        return serviceAccounts().delete(serviceAccount);
+        boolean result = serviceAccounts().delete(serviceAccount);
+        return result;
     }
 
     // RoleBindings
@@ -1242,7 +1279,9 @@ public class OpenShift extends DefaultOpenShiftClient {
     public Waiter clean() {
         for (CustomResourceDefinitionContextProvider crdContextProvider : OpenShift.getCRDContextProviders()) {
             try {
-                customResource(crdContextProvider.getContext()).delete(getNamespace());
+                customResources(crdContextProvider.getContext(), GenericKubernetesResource.class,
+                        GenericKubernetesResourceList.class)
+                                .inNamespace(getNamespace()).delete();
                 log.debug("DELETE :: " + crdContextProvider.getContext().getName() + " instances");
             } catch (KubernetesClientException kce) {
                 log.debug(crdContextProvider.getContext().getName() + " might not be installed on the cluster.", kce);
@@ -1267,7 +1306,9 @@ public class OpenShift extends DefaultOpenShiftClient {
         autoscaling().v1().horizontalPodAutoscalers().withLabelNotIn(KEEP_LABEL, "", "true").delete();
         getUserConfigMaps().forEach(this::deleteConfigMap);
         getUserSecrets().forEach(this::deleteSecret);
-        getUserServiceAccounts().forEach(this::deleteServiceAccount);
+        getUserServiceAccounts().forEach((sa) -> {
+            this.deleteServiceAccount(sa);
+        });
         getUserRoleBindings().forEach(this::deleteRoleBinding);
         rbac().roles().withLabelNotIn(KEEP_LABEL, "", "true").withLabelNotIn("olm.owner.kind", "ClusterServiceVersion")
                 .delete();
@@ -1341,5 +1382,16 @@ public class OpenShift extends DefaultOpenShiftClient {
     @Deprecated
     public OpenShiftWaiters waiters() {
         return waiters;
+    }
+
+    private static boolean isEqualOpenshiftConfig(OpenShiftConfig newConfig, OpenShiftConfig existingConfig) {
+        return new EqualsBuilder()
+                .append(newConfig.getOpenShiftUrl(), existingConfig.getOpenShiftUrl())
+                .append(newConfig.getNamespace(), existingConfig.getNamespace())
+                .append(newConfig.getUsername(), existingConfig.getUsername())
+                .append(newConfig.getPassword(), existingConfig.getPassword())
+                .append(newConfig.getRequestConfig().getOauthToken(), existingConfig.getRequestConfig().getOauthToken())
+                .append(newConfig.isTrustCerts(), existingConfig.isTrustCerts())
+                .isEquals();
     }
 }

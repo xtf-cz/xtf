@@ -15,12 +15,17 @@ import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.SupplierWaiter;
 import cz.xtf.core.waiting.Waiter;
 import cz.xtf.core.waiting.failfast.FailFastCheck;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResourceList;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildStatus;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class OpenShiftWaiters {
     private OpenShift openShift;
     private FailFastCheck failFast;
@@ -120,16 +125,44 @@ public class OpenShiftWaiters {
     public Waiter isProjectClean() {
         return new SimpleWaiter(() -> {
             int crdInstances = 0;
+            List<GenericKubernetesResource> customResourceDefinitionList = null;
             for (CustomResourceDefinitionContextProvider crdContextProvider : OpenShift.getCRDContextProviders()) {
                 try {
-                    crdInstances += ((List) (openShift.customResource(crdContextProvider.getContext())
-                            .list(openShift.getNamespace()).get("items"))).size();
+                    customResourceDefinitionList = openShift.customResources(crdContextProvider.getContext(),
+                            GenericKubernetesResource.class, GenericKubernetesResourceList.class)
+                            .inNamespace(openShift.getNamespace())
+                            .list().getItems();
+                    crdInstances += customResourceDefinitionList.size();
                 } catch (KubernetesClientException kce) {
                     // CRD might not be installed on the cluster
                 }
             }
-            return crdInstances == 0 & openShift.listRemovableResources().isEmpty();
-        }, TimeUnit.MILLISECONDS, WaitingConfig.timeoutCleanup(), "Cleaning project.")
+
+            boolean isClean = false;
+            List<HasMetadata> listRemovableResources = openShift.listRemovableResources();
+            if (crdInstances == 0 & listRemovableResources.isEmpty()) {
+                isClean = true;
+            } else {
+                StringBuilder strBuilderResourcesToDelete = new StringBuilder(
+                        "Cleaning project - " + openShift.getNamespace()
+                                + " Waiting for following resources to be deleted: \n");
+                if (customResourceDefinitionList != null && !customResourceDefinitionList.isEmpty()) {
+                    customResourceDefinitionList.stream().forEach((r) -> {
+                        strBuilderResourcesToDelete.append(r + "\n");
+                    });
+                }
+                if (!listRemovableResources.isEmpty()) {
+                    listRemovableResources.stream().forEach((r) -> {
+                        strBuilderResourcesToDelete.append(r + "\n");
+                    });
+                }
+                log.debug(strBuilderResourcesToDelete.toString());
+            }
+            return isClean;
+        }, TimeUnit.MILLISECONDS, WaitingConfig.timeoutCleanup(), "Cleaning project - " + openShift.getNamespace())
+                .onTimeout(() -> log.info("Cleaning namespace: " + openShift.getNamespace() + " - timed out."))
+                .onFailure(() -> log.info("Cleaning namespace: " + openShift.getNamespace() + " - failed."))
+                .onSuccess(() -> log.info("Cleaning namespace: " + openShift.getNamespace() + " - finished."))
                 .failFast(failFast);
     }
 

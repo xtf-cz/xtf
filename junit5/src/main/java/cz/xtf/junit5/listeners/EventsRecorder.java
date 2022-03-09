@@ -1,5 +1,7 @@
 package cz.xtf.junit5.listeners;
 
+import static org.junit.platform.engine.TestExecutionResult.Status.FAILED;
+
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,9 +11,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.launcher.TestExecutionListener;
+import org.junit.platform.launcher.TestIdentifier;
 import org.junit.platform.launcher.TestPlan;
 
+import cz.xtf.core.config.OpenShiftConfig;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.openshift.OpenShifts;
 import io.fabric8.kubernetes.api.model.Event;
@@ -21,7 +26,29 @@ import lombok.extern.slf4j.Slf4j;
 public class EventsRecorder implements TestExecutionListener {
     @Override
     public void testPlanExecutionFinished(TestPlan testPlan) {
-        final Path eventsLogPath = Paths.get("log", "events");
+        if (OpenShiftConfig.useNamespacePerTestcase()) {
+            return;
+        }
+        recordEvents(Paths.get("log", "events"));
+    }
+
+    @Override
+    public void executionFinished(TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {
+        if (OpenShiftConfig.useNamespacePerTestcase() && testIdentifier.isTest()
+                && FAILED.equals(testExecutionResult.getStatus())) {
+            recordEvents(Paths.get("log", "pods", getTestDisplayName(testIdentifier), "events"));
+        }
+    }
+
+    private String getTestDisplayName(TestIdentifier testIdentifier) {
+        String className = testIdentifier.getParentId().get()
+                .replaceAll(".*class:", "")
+                .replaceAll("].*", "");
+        return String.format("%s#%s", className, testIdentifier.getDisplayName());
+    }
+
+    private void recordEvents(Path eventsLogPath) {
+
         final OpenShift openShift = OpenShifts.master();
 
         eventsLogPath.getParent().toFile().mkdirs();

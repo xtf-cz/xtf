@@ -157,6 +157,23 @@ xtf.foo.v2.version=1.0.3
 
 Retrieving an instance with this metadata: `Produts.resolve("product");`
 
+#### Run test cases in separate namespaces using `xtf.openshift.namespace.per.testcase` property 
+You can enable running each test case in separate namespace by setting `xtf.openshift.namespace.per.testcase=true`. 
+
+Namespace names follow pattern: "`${xtf.openshift.namespace}`-Test_Case_Name". 
+For example for `xtf.openshift.namespace=testnamespace` and test case `org.test.SmokeTest` it will be `testnamespace-SmokeTest`.
+
+You can limit the length of created namespace by `xtf.openshift.namespace.per.testcase.length.limit` property. By default it's `25` chars. If limit is breached then
+test case name in namespace name is hashed to hold the limit. So namespace name would like `testnamespace-s623jd6332`
+
+**Warning - Limitations**
+
+In case that you're using this feature, consuming test suite must follow those rules to avoid unexpected behaviour when using `cz.xtf.core.openshift.OpenShift` instances:
+
+* Do not create static `cz.xtf.core.openshift.OpenShift` variable like: `public static final OpenShift openshift = Openshifts.master()` on class level. 
+The reason is that during initialization of static instances the test case and corresponsing namespace is not known. To avoid unexpected behaviour `RuntimeException` is thrown.
+* Similarly as above do not create `cz.xtf.core.openshift.OpenShift` variables in static blocks or do not initialize other static variables which creates `cz.xtf.core.openshift.OpenShift` instance.
+
 #### Service Logs Streaming (SLS)
 This feature allows for you to stream the services output while the test is running; this way you can see immediately 
 what is happening inside the cluster.
@@ -215,6 +232,7 @@ following information:
 * _**output**_: the base path where the log stream files - one for each executed test class - will be created. 
   **OPTIONAL**, if not assigned, logs will be streamed to `System.out`. When assigned, XTF will attempt to create the 
   path in case it doesn't exist and default to `System.out` should any error occur. 
+
 
 ###### Usage examples 
 Given what above, enabling SLS for all test classes is possible by executing the following command: 

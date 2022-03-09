@@ -28,14 +28,10 @@ public class OpenShifts {
     private static final String OCP3_CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v3/clients";
     private static final String OCP4_CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v4";
 
-    private static OpenShift adminUtil;
-    private static OpenShift masterUtil;
-
     public static OpenShift admin() {
-        if (adminUtil == null) {
-            adminUtil = OpenShifts.admin(OpenShiftConfig.namespace());
-        }
-        return adminUtil;
+
+        return OpenShifts.admin(OpenShiftConfig.namespace());
+
     }
 
     public static OpenShift admin(String namespace) {
@@ -56,10 +52,9 @@ public class OpenShifts {
     }
 
     public static OpenShift master() {
-        if (masterUtil == null) {
-            masterUtil = OpenShifts.master(OpenShiftConfig.namespace());
-        }
-        return masterUtil;
+
+        return OpenShifts.master(OpenShiftConfig.namespace());
+
     }
 
     public static OpenShift master(String namespace) {
