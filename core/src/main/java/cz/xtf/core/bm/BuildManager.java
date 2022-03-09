@@ -28,7 +28,7 @@ public class BuildManager {
                 // Otherwise you can see:
                 // $ oc label namespace <name> "label1=foo"
                 // Error from server (Forbidden): namespaces "<name>" is forbidden: User "<user>" cannot patch resource "namespaces" in API group "" in the namespace "<name>"
-                OpenShifts.admin().namespaces().withName(openShift.getNamespace())
+                OpenShifts.admin(openShift.getNamespace()).namespaces().withName(openShift.getNamespace())
                         .edit(new Visitor<NamespaceBuilder>() {
                             @Override
                             public void visit(NamespaceBuilder builder) {

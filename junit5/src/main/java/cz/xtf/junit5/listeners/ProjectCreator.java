@@ -1,92 +1,73 @@
 package cz.xtf.junit5.listeners;
 
-import java.util.concurrent.TimeUnit;
-import java.util.function.BooleanSupplier;
+import java.util.Arrays;
 
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.engine.descriptor.MethodBasedTestDescriptor;
+import org.junit.platform.engine.FilterResult;
+import org.junit.platform.engine.TestDescriptor;
+import org.junit.platform.launcher.PostDiscoveryFilter;
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 
 import cz.xtf.core.config.OpenShiftConfig;
-import cz.xtf.core.openshift.OpenShift;
+import cz.xtf.core.context.TestCaseContext;
+import cz.xtf.core.namespace.NamespaceManager;
 import cz.xtf.core.openshift.OpenShifts;
-import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.junit5.config.JUnitConfig;
-import io.fabric8.kubernetes.api.builder.Visitor;
-import io.fabric8.kubernetes.api.model.NamespaceBuilder;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ProjectCreator implements TestExecutionListener {
-    private static final OpenShift openShift = OpenShifts.master();
+public class ProjectCreator
+        implements TestExecutionListener, BeforeAllCallback, AfterAllCallback, PostDiscoveryFilter {
 
     @Override
     public void testPlanExecutionStarted(TestPlan testPlan) {
-        createProject();
+        NamespaceManager.createIfDoesNotExistsProject(OpenShiftConfig.namespace());
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext context) {
+        // todo this can be removed once TestCaseContextExtension is called always before ProjectCreator extension
+        setTestExecutionContext(context);
+
+        log.debug("BeforeAll - Test case: " + context.getTestClass().get().getName() + " running in thread name: "
+                + Thread.currentThread().getName()
+                + " will use namespace: " + OpenShifts.master().getNamespace() + " - thread context is: "
+                + TestCaseContext.getRunningTestCaseName());
+        NamespaceManager.createIfDoesNotExistsProject();
+    }
+
+    private void setTestExecutionContext(ExtensionContext context) {
+        TestCaseContext.setRunningTestCase(context.getTestClass().get().getName());
+    }
+
+    @Override
+    public void afterAll(ExtensionContext context) {
+        if (JUnitConfig.cleanOpenShift()) {
+            NamespaceManager.deleteProject(false);
+        }
     }
 
     @Override
     public void testPlanExecutionFinished(TestPlan testPlan) {
         if (JUnitConfig.cleanOpenShift()) {
-            deleteProject();
+            NamespaceManager.deleteProject(OpenShiftConfig.namespace(), true);
         }
     }
 
-    /**
-     * Delete the current project
-     * 
-     * @return boolean, true if the project has been deleted, false otherwise
-     */
-    public static boolean deleteProject() {
-        boolean deleted = openShift.deleteProject();
-        // For multi-module maven projects, other modules may attempt to crate project requests immediately after this modules deleteProject
-        if (deleted) {
-            BooleanSupplier bs = () -> openShift.getProject() == null;
-            new SimpleWaiter(bs, TimeUnit.MINUTES, 2, "Waiting for old project deletion").waitFor();
-        }
-        return deleted;
-    }
-
-    /**
-     * It creates a new project if it doesn't exist
-     * 
-     * @return boolean, true if it is created, false if the project already exist
-     */
-    public static boolean createProject() {
-        boolean newProject = false;
-        if (openShift.getProject() == null) {
-            openShift.createProjectRequest();
-            openShift.waiters().isProjectReady().waitFor();
-
-            try {
-                // Adding a label can be only done via 'namespace'. It cannot be set via 'project' API. Thus we do this
-                // separately. Also, to update namespace label, it's necessary to have 'patch resource "namespaces"'
-                // permission for current user and updated namespace, e.g. by having 'cluster-admin' role.
-                // Otherwise you can see:
-                // $ oc label namespace <name> "label1=foo"
-                // Error from server (Forbidden): namespaces "<name>" is forbidden: User "<user>" cannot patch resource "namespaces" in API group "" in the namespace "<name>"
-                OpenShifts.admin().namespaces().withName(openShift.getProject().getMetadata().getName())
-                        .edit(new Visitor<NamespaceBuilder>() {
-                            @Override
-                            public void visit(NamespaceBuilder builder) {
-                                builder.editMetadata()
-                                        .addToLabels(OpenShift.XTF_MANAGED_LABEL, "true");
-                            }
-                        });
-            } catch (KubernetesClientException e) {
-                // We weren't able to assign a label to the new project. Let's just print warning since this information
-                // is not critical to the tests execution. Possible cause for this are insufficient permissions since
-                // some projects using XTF are executed on OCP instances without 'admin' accounts available.
-                log.warn("Couldn't assign label '" + OpenShift.XTF_MANAGED_LABEL + "' to the new project '"
-                        + openShift.getNamespace() + "'. Possible cause are insufficient permissions.");
-                log.debug(e.getMessage());
+    @Override
+    public FilterResult apply(TestDescriptor testDescriptor) {
+        if (testDescriptor instanceof MethodBasedTestDescriptor) {
+            boolean disabled = Arrays.stream(((MethodBasedTestDescriptor) testDescriptor).getTestClass().getAnnotations())
+                    .filter(annotation -> annotation instanceof Disabled).count() > 0;
+            if (!disabled) {
+                NamespaceManager.addTestCaseToNamespaceEntryIfAbsent(testDescriptor);
             }
-            newProject = true;
         }
-        if (OpenShiftConfig.pullSecret() != null) {
-            openShift.setupPullSecret(OpenShiftConfig.pullSecret());
-        }
-
-        return newProject;
+        return FilterResult.included(testDescriptor.getDisplayName());
     }
 }

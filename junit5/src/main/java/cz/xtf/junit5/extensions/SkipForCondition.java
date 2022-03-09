@@ -10,13 +10,16 @@ import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.commons.support.AnnotationSupport;
 
+import cz.xtf.core.config.OpenShiftConfig;
 import cz.xtf.core.config.XTFConfig;
 import cz.xtf.core.image.Image;
 import cz.xtf.core.openshift.OpenShifts;
 import cz.xtf.junit5.annotations.SkipFor;
 import cz.xtf.junit5.annotations.SkipFors;
 import cz.xtf.junit5.model.DockerImageMetadata;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class SkipForCondition implements ExecutionCondition {
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
@@ -49,10 +52,12 @@ public class SkipForCondition implements ExecutionCondition {
         if (!skipFor.name().equals("")) {
             matcher = Pattern.compile(skipFor.name()).matcher(image.getRepo());
         } else if (!skipFor.imageMetadataLabelName().equals("")) {
-            DockerImageMetadata metadata = DockerImageMetadata.get(OpenShifts.master(), image);
+            DockerImageMetadata metadata = DockerImageMetadata.get(OpenShifts.master(OpenShiftConfig.namespace()),
+                    image);
             matcher = Pattern.compile(skipFor.imageMetadataLabelName()).matcher(metadata.labels().get("name"));
         } else if (!skipFor.imageMetadataLabelArchitecture().equals("")) {
-            DockerImageMetadata metadata = DockerImageMetadata.get(OpenShifts.master(), image);
+            DockerImageMetadata metadata = DockerImageMetadata.get(OpenShifts.master(OpenShiftConfig.namespace()),
+                    image);
             matcher = Pattern.compile(skipFor.imageMetadataLabelArchitecture()).matcher(metadata.labels().get("architecture"));
         } else {
             matcher = Pattern.compile(skipFor.subId()).matcher(XTFConfig.get("xtf." + skipFor.image() + ".subid"));

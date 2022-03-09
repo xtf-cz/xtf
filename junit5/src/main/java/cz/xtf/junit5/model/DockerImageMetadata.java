@@ -11,12 +11,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.StringUtils;
 
+import cz.xtf.core.config.OpenShiftConfig;
 import cz.xtf.core.image.Image;
+import cz.xtf.core.namespace.NamespaceManager;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
 import cz.xtf.core.waiting.failfast.FailFastCheck;
-import cz.xtf.junit5.listeners.ProjectCreator;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamTag;
 import io.fabric8.openshift.api.model.NamedTagEventList;
@@ -78,7 +79,7 @@ public class DockerImageMetadata {
         }
 
         //create namespace if not exists
-        final boolean isNewProject = ProjectCreator.createProject();
+        final boolean isNewProject = NamespaceManager.createIfDoesNotExistsProject(OpenShiftConfig.namespace());
 
         // create new one of unique name
         String tempName = image.getRepo() + "-" + randomString();
@@ -99,7 +100,7 @@ public class DockerImageMetadata {
                 : null;
         openShift.deleteImageStream(imageStream);
         if (isNewProject) {
-            ProjectCreator.deleteProject();
+            NamespaceManager.deleteProject(OpenShiftConfig.namespace(), true);
         }
         return metadata;
     }
