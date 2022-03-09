@@ -74,6 +74,8 @@ Take a look at the
 class to see possible configurations. Enabling some of them will allow you to instantiate as 
 `OpenShift openShift = OpenShifts.master()`.
 
+
+
 ##### Pull Secrets
 There's a convenient method `OpenShift::setupPullSecret()` to set up pull secrets as recommended by OpenShift 
 [documentation](https://docs.openshift.com/container-platform/4.2/openshift_images/managing-images/using-image-pull-secrets.html).
@@ -157,6 +159,51 @@ xtf.foo.v2.version=1.0.3
 
 Retrieving an instance with this metadata: `Produts.resolve("product");`
 
+#### Using `TestCaseContext` to get name of currently running test case
+
+If `junit.jupiter.extensions.autodetection.enabled=true` then JUnit 5 extension `cz.xtf.core.context.TestCaseContextExtension` is
+automatically registered. It
+sets name of currently running test case into `TestCaseContext` before `@BeforeAll` of test case is called.
+
+Following code then can be used to retrieve the name of currently running test case in:
+```
+String testCase = TestCaseContext.getRunningTestCaseName()
+```
+
+#### Automatic creation of namespace(s)
+
+XTF allows to automatically manage creation of testing namespace which is defined by `xtf.openshift.namespace` property. This 
+namespace is created before any test case is started. 
+
+This feature requires to have XTF JUnit5 `cz.xtf.junit5.listeners.ProjectCreator` extension enabled. This can be done by adding
+`cz.xtf.junit5.listeners.ProjectCreator` line into files:
+```
+src/test/resources/META-INF/services/org.junit.jupiter.api.extension.Extension
+src/test/resources/META-INF/services/org.junit.platform.launcher.PostDiscoveryFilter
+src/test/resources/META-INF/services/org.junit.platform.launcher.TestExecutionListener
+```
+
+#### Run test cases in separate namespaces using `xtf.openshift.namespace.per.testcase` property 
+
+You can enable running each test case in separate namespace by setting `xtf.openshift.namespace.per.testcase=true`. 
+
+Namespace names follow pattern: "`${xtf.openshift.namespace}`-TestCaseName". 
+For example for `xtf.openshift.namespace=testnamespace` and test case `org.test.SmokeTest` it will be `testnamespace-SmokeTest`.
+
+You can limit the length of created namespace by `xtf.openshift.namespace.per.testcase.length.limit` property. By default it's `25` chars. If limit is breached then
+test case name in namespace name is hashed to hold the limit. So namespace name would like `testnamespace-s623jd6332`
+
+**Warning - Limitations**
+
+When enabling this feature in your project, **you may need to replace [OpenShiftConfig.getNamespace()](core/src/main/java/cz/xtf/core/config/OpenShiftConfig.java) 
+with [NamespaceManager.getNamespace()](core/src/main/java/cz/xtf/core/namespace/NamespaceManager.java). Check method's javadoc to understand difference.**
+
+In case that you're using this feature, consuming test suite must follow those rules to avoid unexpected behaviour when using `cz.xtf.core.openshift.OpenShift` instances:
+
+* **Do not create static `cz.xtf.core.openshift.OpenShift` variable** like: `public static final OpenShift openshift = Openshifts.master()` on class level. 
+The reason is that during initialization of static instances the test case and corresponsing namespace is not known. To avoid unexpected behaviour `RuntimeException` is thrown, when programmer breaks this rule.
+* Similarly as above do not create `cz.xtf.core.openshift.OpenShift` variables in static blocks or do not initialize other static variables which creates `cz.xtf.core.openshift.OpenShift` instance.
+
 #### Service Logs Streaming (SLS)
 This feature allows for you to stream the services output while the test is running; this way you can see immediately 
 what is happening inside the cluster.
@@ -215,6 +262,7 @@ following information:
 * _**output**_: the base path where the log stream files - one for each executed test class - will be created. 
   **OPTIONAL**, if not assigned, logs will be streamed to `System.out`. When assigned, XTF will attempt to create the 
   path in case it doesn't exist and default to `System.out` should any error occur. 
+
 
 ###### Usage examples 
 Given what above, enabling SLS for all test classes is possible by executing the following command: 

@@ -2,6 +2,10 @@ package cz.xtf.core.config;
 
 import java.nio.file.Paths;
 
+import cz.xtf.core.openshift.OpenShifts;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public final class OpenShiftConfig {
     public static final String OPENSHIFT_URL = "xtf.openshift.url";
     public static final String OPENSHIFT_TOKEN = "xtf.openshift.token";
@@ -22,6 +26,19 @@ public final class OpenShiftConfig {
     public static final String OPENSHIFT_MASTER_TOKEN = "xtf.openshift.master.token";
     public static final String OPENSHIFT_ROUTE_DOMAIN = "xtf.openshift.route_domain";
     public static final String OPENSHIFT_PULL_SECRET = "xtf.openshift.pullsecret";
+    public static final String OPENSHIFT_NAMESPACE_PER_TESTCASE = "xtf.openshift.namespace.per.testcase";
+    /**
+     * Used only if xtf.openshift.namespace.per.testcase=true - this property can configure its maximum length. This is useful
+     * in case
+     * where namespace is used in first part of URL of route which must have <64 chars length.
+     */
+    public static final String OPENSHIFT_NAMESPACE_NAME_LENGTH_LIMIT = "xtf.openshift.namespace.per.testcase.length.limit";
+
+    /**
+     * Used only if xtf.openshift.namespace.per.testcase=true - this property configures default maximum length of namespace
+     * name.
+     */
+    private static final String DEFAULT_OPENSHIFT_NAMESPACE_NAME_LENGTH_LIMIT = "25";
 
     public static String url() {
         return XTFConfig.get(OPENSHIFT_URL);
@@ -48,8 +65,34 @@ public final class OpenShiftConfig {
         return XTFConfig.get(OPENSHIFT_VERSION);
     }
 
+    /**
+     * Note that most likely you want to use {@see NamespaceManager#getNamespace()} which returns actual namespace
+     * used by current tests. For example {@link OpenShifts#master()} is using {@see NamespaceManager#getNamespace()}
+     * to get default namespace for currently running test.
+     *
+     * @return Returns namespace as defined in xtf.openshift.namespace property
+     */
     public static String namespace() {
         return XTFConfig.get(OPENSHIFT_NAMESPACE);
+    }
+
+    /**
+     * @return if property xtf.openshift.namespace.per.testcase is empty or true then returns true otherwise false
+     */
+    public static boolean useNamespacePerTestCase() {
+        return XTFConfig.get(OPENSHIFT_NAMESPACE_PER_TESTCASE) != null
+                && (XTFConfig.get(OPENSHIFT_NAMESPACE_PER_TESTCASE).equals("")
+                        || XTFConfig.get(OPENSHIFT_NAMESPACE_PER_TESTCASE).toLowerCase().equals("true"));
+    }
+
+    /**
+     * Used only if xtf.openshift.namespace.per.testcase=true
+     * 
+     * @return limit on namespace if it's set by -Dxtf.openshift.namespace.per.testcase.length.limit property
+     */
+    public static int getNamespaceLengthLimitForUniqueNamespacePerTest() {
+        return Integer.parseInt(XTFConfig.get(OPENSHIFT_NAMESPACE_NAME_LENGTH_LIMIT,
+                DEFAULT_OPENSHIFT_NAMESPACE_NAME_LENGTH_LIMIT));
     }
 
     public static String binaryPath() {
@@ -60,7 +103,7 @@ public final class OpenShiftConfig {
      * Channel configuration for download of OpenShift client from
      * https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/
      * Channels are: stable, latest, fast, candidate
-     * 
+     *
      * @return channel as configured in xtf.openshift.binary.url.channel property, or default 'stable'
      */
     public static String binaryUrlChannelPath() {

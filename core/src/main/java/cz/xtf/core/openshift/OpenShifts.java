@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import cz.xtf.core.config.OpenShiftConfig;
 import cz.xtf.core.http.Https;
+import cz.xtf.core.namespace.NamespaceManager;
 import io.fabric8.kubernetes.client.Config;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,14 +29,8 @@ public class OpenShifts {
     private static final String OCP3_CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v3/clients";
     private static final String OCP4_CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v4";
 
-    private static OpenShift adminUtil;
-    private static OpenShift masterUtil;
-
     public static OpenShift admin() {
-        if (adminUtil == null) {
-            adminUtil = OpenShifts.admin(OpenShiftConfig.namespace());
-        }
-        return adminUtil;
+        return OpenShifts.admin(NamespaceManager.getNamespace());
     }
 
     public static OpenShift admin(String namespace) {
@@ -56,10 +51,9 @@ public class OpenShifts {
     }
 
     public static OpenShift master() {
-        if (masterUtil == null) {
-            masterUtil = OpenShifts.master(OpenShiftConfig.namespace());
-        }
-        return masterUtil;
+
+        return OpenShifts.master(NamespaceManager.getNamespace());
+
     }
 
     public static OpenShift master(String namespace) {
@@ -84,7 +78,7 @@ public class OpenShifts {
     }
 
     public static OpenShiftBinary masterBinary() {
-        return masterBinary(OpenShiftConfig.namespace());
+        return masterBinary(NamespaceManager.getNamespace());
     }
 
     public static OpenShiftBinary masterBinary(String namespace) {
@@ -92,7 +86,7 @@ public class OpenShifts {
     }
 
     public static OpenShiftBinary adminBinary() {
-        return adminBinary(OpenShiftConfig.namespace());
+        return adminBinary(NamespaceManager.getNamespace());
     }
 
     public static OpenShiftBinary adminBinary(String namespace) {
