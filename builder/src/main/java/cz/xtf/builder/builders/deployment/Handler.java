@@ -1,7 +1,9 @@
 package cz.xtf.builder.builders.deployment;
 
+import io.fabric8.kubernetes.api.model.LifecycleHandler;
+
 public interface Handler {
-    io.fabric8.kubernetes.api.model.Handler build();
+    LifecycleHandler build();
 
     static Handler createExecHandler(final String... cmdLine) {
         return new ExecHandler(cmdLine);

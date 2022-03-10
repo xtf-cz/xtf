@@ -1,6 +1,6 @@
 package cz.xtf.builder.builders.deployment;
 
-import io.fabric8.kubernetes.api.model.HandlerBuilder;
+import io.fabric8.kubernetes.api.model.LifecycleHandlerBuilder;
 
 class ExecHandler implements Handler {
 
@@ -11,8 +11,8 @@ class ExecHandler implements Handler {
     }
 
     @Override
-    public io.fabric8.kubernetes.api.model.Handler build() {
-        return new HandlerBuilder()
+    public io.fabric8.kubernetes.api.model.LifecycleHandler build() {
+        return new LifecycleHandlerBuilder()
                 .withNewExec()
                 .withCommand(cmdLine)
                 .endExec()
