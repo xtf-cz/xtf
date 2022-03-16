@@ -4,7 +4,7 @@
     <groupId>cz.xtf</groupId>
     <artifactId>xtf-parent</artifactId>
     <packaging>pom</packaging>
-    <version>0.26</version>
+    <version>0.27-SNAPSHOT</version>
     <name>XTF</name>
     <description>XTF is a framework designed to ease up aspects of testing in OpenShift environment.</description>
     <url>https://github.com/xtf-cz/xtf/</url>
@@ -29,7 +29,7 @@
         <connection>scm:git:git@github.com:xtf-cz/xtf.git</connection>
         <developerConnection>scm:git:git@github.com:xtf-cz/xtf.git</developerConnection>
         <url>http://github.com/xtf-cz/xtf.git</url>
-        <tag>0.26</tag>
+        <tag>${project.version}</tag>
     </scm>
 
     <developers>
