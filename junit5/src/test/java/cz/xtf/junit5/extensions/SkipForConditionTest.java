@@ -24,7 +24,7 @@ class SkipForConditionTest {
     void before() {
         systemProperties.set("xtf.eap.subid", "74-openjdk11");
         systemProperties.set("xtf.eap.74-openjdk11.image",
-                "registry-proxy.engineering.redhat.com/rh-osbs/jboss-eap-7-eap74-openjdk8-openshift-rhel7:7.4.0-6");
+                "quay.io/wildfly/wildfly-centos7:latest");
     }
 
     @SkipFor(image = "eap", name = ".*eap-74.*", reason = "This test is skipped based on the image name.")
@@ -71,19 +71,16 @@ class SkipForConditionTest {
     void testUniqueCriteriaResolutionOnWellAnnotatedClasses() {
         Stream<Class> workingClasses = Stream.of(
                 WellAnnotatedImageNameBasedSkipTest.class,
-                WellAnnotatedImageMetadataLabelBasedSkipTest.class,
-                WellAnnotatedImageMetadataLabelArchitectureBasedSkipTest.class,
+                // imageMetadataLabelName and imageMetadataLabelArchitecture try to fetch docker metadata, so they require connection to openshift
+                // WellAnnotatedImageMetadataLabelBasedSkipTest.class,
+                // WellAnnotatedImageMetadataLabelArchitectureBasedSkipTest.class,
                 WellAnnotatedSubIdBasedSkipTest.class);
         workingClasses.forEach(k -> {
             try {
                 SkipForCondition.resolve((SkipFor) Arrays.stream(k.getAnnotationsByType(SkipFor.class)).findFirst().get());
             } catch (RuntimeException re) {
-                //  we should be able to do better things here, as for instance using a specific Exception type
-                if (re.getMessage().equals(
-                        "Only one of 'name', 'imageMetadataLabelName', 'imageMetadataLabelArchitecture' and 'subId' can be presented in 'SkipFor' annotation.")) {
-                    Assertions.fail(String.format("No exception is expected when resolving %s \"@SkipFor\" annotation",
-                            k.getSimpleName()));
-                }
+                Assertions.fail(String.format("No exception is expected when resolving %s \"@SkipFor\" annotation",
+                        k.getSimpleName()));
             }
         });
     }
