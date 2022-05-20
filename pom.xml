@@ -76,7 +76,7 @@
         <version.junit5.jupiter.engine>5.7.0</version.junit5.jupiter.engine>
         <version.assertj-core>3.17.2</version.assertj-core>
         <version.lombok>1.18.12</version.lombok>
-        <version.gson>2.8.6</version.gson>
+        <version.gson>2.8.9</version.gson>
 
         <!-- Plugin version properties -->
         <version.maven-source-plugin>3.2.1</version.maven-source-plugin>
