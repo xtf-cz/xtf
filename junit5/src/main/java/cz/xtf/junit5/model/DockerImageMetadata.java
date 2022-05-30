@@ -16,6 +16,7 @@ import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
 import cz.xtf.core.waiting.failfast.FailFastCheck;
+import cz.xtf.junit5.listeners.ProjectCreator;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamTag;
 import io.fabric8.openshift.api.model.NamedTagEventList;
@@ -76,6 +77,9 @@ public class DockerImageMetadata {
             return metadataFromTag;
         }
 
+        //create namespace if not exists
+        final boolean isNewProject = ProjectCreator.createProject();
+
         // create new one of unique name
         String tempName = image.getRepo() + "-" + randomString();
         ImageStream imageStream = image.getImageStream(tempName);
@@ -94,6 +98,9 @@ public class DockerImageMetadata {
                 ? getMetadataFromTag(openShift.getImageStreamTag(tempName, image.getMajorTag()))
                 : null;
         openShift.deleteImageStream(imageStream);
+        if (isNewProject) {
+            ProjectCreator.deleteProject();
+        }
         return metadata;
     }
 
