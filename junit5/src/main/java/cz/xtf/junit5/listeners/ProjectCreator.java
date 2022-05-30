@@ -22,6 +22,38 @@ public class ProjectCreator implements TestExecutionListener {
 
     @Override
     public void testPlanExecutionStarted(TestPlan testPlan) {
+        createProject();
+    }
+
+    @Override
+    public void testPlanExecutionFinished(TestPlan testPlan) {
+        if (JUnitConfig.cleanOpenShift()) {
+            deleteProject();
+        }
+    }
+
+    /**
+     * Delete the current project
+     * 
+     * @return boolean, true if the project has been deleted, false otherwise
+     */
+    public static boolean deleteProject() {
+        boolean deleted = openShift.deleteProject();
+        // For multi-module maven projects, other modules may attempt to crate project requests immediately after this modules deleteProject
+        if (deleted) {
+            BooleanSupplier bs = () -> openShift.getProject() == null;
+            new SimpleWaiter(bs, TimeUnit.MINUTES, 2, "Waiting for old project deletion").waitFor();
+        }
+        return deleted;
+    }
+
+    /**
+     * It creates a new project if it doesn't exist
+     * 
+     * @return boolean, true if it is created, false if the project already exist
+     */
+    public static boolean createProject() {
+        boolean newProject = false;
         if (openShift.getProject() == null) {
             openShift.createProjectRequest();
             openShift.waiters().isProjectReady().waitFor();
@@ -49,21 +81,12 @@ public class ProjectCreator implements TestExecutionListener {
                         + openShift.getNamespace() + "'. Possible cause are insufficient permissions.");
                 log.debug(e.getMessage());
             }
+            newProject = true;
         }
         if (OpenShiftConfig.pullSecret() != null) {
             openShift.setupPullSecret(OpenShiftConfig.pullSecret());
         }
-    }
 
-    @Override
-    public void testPlanExecutionFinished(TestPlan testPlan) {
-        if (JUnitConfig.cleanOpenShift()) {
-            boolean deleted = openShift.deleteProject();
-            // For multi-module maven projects, other modules may attempt to crate project requests immediately after this modules deleteProject
-            if (deleted) {
-                BooleanSupplier bs = () -> openShift.getProject() == null;
-                new SimpleWaiter(bs, TimeUnit.MINUTES, 2, "Waiting for old project deletion").waitFor();
-            }
-        }
+        return newProject;
     }
 }
