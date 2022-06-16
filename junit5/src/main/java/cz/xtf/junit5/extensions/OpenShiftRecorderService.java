@@ -1,6 +1,8 @@
 package cz.xtf.junit5.extensions;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -133,7 +135,6 @@ public class OpenShiftRecorderService {
      * @param context The test execution context
      */
     public void updateFilters(ExtensionContext context) {
-        ExtensionContext.Store classStore = getClassStore(context);
         OpenShift master = OpenShifts.master();
         OpenShift bm = BuildManagers.get().openShift();
         if (!isFilterInitializationComplete(context)) {
@@ -215,6 +216,15 @@ public class OpenShiftRecorderService {
                 !isMasterAndBuildNamespaceSame() ? getFilter(context, EVENT_FILTER_BUILDS) : null);
     }
 
+    public void recordState(ExtensionContext context, PrintStream ps) throws IOException {
+        savePodLogs(context, getFilter(context, POD_FILTER_MASTER),
+                !isMasterAndBuildNamespaceSame() ? getFilter(context, POD_FILTER_BUILDS) : null, ps);
+        saveBuildLogs(context, getFilter(context, BUILD_FILTER_MASTER),
+                !isMasterAndBuildNamespaceSame() ? getFilter(context, BUILD_FILTER_MASTER) : null, ps);
+        saveEvents(context, getFilter(context, EVENT_FILTER_MASTER),
+                !isMasterAndBuildNamespaceSame() ? getFilter(context, EVENT_FILTER_BUILDS) : null, ps);
+    }
+
     private boolean isFilterInitializationComplete(ExtensionContext context) {
         ExtensionContext.Store classStore = getClassStore(context);
         return classStore.get(FILTER_INITIALIZATION_DONE, AtomicBoolean.class).get();
@@ -256,6 +266,10 @@ public class OpenShiftRecorderService {
     }
 
     private ExtensionContext.Store getClassStore(ExtensionContext extensionContext) {
+        if (extensionContext.getTestMethod().isPresent()) {
+            return extensionContext.getParent().get()
+                    .getStore(ExtensionContext.Namespace.create(extensionContext.getRequiredTestClass()));
+        }
         return extensionContext.getStore(ExtensionContext.Namespace.create(extensionContext.getRequiredTestClass()));
     }
 
@@ -447,6 +461,15 @@ public class OpenShiftRecorderService {
 
     protected void savePodLogs(ExtensionContext context, ResourcesFilterBuilder<Pod> masterFilter,
             ResourcesFilterBuilder<Pod> buildsFilter) {
+        savePodLogs(context, masterFilter, buildsFilter, null);
+    }
+
+    protected void savePodLogs(ExtensionContext context, ResourcesFilterBuilder<Pod> masterFilter,
+            ResourcesFilterBuilder<Pod> buildsFilter, PrintStream ps) {
+        if (ps != null) {
+            ps.println("\nAvailable PodLogs:");
+        }
+
         BiConsumer<OpenShift, ResourcesFilterBuilder<Pod>> podPrinter = (openShift, filter) -> openShift.getPods()
                 .stream()
                 .filter(filter.build())
@@ -460,10 +483,15 @@ public class OpenShiftRecorderService {
                                 .count() == 0)
                 .forEach(pod -> {
                     try {
-                        openShift.storePodLog(
-                                pod,
-                                Paths.get(attachmentsDir(), dirNameForTest(context)),
-                                pod.getMetadata().getName() + ".log");
+                        if (ps == null) {
+                            openShift.storePodLog(
+                                    pod,
+                                    Paths.get(attachmentsDir(), dirNameForTest(context)),
+                                    pod.getMetadata().getName() + ".log");
+                        } else {
+                            ps.println("POD " + pod.getMetadata().getName() + ":");
+                            openShift.storePodLog(pod, ps);
+                        }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -477,10 +505,21 @@ public class OpenShiftRecorderService {
 
     protected void saveEvents(ExtensionContext context, ResourcesFilterBuilder<Event> masterFilter,
             ResourcesFilterBuilder<Event> buildsFilter) throws IOException {
+        saveEvents(context, masterFilter, buildsFilter, null);
+    }
+
+    protected void saveEvents(ExtensionContext context, ResourcesFilterBuilder<Event> masterFilter,
+            ResourcesFilterBuilder<Event> buildsFilter, PrintStream ps) throws IOException {
         // master namespace
         final Path eventsMasterLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
                 "events-" + OpenShifts.master().getNamespace() + ".log");
-        try (final ResourcesPrinterHelper<Event> printer = ResourcesPrinterHelper.forEvents(eventsMasterLogPath)) {
+        ResourcesPrinterHelper<Event> printHelper = ResourcesPrinterHelper.forEvents(eventsMasterLogPath);
+        if (ps != null) {
+            ps.println("\nAvailable Openshift events:");
+            printHelper = ResourcesPrinterHelper.forEvents(new OutputStreamWriter(ps));
+        }
+
+        try (final ResourcesPrinterHelper<Event> printer = printHelper) {
             OpenShifts.master().getEvents()
                     .stream()
                     .filter(masterFilter.build())
@@ -490,7 +529,10 @@ public class OpenShiftRecorderService {
         if (!isMasterAndBuildNamespaceSame()) {
             final Path eventsBMLogPath = Paths.get(attachmentsDir(), dirNameForTest(context),
                     "events-" + BuildManagers.get().openShift().getNamespace() + ".log");
-            try (final ResourcesPrinterHelper<Event> printer = ResourcesPrinterHelper.forEvents(eventsBMLogPath)) {
+            printHelper = ps == null ? ResourcesPrinterHelper.forEvents(eventsBMLogPath)
+                    : ResourcesPrinterHelper.forEvents(new OutputStreamWriter(ps));
+
+            try (final ResourcesPrinterHelper<Event> printer = printHelper) {
                 BuildManagers.get().openShift().getEvents()
                         .stream()
                         .filter(buildsFilter.build())
@@ -501,17 +543,31 @@ public class OpenShiftRecorderService {
 
     protected void saveBuildLogs(ExtensionContext context, ResourcesFilterBuilder<Build> masterFilter,
             ResourcesFilterBuilder<Build> buildsFilter) {
+        saveBuildLogs(context, masterFilter, buildsFilter, null);
+    }
+
+    protected void saveBuildLogs(ExtensionContext context, ResourcesFilterBuilder<Build> masterFilter,
+            ResourcesFilterBuilder<Build> buildsFilter, PrintStream ps) {
+        if (ps != null) {
+            ps.println("\nAvailable BuildLogs:");
+        }
+
         BiConsumer<OpenShift, ResourcesFilterBuilder<Build>> buildPrinter = (openShift, filter) -> openShift.getBuilds()
                 .stream()
                 .filter(filter.build())
                 .forEach(build -> {
                     try {
-                        openShift.storeBuildLog(
-                                build,
-                                Paths.get(attachmentsDir(), dirNameForTest(context)),
-                                build.getMetadata().getName() + ".log");
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        if (ps == null) {
+                            openShift.storeBuildLog(
+                                    build,
+                                    Paths.get(attachmentsDir(), dirNameForTest(context)),
+                                    build.getMetadata().getName() + ".log");
+                        } else {
+                            ps.println("BUILD " + build.getMetadata().getName() + ":");
+                            openShift.storeBuildLog(build, ps);
+                        }
+                    } catch (Exception e) {
+                        // ignoring KubernetesClientExceptions
                     }
                 });
 
