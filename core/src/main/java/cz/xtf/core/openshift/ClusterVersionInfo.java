@@ -21,7 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 class ClusterVersionInfo {
     // version must be in format major.minor.micro (4.8.13) or major.minor (4.8)
-    private static final Pattern versionPattern = Pattern.compile("^(\\d+\\.\\d+)(\\.\\d+)?$");
+    private static final Pattern versionPattern = Pattern
+            .compile("^(\\d+\\.\\d+)(\\.\\d+)?(-\\d+\\.nightly-\\d{4}-\\d{2}-\\d{2}-\\d{6})?$");
     private final String openshiftVersion;
     private final Matcher versionMatcher;
 
@@ -59,7 +60,7 @@ class ClusterVersionInfo {
      */
     boolean isMajorMinorOnly() {
         if (openshiftVersion != null) {
-            return versionMatcher.group(2) == null;
+            return versionMatcher.group(2) == null && versionMatcher.group(3) == null;
         }
         return false;
     }
@@ -69,7 +70,14 @@ class ClusterVersionInfo {
      */
     boolean isMajorMinorMicro() {
         if (openshiftVersion != null) {
-            return versionMatcher.group(2) != null;
+            return versionMatcher.group(2) != null && versionMatcher.group(3) == null;
+        }
+        return false;
+    }
+
+    boolean isNightly() {
+        if (openshiftVersion != null) {
+            return versionMatcher.group(3) != null;
         }
         return false;
     }

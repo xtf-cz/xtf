@@ -80,7 +80,8 @@ class ClusterVersionOpenShiftBinaryPathResolver implements OpenShiftBinaryPathRe
 
             String ocFileName = SystemUtils.IS_OS_MAC ? "openshift-client-mac.tar.gz" : "openshift-client-linux.tar.gz";
 
-            return String.format("%s/%s/clients/ocp/%s/%s", OCP4_CLIENTS_URL, getSystemTypeForOCP4(),
+            return String.format("%s/%s/clients/%s/%s/%s", OCP4_CLIENTS_URL, getSystemTypeForOCP4(),
+                    (versionInfo.isNightly() ? "ocp-dev-preview" : "ocp"),
                     getVersionOrChannel(versionInfo),
                     ocFileName);
         }
@@ -225,7 +226,7 @@ class ClusterVersionOpenShiftBinaryPathResolver implements OpenShiftBinaryPathRe
     private String getVersionOrChannel(ClusterVersionInfo versionInfo) {
         Objects.requireNonNull(versionInfo);
 
-        if (versionInfo.isMajorMinorMicro()) {
+        if (versionInfo.isMajorMinorMicro() || versionInfo.isNightly()) {
             return versionInfo.getOpenshiftVersion();
         } else {
             return getConfiguredChannel() + "-" + versionInfo.getMajorMinorOpenshiftVersion();
