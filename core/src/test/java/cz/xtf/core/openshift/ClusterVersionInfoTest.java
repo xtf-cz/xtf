@@ -26,4 +26,9 @@ public class ClusterVersionInfoTest {
     public void isMajorMinorMicroTest() {
         Assertions.assertTrue(clusterVersionInfo.isMajorMinorMicro());
     }
+
+    @Test
+    public void isNightlyTest() {
+        Assertions.assertFalse(clusterVersionInfo.isNightly());
+    }
 }
