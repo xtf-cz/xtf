@@ -24,8 +24,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class XTFConfig {
     // Replace with common method for finding once available in core
-    private static final Path testPropertiesPath;
-    private static final Path globalPropertiesPath;
+    private static Path testPropertiesPath;
+    private static Path globalPropertiesPath;
 
     private static final Properties properties = new Properties();
 
@@ -34,6 +34,11 @@ public final class XTFConfig {
 
     // Pre-loading
     static {
+        loadConfig();
+    }
+
+    public static void loadConfig() {
+        properties.clear();
         globalPropertiesPath = resolvePropertiesPath(System.getProperty(GLOBAL_TEST_PROPERTIES_PATH, "global-test.properties"));
         testPropertiesPath = resolvePropertiesPath(System.getProperty(TEST_PROPERTIES_PATH, "test.properties"));
         properties.putAll(XTFConfig.getPropertiesFromPath(globalPropertiesPath));
