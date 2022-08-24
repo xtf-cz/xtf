@@ -3,6 +3,7 @@ package cz.xtf.junit5.extensions;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
@@ -532,9 +533,10 @@ public class OpenShiftRecorderService {
     private String dirNameForTest(ExtensionContext context) {
         // if is test
         if (context.getTestMethod().isPresent()) {
-            return context.getTestClass().get().getName() + "." + context.getDisplayName();
+            return context.getTestClass().get().getName() + "." + context.getTestMethod().get().getName()
+                    + context.getDisplayName();
         } else {
-            return context.getTestClass().get().getName();
+            return context.getTestClass().get().getName() + "-" + ThreadLocalRandom.current().nextInt(Short.MAX_VALUE);
         }
     }
 }
