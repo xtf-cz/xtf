@@ -155,12 +155,21 @@ public class DockerImageMetadata {
 
     /**
      * Returns default container command on Config/Cmd path
+     * If command consists of more parts, the space-separated string of all those parts is returned.
      *
      * @return default command
      */
     public String command() {
-        List<String> cmdList = (List<String>) getConfig().get(METADATA_CONFIG_CMD);
-        return cmdList.get(0);
+        return String.join(" ", commandList());
+    }
+
+    /**
+     * Returns default container command on Config/Cmd path - return all parts as a list
+     *
+     * @return default command list
+     */
+    public List<String> commandList() {
+        return (List<String>) getConfig().get(METADATA_CONFIG_CMD);
     }
 
     /**
