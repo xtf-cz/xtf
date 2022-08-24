@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import cz.xtf.core.config.XTFConfig;
 import cz.xtf.junit5.annotations.SkipFor;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
@@ -23,8 +24,8 @@ class SkipForConditionTest {
     @BeforeEach
     void before() {
         systemProperties.set("xtf.eap.subid", "74-openjdk11");
-        systemProperties.set("xtf.eap.74-openjdk11.image",
-                "quay.io/wildfly/wildfly-centos7:latest");
+        systemProperties.set("xtf.eap.74-openjdk11.image", "quay.io/wildfly/wildfly-centos7:latest");
+        XTFConfig.loadConfig();
     }
 
     @SkipFor(image = "eap", name = ".*eap-74.*", reason = "This test is skipped based on the image name.")
