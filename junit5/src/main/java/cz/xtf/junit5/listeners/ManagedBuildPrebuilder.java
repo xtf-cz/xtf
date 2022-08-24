@@ -137,16 +137,12 @@ public class ManagedBuildPrebuilder implements TestExecutionListener {
             TestSource testSource = identifier.getSource().get();
             if (testSource instanceof ClassSource) {
                 ClassSource classSource = (ClassSource) testSource;
-                Class klass = classSource.getJavaClass();
+                Class<?> klass = classSource.getJavaClass();
 
                 log.debug("Processing {}", klass);
 
                 // We don't want to prepare build when whole test case is skipped
-                boolean classSkippedForStream = Arrays.stream(klass.getAnnotationsByType(SkipFor.class))
-                        .anyMatch(a -> SkipForCondition.resolve((SkipFor) a).isDisabled());
-                boolean classSkippedForTestedVersion = Arrays.stream(klass.getAnnotationsByType(SinceVersion.class))
-                        .anyMatch(a -> SinceVersionCondition.resolve((SinceVersion) a).isDisabled());
-                if (classSkippedForStream || classSkippedForTestedVersion) {
+                if (shouldSkipBuildsForClass(klass)) {
                     return;
                 }
 
@@ -170,5 +166,14 @@ public class ManagedBuildPrebuilder implements TestExecutionListener {
                         });
             }
         }
+    }
+
+    static boolean shouldSkipBuildsForClass(Class<?> klass) {
+        boolean classSkippedForStream = Arrays.stream(klass.getAnnotationsByType(SkipFor.class))
+                .anyMatch(a -> SkipForCondition.resolve(a).isDisabled());
+        boolean classSkippedForTestedVersion = Arrays.stream(klass.getAnnotationsByType(SinceVersion.class))
+                .anyMatch(a -> SinceVersionCondition.resolve(a).isDisabled());
+
+        return classSkippedForStream || classSkippedForTestedVersion;
     }
 }
