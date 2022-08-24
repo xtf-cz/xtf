@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.support.descriptor.ClassSource;
 import org.junit.platform.launcher.TestExecutionListener;
@@ -169,11 +170,12 @@ public class ManagedBuildPrebuilder implements TestExecutionListener {
     }
 
     static boolean shouldSkipBuildsForClass(Class<?> klass) {
+        boolean classDisabled = Arrays.stream(klass.getAnnotationsByType(Disabled.class)).findAny().isPresent();
         boolean classSkippedForStream = Arrays.stream(klass.getAnnotationsByType(SkipFor.class))
                 .anyMatch(a -> SkipForCondition.resolve(a).isDisabled());
         boolean classSkippedForTestedVersion = Arrays.stream(klass.getAnnotationsByType(SinceVersion.class))
                 .anyMatch(a -> SinceVersionCondition.resolve(a).isDisabled());
 
-        return classSkippedForStream || classSkippedForTestedVersion;
+        return classDisabled || classSkippedForStream || classSkippedForTestedVersion;
     }
 }

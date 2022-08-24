@@ -7,6 +7,7 @@ import java.lang.annotation.Target;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -60,6 +61,11 @@ class ManagedBuildPrebuilderTest {
     }
 
     @Test
+    public void buildFromDisabledClassIsSkipped() {
+        Assertions.assertThat(ManagedBuildPrebuilder.shouldSkipBuildsForClass(TestClassDisabledTest.class)).isTrue();
+    }
+
+    @Test
     public void buildFromClassMatchingAllSkipConditionsIsSkipped() {
         Assertions.assertThat(ManagedBuildPrebuilder.shouldSkipBuildsForClass(TestClassSkippedByAllConditionsTest.class))
                 .isTrue();
@@ -80,8 +86,14 @@ class ManagedBuildPrebuilderTest {
     static class TestClassSkippedForLowerVersionTest {
     }
 
+    @Disabled("Some reason given")
+    @UsesTestBuild(TestBuilds.testBuild)
+    static class TestClassDisabledTest {
+    }
+
     @SkipFor(image = "eap", name = "wildfly-s2i-jdk11", reason = "This test is skipped based on the image name.")
     @SinceVersion(image = "eap", name = "wildfly-s2i-jdk11", since = "27.0", jira = "JIRA-1234")
+    @Disabled("Some reason given")
     @UsesTestBuild(TestBuilds.testBuild)
     static class TestClassSkippedByAllConditionsTest {
     }
