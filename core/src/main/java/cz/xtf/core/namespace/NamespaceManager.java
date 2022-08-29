@@ -16,6 +16,7 @@ import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.openshift.OpenShifts;
 import cz.xtf.core.waiting.SimpleWaiter;
 import io.fabric8.kubernetes.api.builder.Visitor;
+import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.extern.slf4j.Slf4j;
@@ -58,12 +59,14 @@ public class NamespaceManager {
     /**
      * Creates namespace if it does not exist
      *
-     * @return true if successful, false otherwise
+     * @return true if newly created, false otherwise (failed or namespace already present)
      */
     public static boolean createIfDoesNotExistsProject(String namespace) {
         OpenShift openShift = OpenShifts.master(namespace);
 
-        boolean isCreated = false;
+        // in case namespace is terminating (means is being deleted) then wait
+        checkAndWaitIfNamespaceIsTerminating(namespace);
+
         if (openShift.getProject() == null) {
             log.info("Creating namespace: " + openShift.getNamespace());
             openShift.createProjectRequest();
@@ -92,13 +95,21 @@ public class NamespaceManager {
                         + openShift.getNamespace() + "'. Possible cause are insufficient permissions.");
                 log.debug(e.getMessage());
             }
-            isCreated = true;
+
+            if (OpenShiftConfig.pullSecret() != null) {
+                openShift.setupPullSecret(OpenShiftConfig.pullSecret());
+            }
+            log.info("Created namespace: " + openShift.getNamespace());
+            return true;
         }
-        if (OpenShiftConfig.pullSecret() != null) {
-            openShift.setupPullSecret(OpenShiftConfig.pullSecret());
+        return false;
+    }
+
+    private static void checkAndWaitIfNamespaceIsTerminating(String namespace) {
+        Namespace n = OpenShifts.admin(namespace).namespaces().withName(namespace).get();
+        if (n != null && n.getStatus().getPhase().equals("Terminating")) {
+            waitForNamespaceToBeDeleted(namespace);
         }
-        log.info("Created namespace: " + openShift.getNamespace());
-        return isCreated;
     }
 
     /**
@@ -122,17 +133,40 @@ public class NamespaceManager {
      */
     public static boolean deleteProject(String namespace, boolean waitForDeletion) {
         boolean deleted = false;
-        OpenShift openShift = OpenShifts.master(namespace);
-        if (openShift.getProject() != null) {
+        // problem with OpenShift.getProject() is that it might return null even if namespace still exists (is in terminating state)
+        // thus use Openshift.namespaces() which do not suffer by this problem
+        // openshift.namespaces() requires admin privileges otherwise following KubernetesClientException is thrown:
+        // ... User "xpaasqe" cannot get resource "namespaces" in API group "" in the namespace ...
+        if (OpenShifts.admin(namespace).namespaces().withName(namespace).get() != null) {
+            OpenShift openShift = OpenShifts.master(namespace);
+            log.info("Start deleting namespace: " + openShift.getNamespace() + ", wait for deletion: " + waitForDeletion);
             deleted = openShift.deleteProject();
-            log.info("Start deleting namespace: " + openShift.getNamespace());
             if (!deleted && waitForDeletion) {
-                BooleanSupplier bs = () -> openShift.getProject() == null;
-                new SimpleWaiter(bs, TimeUnit.MINUTES, 2, "Waiting for " + openShift.getNamespace() + " project deletion")
-                        .waitFor();
+                waitForNamespaceToBeDeleted(namespace);
             }
         }
         return deleted;
+    }
+
+    /**
+     *
+     * Deletes namespace as returned by @see #getNamespace.
+     * Deletes namespace only if @see {@link OpenShiftConfig#useNamespacePerTestCase()} is true.
+     *
+     * @param waitForDeletion wait for deletion of namespace
+     * @return true if successful, false otherwise
+     */
+    public static boolean deleteProjectIfUsedNamespacePerTestCase(boolean waitForDeletion) {
+        if (OpenShiftConfig.useNamespacePerTestCase()) {
+            return deleteProject(waitForDeletion);
+        }
+        return false;
+    }
+
+    private static void waitForNamespaceToBeDeleted(String namespace) {
+        BooleanSupplier bs = () -> OpenShifts.admin(namespace).namespaces().withName(namespace).get() == null;
+        new SimpleWaiter(bs, TimeUnit.MINUTES, 2, "Waiting for " + namespace + " project deletion")
+                .waitFor();
     }
 
     private static String getNamespaceForTestClass(TestDescriptor testDescriptor) {

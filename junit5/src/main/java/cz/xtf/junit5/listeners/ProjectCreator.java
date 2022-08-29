@@ -48,7 +48,7 @@ public class ProjectCreator
     @Override
     public void afterAll(ExtensionContext context) {
         if (JUnitConfig.cleanOpenShift()) {
-            NamespaceManager.deleteProject(false);
+            NamespaceManager.deleteProjectIfUsedNamespacePerTestCase(false);
         }
     }
 
