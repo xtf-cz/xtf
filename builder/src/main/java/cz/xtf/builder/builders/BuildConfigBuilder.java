@@ -41,6 +41,7 @@ public class BuildConfigBuilder extends AbstractBuilder<BuildConfig, BuildConfig
     private String secretDestinationDir;
     private boolean binaryBuild;
     private boolean configChangeTrigger;
+    private boolean mountTrustedCA;
 
     private BuildStrategy strategy;
     private ImageSource imageSource;
@@ -114,6 +115,11 @@ public class BuildConfigBuilder extends AbstractBuilder<BuildConfig, BuildConfig
 
     public BuildConfigBuilder withBinaryBuild() {
         this.binaryBuild = true;
+        return this;
+    }
+
+    public BuildConfigBuilder withMountTrustedCA() {
+        this.mountTrustedCA = true;
         return this;
     }
 
@@ -218,6 +224,8 @@ public class BuildConfigBuilder extends AbstractBuilder<BuildConfig, BuildConfig
         }
 
         spec
+                // mountTrustedCA
+                .withMountTrustedCA(mountTrustedCA)
                 // triggers
                 .withTriggers(triggers)
                 // source
