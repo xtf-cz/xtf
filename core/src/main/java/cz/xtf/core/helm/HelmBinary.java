@@ -51,6 +51,7 @@ public class HelmBinary {
         environmentVariables.put("HELM_KUBEASUSER", kubeUsername);
         environmentVariables.put("HELM_KUBETOKEN", kubeToken);
         environmentVariables.put("HELM_NAMESPACE", namespace);
+        environmentVariables.put("HELM_KUBEINSECURE_SKIP_TLS_VERIFY", "true");
         return CLIUtils.executeCommand(environmentVariables, ArrayUtils.addAll(new String[] { path }, args));
     }
 

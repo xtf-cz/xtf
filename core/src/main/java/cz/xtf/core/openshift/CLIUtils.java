@@ -3,7 +3,6 @@ package cz.xtf.core.openshift;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -48,11 +47,11 @@ public class CLIUtils {
             if (result == 0) {
                 return out.get();
             } else {
-                log.error("Failed while executing (code {}): {}", result, Arrays.toString(args));
+                log.error("Failed while executing (code {}): {}", result, String.join(" ", args));
                 log.error(err.get());
             }
         } catch (IOException | InterruptedException | ExecutionException e) {
-            log.error("Failed while executing: " + Arrays.toString(args), e);
+            log.error("Failed while executing: " + String.join(" ", args), e);
         }
 
         return null;
