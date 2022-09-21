@@ -10,6 +10,10 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -17,6 +21,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,6 +45,16 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 abstract public class BinaryBuildFromSources extends BinaryBuild {
+
+    private static final int OWNER_READ_FILEMODE = 0400;
+    private static final int OWNER_WRITE_FILEMODE = 0200;
+    private static final int OWNER_EXEC_FILEMODE = 0100;
+    private static final int GROUP_READ_FILEMODE = 0040;
+    private static final int GROUP_WRITE_FILEMODE = 0020;
+    private static final int GROUP_EXEC_FILEMODE = 0010;
+    private static final int OTHERS_READ_FILEMODE = 0004;
+    private static final int OTHERS_WRITE_FILEMODE = 0002;
+    private static final int OTHERS_EXEC_FILEMODE = 0001;
 
     public BinaryBuildFromSources(String builderImage, Path path, Map<String, String> envProperties, String id) {
         super(builderImage, path, envProperties, id);
@@ -97,6 +112,9 @@ abstract public class BinaryBuildFromSources extends BinaryBuild {
                 // we force the modTime in the tar, so that the resulting tars are binary equal if their contents are
                 TarArchiveEntry tarArchiveEntry = (TarArchiveEntry) entry;
                 tarArchiveEntry.setModTime(Date.from(Instant.EPOCH));
+                PosixFileAttributes attrs = Files.getFileAttributeView(Paths.get(f.toURI()), PosixFileAttributeView.class)
+                        .readAttributes();
+                tarArchiveEntry.setMode(toOctalFileMode(attrs.permissions()));
 
                 o.putArchiveEntry(tarArchiveEntry);
                 if (f.isFile()) {
@@ -110,5 +128,44 @@ abstract public class BinaryBuildFromSources extends BinaryBuild {
         } catch (ArchiveException | IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Converts a set of {@link PosixFilePermission} to chmod-style octal file mode.
+     */
+    public int toOctalFileMode(Set<PosixFilePermission> permissions) {
+        int result = 0;
+        for (PosixFilePermission permissionBit : permissions) {
+            switch (permissionBit) {
+                case OWNER_READ:
+                    result |= OWNER_READ_FILEMODE;
+                    break;
+                case OWNER_WRITE:
+                    result |= OWNER_WRITE_FILEMODE;
+                    break;
+                case OWNER_EXECUTE:
+                    result |= OWNER_EXEC_FILEMODE;
+                    break;
+                case GROUP_READ:
+                    result |= GROUP_READ_FILEMODE;
+                    break;
+                case GROUP_WRITE:
+                    result |= GROUP_WRITE_FILEMODE;
+                    break;
+                case GROUP_EXECUTE:
+                    result |= GROUP_EXEC_FILEMODE;
+                    break;
+                case OTHERS_READ:
+                    result |= OTHERS_READ_FILEMODE;
+                    break;
+                case OTHERS_WRITE:
+                    result |= OTHERS_WRITE_FILEMODE;
+                    break;
+                case OTHERS_EXECUTE:
+                    result |= OTHERS_EXEC_FILEMODE;
+                    break;
+            }
+        }
+        return result;
     }
 }
