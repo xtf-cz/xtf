@@ -1,5 +1,6 @@
 package cz.xtf.testhelpers.image;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -74,6 +75,21 @@ public class ImageContent {
             container.setCommand(command);
         container.setEnv(
                 envs.entrySet().stream().map(e -> new EnvVar(e.getKey(), e.getValue(), null)).collect(Collectors.toList()));
+
+        // Setting security context as required to comply with "restricted" pod security standards (since OCP 4.12/Kubernetes 1.25)
+        // https://master.sdk.operatorframework.io/docs/best-practices/pod-security-standards/
+        SeccompProfile secCom = new SeccompProfile();
+        secCom.setType("RuntimeDefault");
+        Capabilities cap = new Capabilities();
+        cap.setDrop(Arrays.asList("ALL"));
+        SecurityContext updateSecContext = new SecurityContext();
+        updateSecContext.setAllowPrivilegeEscalation(false);
+        updateSecContext.setRunAsNonRoot(true);
+        updateSecContext.setSeccompProfile(secCom);
+        updateSecContext.setCapabilities(cap);
+
+        // Apply the security context to the container object.
+        container.setSecurityContext(updateSecContext);
 
         PodSpec podSpec = new PodSpec();
         podSpec.setContainers(Collections.singletonList(container));
