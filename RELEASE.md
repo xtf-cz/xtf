@@ -30,8 +30,11 @@ What is the new development version for "XTF"? (cz.xtf:utilities) 0.6-SNAPSHOT: 
 ```
 
 the finally tagged version is then pushed to GitHub repository. 
-GitHub Actions are configured to perform `mvn deploy` for new tags and push to maven repository. 
-After a few minutes, the new version should appear in the online Maven repository.
+GitHub Actions are configured to perform `mvn deploy` for new tags and push to maven repository.
+After a few minutes, the new version should appear in the
+[JBoss Staging Maven](https://repository.jboss.org/nexus/index.html#stagingRepositories) repository. Log in into staging repository
+and select the line with the uploaded new XTF tag. Click on the "Close" button and wait until all activities are completed. Once those are
+complete then click the "Release" button which makes the new XTF tag publicly available.
 
 ## Snapshot release
 
