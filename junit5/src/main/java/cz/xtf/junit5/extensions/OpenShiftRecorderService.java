@@ -211,7 +211,7 @@ public class OpenShiftRecorderService {
         savePodLogs(context, getFilter(context, POD_FILTER_MASTER),
                 !isMasterAndBuildNamespaceSame() ? getFilter(context, POD_FILTER_BUILDS) : null);
         saveBuildLogs(context, getFilter(context, BUILD_FILTER_MASTER),
-                !isMasterAndBuildNamespaceSame() ? getFilter(context, BUILD_FILTER_MASTER) : null);
+                !isMasterAndBuildNamespaceSame() ? getFilter(context, BUILD_FILTER_BUILDS) : null);
         saveEvents(context, getFilter(context, EVENT_FILTER_MASTER),
                 !isMasterAndBuildNamespaceSame() ? getFilter(context, EVENT_FILTER_BUILDS) : null);
     }
