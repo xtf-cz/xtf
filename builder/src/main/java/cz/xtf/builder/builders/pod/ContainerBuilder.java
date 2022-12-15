@@ -128,6 +128,16 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
         return this;
     }
 
+    public ContainerBuilder addVolumeMount(String name, String mountPath, boolean readOnly, String subPath) {
+        this.volumeMounts.add(new VolumeMount(name, mountPath, readOnly, subPath));
+        return this;
+    }
+
+    public ContainerBuilder addVolumeMount(VolumeMount volumeMount) {
+        this.volumeMounts.add(volumeMount);
+        return this;
+    }
+
     public LivenessProbe addLivenessProbe() {
         this.livenessProbe = new LivenessProbe();
         return (LivenessProbe) this.livenessProbe;
@@ -205,6 +215,7 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
                 .withName(item.getName())
                 .withMountPath(item.getMountPath())
                 .withReadOnly(item.isReadOnly())
+                .withSubPath(item.getSubPath())
                 .build()).collect(Collectors.toList()));
 
         final List<ComputingResource> requests = computingResources.values().stream().filter(x -> x.getRequests() != null)
@@ -269,30 +280,6 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
 
     public void addPreStopHandler(Handler handler) {
         preStopHandler = handler;
-    }
-
-    private static class VolumeMount {
-        private String mountPath;
-        private String name;
-        private boolean readOnly;
-
-        public VolumeMount(String name, String mountPath, boolean readOnly) {
-            this.mountPath = mountPath;
-            this.name = name;
-            this.readOnly = readOnly;
-        }
-
-        public String getMountPath() {
-            return mountPath;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public boolean isReadOnly() {
-            return readOnly;
-        }
     }
 
     private static class ContainerPort {
