@@ -13,12 +13,20 @@ public class MySQL extends AbstractSQLDatabase {
         super("MYSQL", "/var/lib/mysql/data", withLivenessProbe, withReadinessProbe);
     }
 
+    public MySQL(boolean withLivenessProbe, boolean withReadinessProbe, boolean withStartupProbe) {
+        super("MYSQL", "/var/lib/mysql/data", withLivenessProbe, withReadinessProbe, withStartupProbe, true);
+    }
+
     public MySQL(PersistentVolumeClaim pvc) {
         super("MYSQL", "/var/lib/mysql/data", pvc);
     }
 
     public MySQL(PersistentVolumeClaim pvc, boolean withLivenessProbe, boolean withReadinessProbe) {
         super("MYSQL", "/var/lib/mysql/data", pvc, withLivenessProbe, withReadinessProbe);
+    }
+
+    public MySQL(PersistentVolumeClaim pvc, boolean withLivenessProbe, boolean withReadinessProbe, boolean withStartupProbe) {
+        super("MYSQL", "/var/lib/mysql/data", pvc, withLivenessProbe, withReadinessProbe, withStartupProbe);
     }
 
     public MySQL(String username, String password, String dbName) {
@@ -40,7 +48,11 @@ public class MySQL extends AbstractSQLDatabase {
         return new ProbeSettings(30,
                 String.valueOf(getPort()),
                 5,
-                "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'");
+                "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'",
+                5,
+                "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'",
+                10,
+                10);
     }
 
     @Override
