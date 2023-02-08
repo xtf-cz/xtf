@@ -21,6 +21,12 @@ public abstract class AbstractSQLDatabase extends AbstractDatabase implements SQ
         super(symbolicName, dataDir, withLivenessProbe, withReadinessProbe, configureEnvironment);
     }
 
+    public AbstractSQLDatabase(String symbolicName, String dataDir, boolean withLivenessProbe, boolean withReadinessProbe,
+            boolean withStartupProbe,
+            boolean configureEnvironment) {
+        super(symbolicName, dataDir, withLivenessProbe, withReadinessProbe, withStartupProbe, configureEnvironment);
+    }
+
     public AbstractSQLDatabase(String username, String password, String dbName, String symbolicName, String dataDir,
             boolean withLivenessProbe, boolean withReadinessProbe) {
         super(username, password, dbName, symbolicName, dataDir, withLivenessProbe, withReadinessProbe);
@@ -31,9 +37,20 @@ public abstract class AbstractSQLDatabase extends AbstractDatabase implements SQ
         super(username, password, dbName, symbolicName, dataDir, withLivenessProbe, withReadinessProbe, configureEnvironment);
     }
 
+    public AbstractSQLDatabase(String username, String password, String dbName, String symbolicName, String dataDir,
+            boolean withLivenessProbe, boolean withReadinessProbe, boolean withStartupProbe, boolean configureEnvironment) {
+        super(username, password, dbName, symbolicName, dataDir, withLivenessProbe, withReadinessProbe, withStartupProbe,
+                configureEnvironment);
+    }
+
     public AbstractSQLDatabase(String symbolicName, String dataDir, PersistentVolumeClaim pvc, boolean withLivenessProbe,
             boolean withReadinessProbe) {
         super(symbolicName, dataDir, pvc, withLivenessProbe, withReadinessProbe);
+    }
+
+    public AbstractSQLDatabase(String symbolicName, String dataDir, PersistentVolumeClaim pvc, boolean withLivenessProbe,
+            boolean withReadinessProbe, boolean withStartupProbe) {
+        super(symbolicName, dataDir, pvc, withLivenessProbe, withReadinessProbe, withStartupProbe);
     }
 
     public AbstractSQLDatabase(String symbolicName, String dataDir, PersistentVolumeClaim pvc) {
@@ -95,6 +112,13 @@ public abstract class AbstractSQLDatabase extends AbstractDatabase implements SQ
                     .setInitialDelaySeconds(settings.getReadinessInitialDelaySeconds())
                     .createExecProbe("/bin/sh", "-i", "-c",
                             settings.getReadinessProbeCommand());
+        }
+        if (withStartupProbe) {
+            containerBuilder.addStartupProbe()
+                    .setFailureThreshold(settings.getStartupFailureThreshold())
+                    .setPeriodSeconds(settings.getStartupPeriodSeconds())
+                    .createExecProbe("/bin/sh", "-i", "-c",
+                            settings.getStartupProbeCommand());
         }
     }
 

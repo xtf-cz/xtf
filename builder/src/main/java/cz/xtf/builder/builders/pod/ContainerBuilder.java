@@ -20,6 +20,7 @@ import cz.xtf.builder.builders.deployment.AbstractProbe;
 import cz.xtf.builder.builders.deployment.Handler;
 import cz.xtf.builder.builders.deployment.LivenessProbe;
 import cz.xtf.builder.builders.deployment.ReadinessProbe;
+import cz.xtf.builder.builders.deployment.StartupProbe;
 import cz.xtf.builder.builders.limits.CPUResource;
 import cz.xtf.builder.builders.limits.ComputingResource;
 import cz.xtf.builder.builders.limits.MemoryResource;
@@ -49,6 +50,7 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
     private boolean privileged = false;
     private AbstractProbe livenessProbe;
     private AbstractProbe readinessProbe;
+    private StartupProbe startupProbe;
     private Handler preStopHandler;
     private String[] command;
 
@@ -148,6 +150,11 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
         return (ReadinessProbe) this.readinessProbe;
     }
 
+    public StartupProbe addStartupProbe() {
+        this.startupProbe = new StartupProbe();
+        return (StartupProbe) this.startupProbe;
+    }
+
     public ContainerBuilder addReadinessProbe(AbstractProbe readinessProbe) {
         this.readinessProbe = readinessProbe;
         return this;
@@ -209,6 +216,10 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
 
         if (readinessProbe != null) {
             builder.withReadinessProbe(readinessProbe.build());
+        }
+
+        if (startupProbe != null) {
+            builder.withStartupProbe(startupProbe.build());
         }
 
         builder.withVolumeMounts(volumeMounts.stream().map(item -> new VolumeMountBuilder()

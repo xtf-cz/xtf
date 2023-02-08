@@ -14,4 +14,8 @@ public class ProbeSettings {
     private String livenessTcpProbe;
     private int readinessInitialDelaySeconds;
     private String readinessProbeCommand;
+    private int startupInitialDelaySeconds;
+    private String startupProbeCommand;
+    private int startupFailureThreshold;
+    private int startupPeriodSeconds;
 }

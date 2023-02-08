@@ -15,6 +15,10 @@ public class PostgreSQL extends AbstractSQLDatabase {
         super("POSTGRESQL", "/var/lib/pgsql/data", withLivenessProbe, withReadinessProbe);
     }
 
+    public PostgreSQL(boolean withLivenessProbe, boolean withReadinessProbe, boolean withStartupProbe) {
+        super("POSTGRESQL", "/var/lib/pgsql/data", withLivenessProbe, withReadinessProbe, withStartupProbe, true);
+    }
+
     public PostgreSQL(PersistentVolumeClaim pvc) {
         super("POSTGRESQL", "/var/lib/pgsql/data", pvc);
     }
@@ -23,12 +27,21 @@ public class PostgreSQL extends AbstractSQLDatabase {
         super("POSTGRESQL", "/var/lib/pgsql/data", pvc, withLivenessProbe, withReadinessProbe);
     }
 
+    public PostgreSQL(PersistentVolumeClaim pvc, boolean withLivenessProbe, boolean withReadinessProbe,
+            boolean withStartupProbe) {
+        super("POSTGRESQL", "/var/lib/pgsql/data", pvc, withLivenessProbe, withReadinessProbe, withStartupProbe);
+    }
+
     public PostgreSQL(String username, String password, String dbName) {
         super(username, password, dbName, "POSTGRESQL", "/var/lib/pgsql/data");
     }
 
     public PostgreSQL(String symbolicName, boolean withLivenessProbe, boolean withReadinessProbe) {
         super(symbolicName, "/var/lib/pgsql/data", withLivenessProbe, withReadinessProbe);
+    }
+
+    public PostgreSQL(String symbolicName, boolean withLivenessProbe, boolean withReadinessProbe, boolean withStartupProbe) {
+        super(symbolicName, "/var/lib/pgsql/data", withLivenessProbe, withReadinessProbe, withStartupProbe, true);
     }
 
     @Override
@@ -45,7 +58,11 @@ public class PostgreSQL extends AbstractSQLDatabase {
         return new ProbeSettings(300,
                 String.valueOf(getPort()),
                 5,
-                "psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'");
+                "psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'",
+                5,
+                "psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'",
+                10,
+                10);
     }
 
     @Override
