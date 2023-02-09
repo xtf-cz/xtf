@@ -89,6 +89,8 @@ public class OpenShiftRecorderService {
     private static final String IS_FILTER_BUILDS = "IS_FILTER_BUILDS";
     private static final String EVENT_FILTER_BUILDS = "EVENT_FILTER_BUILDS";
 
+    private int uniqueExecutionIdentifier;
+
     /**
      * Initialize filters by collecting information OCP resources which are relevant for the current test execution
      * context (e.g.: called by a {@link org.junit.jupiter.api.extension.BeforeAllCallback#beforeAll(ExtensionContext)}
@@ -194,6 +196,8 @@ public class OpenShiftRecorderService {
      * Retrieves resources identified by filters
      */
     public void recordState(ExtensionContext context) throws IOException {
+        uniqueExecutionIdentifier = ThreadLocalRandom.current().nextInt(Short.MAX_VALUE);
+
         savePods(context, getFilter(context, POD_FILTER_MASTER),
                 !isMasterAndBuildNamespaceSame() ? getFilter(context, POD_FILTER_BUILDS) : null);
         saveDCs(context, getFilter(context, DC_FILTER_MASTER));
@@ -536,7 +540,7 @@ public class OpenShiftRecorderService {
             return context.getTestClass().get().getName() + "." + context.getTestMethod().get().getName()
                     + context.getDisplayName();
         } else {
-            return context.getTestClass().get().getName() + "-" + ThreadLocalRandom.current().nextInt(Short.MAX_VALUE);
+            return context.getTestClass().get().getName() + "-" + uniqueExecutionIdentifier;
         }
     }
 }
