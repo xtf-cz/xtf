@@ -2,10 +2,11 @@ package cz.xtf.core.openshift;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
@@ -56,9 +57,12 @@ class OpenShiftBinaryManager {
         } else {
             // If we are using an existing kubeconfig (or a default kubeconfig), we copy the original kubeconfig
             if (StringUtils.isNotEmpty(kubeconfig)) {
-                // We copy the specified kubeconfig
+                // flatten kubeconfig in case it contains certs/keys
                 try {
-                    Files.copy(Paths.get(kubeconfig), Paths.get(ocConfigPath), StandardCopyOption.REPLACE_EXISTING);
+                    Files.write(Paths.get(ocConfigPath),
+                            Arrays.asList(new OpenShiftBinary(OpenShifts.getBinaryPath(), null)
+                                    .execute("config", "view", "--kubeconfig", kubeconfig, "--flatten")),
+                            StandardCharsets.UTF_8);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -67,7 +71,11 @@ class OpenShiftBinaryManager {
                 File defaultKubeConfig = Paths.get(getHomeDir(), ".kube", "config").toFile();
                 if (defaultKubeConfig.isFile()) {
                     try {
-                        Files.copy(defaultKubeConfig.toPath(), Paths.get(ocConfigPath), StandardCopyOption.REPLACE_EXISTING);
+                        Files.write(Paths.get(ocConfigPath),
+                                Arrays.asList(new OpenShiftBinary(OpenShifts.getBinaryPath(), null)
+                                        .execute("config", "view", "--kubeconfig", defaultKubeConfig.getAbsolutePath(),
+                                                "--flatten")),
+                                StandardCharsets.UTF_8);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
