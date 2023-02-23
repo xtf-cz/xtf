@@ -104,6 +104,7 @@ abstract public class BinaryBuildFromSources extends BinaryBuild {
         try (TarArchiveOutputStream o = (TarArchiveOutputStream) new ArchiveStreamFactory()
                 .createArchiveOutputStream(ArchiveStreamFactory.TAR, os)) {
             o.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
+            o.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX);
             for (File f : filesToArchive) {
                 String tarPath = getPath().relativize(f.toPath()).toString();
                 log.trace("adding file to tar: {}", tarPath);
