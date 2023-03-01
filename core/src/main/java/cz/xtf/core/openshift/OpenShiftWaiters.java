@@ -66,9 +66,9 @@ public class OpenShiftWaiters {
 
         return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MILLISECONDS,
                 WaitingConfig.buildTimeout(), reason)
-                        .logPoint(Waiter.LogPoint.BOTH)
-                        .failFast(failFast)
-                        .interval(5_000);
+                .logPoint(Waiter.LogPoint.BOTH)
+                .failFast(failFast)
+                .interval(5_000);
     }
 
     /**
@@ -85,9 +85,9 @@ public class OpenShiftWaiters {
 
         return new SupplierWaiter<>(supplier, "Complete"::equals, "Failed"::equals, TimeUnit.MILLISECONDS,
                 WaitingConfig.buildTimeout(), reason)
-                        .logPoint(Waiter.LogPoint.BOTH)
-                        .failFast(failFast)
-                        .interval(5_000);
+                .logPoint(Waiter.LogPoint.BOTH)
+                .failFast(failFast)
+                .interval(5_000);
     }
 
     /**
@@ -114,7 +114,7 @@ public class OpenShiftWaiters {
     public Waiter isProjectReady() {
         return new SimpleWaiter(() -> openShift.getProject() != null, TimeUnit.SECONDS, 20,
                 "Waiting for the project to be created.")
-                        .failFast(failFast);
+                .failFast(failFast);
     }
 
     /**

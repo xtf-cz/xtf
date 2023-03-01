@@ -87,7 +87,7 @@ public final class OpenShiftConfig {
 
     /**
      * Used only if xtf.openshift.namespace.per.testcase=true
-     * 
+     *
      * @return limit on namespace if it's set by -Dxtf.openshift.namespace.per.testcase.length.limit property
      */
     public static int getNamespaceLengthLimitForUniqueNamespacePerTest() {
