@@ -13,16 +13,24 @@ jobs:
   test:
     name: Build and CheckStyle
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ 8, 11 ]
+      fail-fast: false
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
       - name: Set up JDK 8
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
-          java-version: 8
+          distribution: 'temurin'
+          java-version: ${{ matrix.java }}
           java-package: jdk
           architecture: x64
+          cache: 'maven'
       - name: Check well-formatted code
+        # impsort-maven-plugin requires JDK 11 and profile is active only on JDK11
+        if: ${{ matrix.java == 11 }}
         run: mvn -B formatter:validate impsort:check
       - name: Maven Package
         run: mvn install -B -DskipTests=true -Dmaven.javadoc.skip=true -B -V
