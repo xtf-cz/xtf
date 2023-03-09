@@ -85,7 +85,7 @@ public class DockerImageMetadata {
         String tempName = image.getRepo() + "-" + randomString();
         ImageStream imageStream = image.getImageStream(tempName);
         imageStream.getMetadata().setName(tempName);
-        openShift.imageStreams().createOrReplace(imageStream);
+        openShift.imageStreams().resource(imageStream).createOrReplace();
 
         // wait till metadata are available
         Waiter metadataWaiter = new SimpleWaiter(
@@ -107,13 +107,13 @@ public class DockerImageMetadata {
 
     private static DockerImageMetadata getMetadataFromTag(ImageStreamTag imageStreamTag) {
         return areMetadataForImageReady(imageStreamTag)
-                ? new DockerImageMetadata(imageStreamTag.getImage().getDockerImageMetadata().getAdditionalProperties())
+                ? new DockerImageMetadata((Map<String, Object>) imageStreamTag.getImage().getDockerImageMetadata().getValue())
                 : null;
     }
 
     private static boolean areMetadataForImageReady(ImageStreamTag tag) {
         return tag != null && tag.getImage() != null && tag.getImage().getDockerImageMetadata() != null
-                && tag.getImage().getDockerImageMetadata().getAdditionalProperties() != null;
+                && tag.getImage().getDockerImageMetadata().getValue() != null;
     }
 
     private static String randomString() {

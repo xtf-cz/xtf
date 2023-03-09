@@ -12,11 +12,6 @@ import cz.xtf.core.config.OpenShiftConfig;
 import cz.xtf.core.http.Https;
 import cz.xtf.core.http.HttpsException;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.openshift.api.model.ClusterVersion;
-import io.fabric8.openshift.api.model.ClusterVersionList;
-import io.fabric8.openshift.client.OpenShiftHandlers;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -136,9 +131,7 @@ public class ClusterVersionInfo {
             // it is OpenShift 4+
             // admin is required for operation
             try {
-                NonNamespaceOperation<ClusterVersion, ClusterVersionList, Resource<ClusterVersion>> op = OpenShiftHandlers
-                        .getOperation(ClusterVersion.class, ClusterVersionList.class, OpenShifts.admin());
-                openshiftVersion = op.withName("version").get().getStatus().getDesired().getVersion();
+                openshiftVersion = OpenShifts.admin().getOpenShiftV4Version();
             } catch (KubernetesClientException kce) {
                 log.warn("xtf.openshift.version isn't configured and automatic version detection failed.", kce);
             }

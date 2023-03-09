@@ -19,13 +19,14 @@ import cz.xtf.builder.builders.limits.ResourceLimitBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.openshift.api.model.BinaryBuildSource;
 import io.fabric8.openshift.api.model.BuildConfig;
-import io.fabric8.openshift.api.model.BuildConfigFluent.SpecNested;
+import io.fabric8.openshift.api.model.BuildConfigFluent;
+import io.fabric8.openshift.api.model.BuildConfigSpecFluent;
 import io.fabric8.openshift.api.model.BuildSourceBuilder;
 import io.fabric8.openshift.api.model.BuildTriggerPolicy;
 import io.fabric8.openshift.api.model.BuildTriggerPolicyBuilder;
 import io.fabric8.openshift.api.model.GitBuildSourceBuilder;
 import io.fabric8.openshift.api.model.ImageSourceBuilder;
-import io.fabric8.openshift.api.model.ImageSourceFluent.FromNested;
+import io.fabric8.openshift.api.model.ImageSourceFluent;
 import io.fabric8.openshift.api.model.SecretBuildSourceBuilder;
 
 public class BuildConfigBuilder extends AbstractBuilder<BuildConfig, BuildConfigBuilder> implements ResourceLimitBuilder {
@@ -183,7 +184,7 @@ public class BuildConfigBuilder extends AbstractBuilder<BuildConfig, BuildConfig
 
         if (imageSource != null) {
             final ImageSourceBuilder isb = new ImageSourceBuilder();
-            FromNested<ImageSourceBuilder> from = isb.withNewFrom()
+            ImageSourceFluent<ImageSourceBuilder>.FromNested<ImageSourceBuilder> from = isb.withNewFrom()
                     .withName(imageSource.getName())
                     .withKind(imageSource.getKind());
             if (imageSource.getNamespace() != null) {
@@ -200,7 +201,8 @@ public class BuildConfigBuilder extends AbstractBuilder<BuildConfig, BuildConfig
                 .withMetadata(metadataBuilder().build());
 
         // spec
-        final SpecNested<io.fabric8.openshift.api.model.BuildConfigBuilder> spec = builder.withNewSpec();
+        final BuildConfigFluent<io.fabric8.openshift.api.model.BuildConfigBuilder>.SpecNested<io.fabric8.openshift.api.model.BuildConfigBuilder> spec = builder
+                .withNewSpec();
 
         // limits
         final List<ComputingResource> requests = computingResources.values().stream().filter(x -> x.getRequests() != null)
@@ -208,7 +210,7 @@ public class BuildConfigBuilder extends AbstractBuilder<BuildConfig, BuildConfig
         final List<ComputingResource> limits = computingResources.values().stream().filter(x -> x.getLimits() != null)
                 .collect(Collectors.toList());
         if (!requests.isEmpty() || !limits.isEmpty()) {
-            io.fabric8.openshift.api.model.BuildConfigSpecFluent.ResourcesNested<SpecNested<io.fabric8.openshift.api.model.BuildConfigBuilder>> resources = spec
+            BuildConfigSpecFluent<BuildConfigFluent<io.fabric8.openshift.api.model.BuildConfigBuilder>.SpecNested<io.fabric8.openshift.api.model.BuildConfigBuilder>>.ResourcesNested<BuildConfigFluent<io.fabric8.openshift.api.model.BuildConfigBuilder>.SpecNested<io.fabric8.openshift.api.model.BuildConfigBuilder>> resources = spec
                     .withNewResources();
             if (!requests.isEmpty()) {
                 resources.withRequests(

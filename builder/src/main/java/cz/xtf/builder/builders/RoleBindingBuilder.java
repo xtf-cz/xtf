@@ -94,7 +94,7 @@ public class RoleBindingBuilder extends AbstractBuilder<RoleBinding, RoleBinding
 
     @Override
     public RoleBinding build() {
-        RoleBindingFluent.SubjectsNested<io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder> subject = new io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder()
+        RoleBindingFluent<io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder>.SubjectsNested<io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder> subject = new io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder()
                 .withNewMetadata()
                 .withName(this.getName())
                 .endMetadata()
@@ -105,7 +105,7 @@ public class RoleBindingBuilder extends AbstractBuilder<RoleBinding, RoleBinding
         if (subjectNamespace != null && !subjectNamespace.isEmpty())
             subject.withNamespace(subjectNamespace);
 
-        RoleBindingFluent.RoleRefNested<io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder> roleRef = subject
+        RoleBindingFluent<io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder>.RoleRefNested<io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder> roleRef = subject
                 .endSubject()
                 .withNewRoleRef()
                 .withKind(roleRefKind)

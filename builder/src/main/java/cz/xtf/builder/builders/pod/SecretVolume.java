@@ -28,7 +28,7 @@ public class SecretVolume extends Volume {
     @Override
     protected void addVolumeParameters(VolumeBuilder builder) {
 
-        final VolumeFluent.SecretNested<VolumeBuilder> volumeBuilderSecretNested = builder.withNewSecret()
+        final VolumeFluent<VolumeBuilder>.SecretNested<VolumeBuilder> volumeBuilderSecretNested = builder.withNewSecret()
                 .withSecretName(getSecretName());
 
         if (items != null) {

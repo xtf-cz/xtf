@@ -73,7 +73,7 @@ public class EventsRecorder implements TestExecutionListener {
 
                 writer.append('\n');
 
-                for (Event event : openShift.getEvents()) {
+                for (Event event : openShift.getEventList()) {
                     writer.append(event.getLastTimestamp());
                     writer.append('\t');
                     writer.append(event.getFirstTimestamp());

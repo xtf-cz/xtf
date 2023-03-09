@@ -51,8 +51,8 @@ public class ImageMetadata {
                 .withName(image.getRepo() + ":" + image.getMajorTag()).get();
         Waiter metadataWaiter = new SimpleWaiter(() -> {
             ImageStreamTag isTag = imageStreamTagSupplier.get();
-            if (isTag != null && isTag.getImage() != null && isTag.getImage().getDockerImageMetadata() != null
-                    && isTag.getImage().getDockerImageMetadata().getAdditionalProperties() != null) {
+            if (isTag != null && isTag.getImage() != null && isTag.getImage().getMetadata() != null
+                    && isTag.getImage().getMetadata().getAdditionalProperties() != null) {
                 return true;
             }
             return false;
@@ -61,7 +61,7 @@ public class ImageMetadata {
         metadataWaiter.failFast(new ImageStreamFailFastCheck(openShift, image.getRepo(), image)).waitFor();
 
         return new ImageMetadata(ModelNode.fromJSONString(
-                new Gson().toJson(imageStreamTagSupplier.get().getImage().getDockerImageMetadata().getAdditionalProperties())));
+                new Gson().toJson(imageStreamTagSupplier.get().getImage().getMetadata().getAdditionalProperties())));
     }
 
     private final ModelNode metadata;

@@ -28,7 +28,7 @@ import cz.xtf.builder.builders.limits.ResourceLimitBuilder;
 import cz.xtf.builder.builders.route.TransportProtocol;
 import io.fabric8.kubernetes.api.model.ConfigMapKeySelectorBuilder;
 import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.ContainerFluent.ResourcesNested;
+import io.fabric8.kubernetes.api.model.ContainerFluent;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarSource;
@@ -251,7 +251,8 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
         final List<ComputingResource> limits = computingResources.values().stream().filter(x -> x.getLimits() != null)
                 .collect(Collectors.toList());
         if (!requests.isEmpty() || !limits.isEmpty()) {
-            ResourcesNested<io.fabric8.kubernetes.api.model.ContainerBuilder> resources = builder.withNewResources();
+            ContainerFluent<io.fabric8.kubernetes.api.model.ContainerBuilder>.ResourcesNested<io.fabric8.kubernetes.api.model.ContainerBuilder> resources = builder
+                    .withNewResources();
             if (!requests.isEmpty()) {
                 resources.withRequests(
                         requests.stream().collect(Collectors.toMap(
