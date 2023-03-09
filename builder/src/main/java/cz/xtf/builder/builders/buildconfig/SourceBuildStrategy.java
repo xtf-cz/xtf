@@ -85,7 +85,7 @@ public class SourceBuildStrategy extends BuildStrategy {
                         .endFrom();
             }
             if (StringUtils.isNotBlank(imageStreamNamespace)) {
-                strategyBuilder.getFrom().setNamespace(imageStreamNamespace);
+                strategyBuilder.buildFrom().setNamespace(imageStreamNamespace);
             }
         } else if (StringUtils.isNotBlank(dockerImageUrl)) {
             strategyBuilder.withNewFrom()

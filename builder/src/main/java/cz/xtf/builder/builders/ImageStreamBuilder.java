@@ -107,7 +107,7 @@ public class ImageStreamBuilder extends AbstractBuilder<ImageStream, ImageStream
                 .withName(tag);
 
         if (StringUtils.isNotBlank(sourceUrl)) {
-            trb.withImportPolicy(new TagImportPolicy(insecure, SCHEDULED));
+            trb.withImportPolicy(new TagImportPolicy("Legacy", insecure, SCHEDULED));
 
             trb.withNewFrom()
                     .withKind("DockerImage")

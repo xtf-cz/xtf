@@ -128,7 +128,7 @@ public class OpenShiftWaiters {
             List<GenericKubernetesResource> customResourceDefinitionList = null;
             for (CustomResourceDefinitionContextProvider crdContextProvider : OpenShift.getCRDContextProviders()) {
                 try {
-                    customResourceDefinitionList = openShift.customResources(crdContextProvider.getContext(),
+                    customResourceDefinitionList = openShift.newHasMetadataOperation(crdContextProvider.getContext(),
                             GenericKubernetesResource.class, GenericKubernetesResourceList.class)
                             .inNamespace(openShift.getNamespace())
                             .list().getItems();

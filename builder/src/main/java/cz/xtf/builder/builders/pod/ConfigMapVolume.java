@@ -24,7 +24,7 @@ public class ConfigMapVolume extends Volume {
 
     @Override
     protected void addVolumeParameters(VolumeBuilder builder) {
-        VolumeFluent.ConfigMapNested<VolumeBuilder> cfm = builder.withNewConfigMap();
+        VolumeFluent<VolumeBuilder>.ConfigMapNested<VolumeBuilder> cfm = builder.withNewConfigMap();
         cfm.withName(configMapName);
         if (defaultMode != null) {
             int defaultModeIntVal = 0;

@@ -60,9 +60,9 @@ public abstract class AbstractProbe {
     private IntOrString getPort() {
         IntOrStringBuilder builder = new IntOrStringBuilder();
         if (StringUtils.isNumeric(port)) {
-            builder.withIntVal(Integer.valueOf(port));
+            builder.withValue(Integer.valueOf(port));
         } else {
-            builder.withStrVal(port);
+            builder.withValue(port);
         }
         return builder.build();
     }
