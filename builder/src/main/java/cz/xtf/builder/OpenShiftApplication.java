@@ -7,7 +7,9 @@ import java.util.stream.Collectors;
 import cz.xtf.builder.builders.ApplicationBuilder;
 import cz.xtf.builder.builders.DeploymentConfigBuilder;
 import cz.xtf.core.openshift.OpenShift;
+import cz.xtf.core.openshift.OpenShiftWaiters;
 import cz.xtf.core.openshift.OpenShifts;
+import cz.xtf.core.waiting.failfast.FailFastCheck;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Endpoints;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
@@ -41,6 +43,7 @@ public class OpenShiftApplication {
     private List<HorizontalPodAutoscaler> autoScalers = new LinkedList<>();
     private List<Role> roles = new LinkedList<>();
     private List<RoleBinding> roleBindings = new LinkedList<>();
+    private FailFastCheck failFast = () -> false;
 
     /**
      * @deprecated superseded by {@link #OpenShiftApplication(ApplicationBuilder, OpenShift)}
@@ -72,6 +75,11 @@ public class OpenShiftApplication {
         // TODO return Waiter
     }
 
+    public OpenShiftApplication setFailFastCheck(FailFastCheck failFast) {
+        this.failFast = failFast;
+        return this;
+    }
+
     private void createResources() {
         log.debug("Deploying application {}", name);
 
@@ -99,8 +107,8 @@ public class OpenShiftApplication {
                         try {
                             log.info("Waiting for a startup of pod with deploymentconfig '{}' ({} {})",
                                     dc.getMetadata().getName(), DeploymentConfigBuilder.SYNCHRONOUS_LABEL, syncId);
-                            openShift.waiters().areExactlyNPodsReady(dc.getSpec().getReplicas(), dc.getMetadata().getName())
-                                    .waitFor();
+                            OpenShiftWaiters.get(openShift, failFast)
+                                    .areExactlyNPodsReady(dc.getSpec().getReplicas(), dc.getMetadata().getName()).waitFor();
                         } catch (Exception e) {
                             throw new IllegalStateException(
                                     "Timeout while waiting for deployment of " + dc.getMetadata().getName(), e);
