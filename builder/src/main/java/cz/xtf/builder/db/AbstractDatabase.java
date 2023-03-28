@@ -59,7 +59,13 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
 
     public AbstractDatabase(String symbolicName, String dataDir, PersistentVolumeClaim pvc, boolean withLivenessProbe,
             boolean withReadinessProbe) {
-        this("testuser", "testpwd", "testdb", symbolicName, dataDir, pvc);
+        this("testuser", "testpwd", "testdb", symbolicName, dataDir, pvc, withLivenessProbe, withReadinessProbe);
+    }
+
+    public AbstractDatabase(String username, String password, String dbName, String symbolicName, String dataDir,
+            PersistentVolumeClaim pvc, boolean withLivenessProbe,
+            boolean withReadinessProbe) {
+        this(username, password, dbName, symbolicName, dataDir, pvc);
 
         this.withLivenessProbe = withLivenessProbe;
         this.withReadinessProbe = withReadinessProbe;
@@ -144,7 +150,7 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
 
     public String getDeploymentConfigName() {
         if (openShiftName == null) {
-            openShiftName = dbName + "-" + getSymbolicName().toLowerCase();
+            openShiftName = dbName.toLowerCase() + "-" + getSymbolicName().toLowerCase();
         }
         return openShiftName;
     }

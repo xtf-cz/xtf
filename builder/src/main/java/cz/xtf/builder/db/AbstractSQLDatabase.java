@@ -70,6 +70,11 @@ public abstract class AbstractSQLDatabase extends AbstractDatabase implements SQ
         super(symbolicName, dataDir);
     }
 
+    public AbstractSQLDatabase(String username, String password, String dbName, String symbolicName, String dataDir,
+            PersistentVolumeClaim pvc, boolean withLivenessProbe, boolean withReadinessProbe) {
+        super(username, password, dbName, symbolicName, dataDir, pvc, withLivenessProbe, withReadinessProbe);
+    }
+
     public void executeSQL(Consumer<Connection> execute) {
         getSQLExecutor("127.0.0.1", getPort()).executeSQL(execute);
     }
