@@ -49,7 +49,9 @@ public class BuildManager {
             openShift.setupPullSecret(OpenShiftConfig.pullSecret());
         }
 
-        openShift.addRoleToGroup("system:image-puller", "ClusterRole", "system:authenticated");
+        if (!BuildManagerConfig.namespace().equals(OpenShiftConfig.namespace())) {
+            openShift.addRoleToGroup("system:image-puller", "ClusterRole", "system:authenticated");
+        }
     }
 
     public ManagedBuildReference deploy(ManagedBuild managedBuild) {
