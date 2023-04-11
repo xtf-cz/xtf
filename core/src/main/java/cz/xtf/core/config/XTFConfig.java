@@ -35,6 +35,7 @@ public final class XTFConfig {
     // Pre-loading
     static {
         loadConfig();
+        validateConfig();
     }
 
     public static void loadConfig() {
@@ -49,6 +50,13 @@ public final class XTFConfig {
 
         // Set new values based on old properties if new are not set
         BackwardCompatibility.updateProperties();
+    }
+
+    public static void validateConfig() {
+        if (BuildManagerConfig.namespace().equals(OpenShiftConfig.namespace())) {
+            throw new IllegalStateException(
+                    "The xtf.openshift.namespace and xtf.bm.namespace properties cannot be set to the same value.");
+        }
     }
 
     public static String get(String property) {
