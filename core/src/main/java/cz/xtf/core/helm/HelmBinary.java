@@ -18,13 +18,11 @@ public class HelmBinary {
 
     private final String path;
     private final String helmConfigPath;
-    private final String kubeUsername;
     private final String kubeToken;
     private final String namespace;
 
-    public HelmBinary(String path, String kubeUsername, String kubeToken, String namespace) {
+    public HelmBinary(String path, String kubeToken, String namespace) {
         this.path = path;
-        this.kubeUsername = kubeUsername;
         this.kubeToken = kubeToken;
         Path helmConfigFile = Paths.get(path).getParent().resolve(".config");
         try {
@@ -39,7 +37,6 @@ public class HelmBinary {
     public HelmBinary(String path, String helmConfigPath, String kubeUsername, String kubeToken, String namespace) {
         this.path = path;
         this.helmConfigPath = helmConfigPath;
-        this.kubeUsername = kubeUsername;
         this.kubeToken = kubeToken;
         this.namespace = namespace;
     }
@@ -48,7 +45,6 @@ public class HelmBinary {
         Map<String, String> environmentVariables = new HashMap<>();
         environmentVariables.put("HELM_CONFIG_HOME", helmConfigPath);
         environmentVariables.put("HELM_KUBEAPISERVER", OpenShiftConfig.url());
-        environmentVariables.put("HELM_KUBEASUSER", kubeUsername);
         environmentVariables.put("HELM_KUBETOKEN", kubeToken);
         environmentVariables.put("HELM_NAMESPACE", namespace);
         environmentVariables.put("HELM_KUBEINSECURE_SKIP_TLS_VERIFY", "true");

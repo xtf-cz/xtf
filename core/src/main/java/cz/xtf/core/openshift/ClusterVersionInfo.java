@@ -84,7 +84,7 @@ public class ClusterVersionInfo {
 
     /**
      * Detects cluster version from cluster
-     * 
+     *
      * @return version of OpenShift cluster or null
      */
     private String detectClusterVersionFromCluster() {

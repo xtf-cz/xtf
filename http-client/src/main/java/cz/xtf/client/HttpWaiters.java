@@ -42,6 +42,6 @@ public class HttpWaiters {
         };
         return new SimpleWaiter(bs,
                 "Waiting for " + client.getUrl().toExternalForm() + " to contain (" + String.join(",", strings) + ")")
-                        .timeout(WaitingConfig.timeout());
+                .timeout(WaitingConfig.timeout());
     }
 }
