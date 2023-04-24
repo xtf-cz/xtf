@@ -4,7 +4,6 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.dmr.ModelNode;
 
 import cz.xtf.core.config.OpenShiftConfig;
@@ -27,15 +26,22 @@ public class ClusterVersionInfo {
     private final Matcher versionMatcher;
 
     ClusterVersionInfo() {
-        if (StringUtils.isNotEmpty(OpenShiftConfig.version())) {
-            // manually configured version in config
-            openshiftVersion = OpenShiftConfig.version();
-        } else {
-            // try to detect version from cluster
-            openshiftVersion = detectClusterVersionFromCluster();
+        Matcher vMatcher;
+        String version = OpenShiftConfig.version();
+
+        vMatcher = (version != null && !version.isEmpty()) ? validateConfiguredVersion(version) : null;
+        if (vMatcher == null || !vMatcher.matches()) {
+            log.warn(
+                    "Version {} configured in xtf.openshift.version isn't in expected format 'major.minor[.micro]'. Attempting version detection from openshift cluster.",
+                    version);
+            version = detectClusterVersionFromCluster();
         }
 
+        openshiftVersion = version;
         versionMatcher = openshiftVersion != null ? validateConfiguredVersion(openshiftVersion) : null;
+        if (versionMatcher == null || !versionMatcher.matches()) {
+            log.warn("Version {} detected from openshift isn't in expected format 'major.minor[.micro]'.", version);
+        }
     }
 
     /**
@@ -129,10 +135,6 @@ public class ClusterVersionInfo {
     private Matcher validateConfiguredVersion(final String version) {
         Objects.requireNonNull(version);
 
-        Matcher matcher = versionPattern.matcher(version);
-        if (!matcher.matches()) {
-            log.warn("Version {} configured in xtf.openshift.version isn't in expected format 'major.minor[.micro]'.", version);
-        }
-        return matcher;
+        return versionPattern.matcher(version);
     }
 }
