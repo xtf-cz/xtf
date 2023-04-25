@@ -16,16 +16,16 @@ class HelmBinaryManager {
     }
 
     public HelmBinary adminBinary() {
-        return getBinary(OpenShiftConfig.adminToken(), OpenShiftConfig.adminUsername(), OpenShiftConfig.namespace());
+        return getBinary(OpenShiftConfig.adminToken(), OpenShiftConfig.namespace());
     }
 
     public HelmBinary masterBinary() {
-        return getBinary(OpenShiftConfig.masterToken(), OpenShiftConfig.masterUsername(), OpenShiftConfig.namespace());
+        return getBinary(OpenShiftConfig.masterToken(), OpenShiftConfig.namespace());
     }
 
-    private static HelmBinary getBinary(String token, String username, String namespace) {
+    private static HelmBinary getBinary(String token, String namespace) {
         String helmBinaryPath = HelmBinaryManagerFactory.INSTANCE.getHelmBinaryManager().getHelmBinaryPath();
-        return new HelmBinary(helmBinaryPath, username, token, namespace);
+        return new HelmBinary(helmBinaryPath, token, namespace);
 
     }
 }
