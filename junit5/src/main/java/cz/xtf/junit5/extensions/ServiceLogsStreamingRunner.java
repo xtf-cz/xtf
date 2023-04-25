@@ -160,7 +160,7 @@ public class ServiceLogsStreamingRunner implements BeforeAllCallback, AfterAllCa
     /**
      * Access the execution context {@link OutputStream} instances that represent the output of existing
      * {@link ServiceLogs} instances
-     * 
+     *
      * @param extensionContext The current test execution context
      * @return A list of {@link OutputStream} instances that represent the output of existing {@link ServiceLogs}
      *         instances
