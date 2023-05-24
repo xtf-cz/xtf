@@ -368,7 +368,7 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
 
     public ContainerBuilder configFromConfigMap(String configMapName, Function<String, String> nameMapping,
             Collection<String> configMapKeys) {
-        configMapKeys.forEach(x -> referredEnvVars.put(nameMapping.apply(x), new Entry(configMapName, x)));
+        configMapKeys.forEach(x -> referredEnvVars.put(nameMapping.apply(x), new Entry(x, configMapName)));
         return this;
     }
 
