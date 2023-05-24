@@ -33,6 +33,7 @@ import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarSource;
 import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -175,8 +176,24 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
         Stream<EnvVar> definedVars = envVars.entrySet().stream()
                 .map(entry -> new EnvVar(entry.getKey(), entry.getValue(), null));
         Stream<EnvVar> referredVars = referredEnvVars.entrySet().stream()
-                .map(entry -> new EnvVar(entry.getKey(), null, new EnvVarSource(new ConfigMapKeySelectorBuilder()
-                        .withKey(entry.getValue().getKey()).withName(entry.getValue().getValue()).build(), null, null, null)));
+                .map(entry -> (entry instanceof ConfigMapEntry) ? new EnvVar(entry.getKey(), null,
+                        new EnvVarSource(
+                                new ConfigMapKeySelectorBuilder()
+                                        .withKey(entry.getValue().getKey())
+                                        .withName(entry.getValue().getValue())
+                                        .build(),
+                                null,
+                                null,
+                                null))
+                        : new EnvVar(entry.getKey(), null,
+                                new EnvVarSource(
+                                        null,
+                                        null,
+                                        null,
+                                        new SecretKeySelectorBuilder()
+                                                .withKey(entry.getValue().getKey())
+                                                .withName(entry.getValue().getValue())
+                                                .build())));
         builder.withEnv(Stream.concat(definedVars, referredVars).collect(Collectors.toList()));
         builder.withImage(imageName);
         builder.withImagePullPolicy("Always");
@@ -372,10 +389,30 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
         return this;
     }
 
+    public ContainerBuilder configFromSecret(String secretName, Function<String, String> nameMapping,
+            Collection<String> configMapKeys) {
+        configMapKeys.forEach(x -> referredEnvVars.put(nameMapping.apply(x), new SecretEntry(x, secretName)));
+        return this;
+    }
+
     @Getter
     @AllArgsConstructor
     private class Entry {
         private String key;
         private String value;
+    }
+
+    @Getter
+    private class ConfigMapEntry extends Entry {
+        public ConfigMapEntry(String x, String configMapName) {
+            super(x, configMapName);
+        }
+    }
+
+    @Getter
+    private class SecretEntry extends Entry {
+        public SecretEntry(String x, String secretName) {
+            super(x, secretName);
+        }
     }
 }
