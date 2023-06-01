@@ -43,11 +43,6 @@ public class ClusterVersionInfoTest {
 
     @Test
     public void isMajorMinorMicroTest() {
-        Assertions.assertTrue(clusterVersionInfo.isMajorMinorMicro());
-    }
-
-    @Test
-    public void isNightlyTest() {
-        Assertions.assertFalse(clusterVersionInfo.isNightly());
+        Assertions.assertTrue(clusterVersionInfo.getOpenshiftVersion() != null && !clusterVersionInfo.isMajorMinorOnly());
     }
 }

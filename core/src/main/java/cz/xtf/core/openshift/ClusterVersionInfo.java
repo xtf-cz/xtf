@@ -1,9 +1,15 @@
 package cz.xtf.core.openshift;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.SystemUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jboss.dmr.ModelNode;
 
 import cz.xtf.core.config.OpenShiftConfig;
@@ -19,28 +25,41 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ClusterVersionInfo {
-    // version must be in format major.minor.micro (4.8.13) or major.minor (4.8)
+    // version must contain major.minor (4.8)
+
+    private static final String OCP3_CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v3/clients";
+    private static final String OCP4_CLIENTS_URL = "https://mirror.openshift.com/pub/openshift-v4";
+
     private static final Pattern versionPattern = Pattern
-            .compile("^(\\d+\\.\\d+)(\\.\\d+)?(-\\d+\\.nightly-\\d{4}-\\d{2}-\\d{2}-\\d{6})?$");
-    private final String openshiftVersion;
-    private final Matcher versionMatcher;
+            .compile("(^(\\d+\\.\\d+).*)");
+    private String openshiftVersion;
+    private String openshiftVersionURL;
+    private Matcher versionMatcher;
 
     ClusterVersionInfo() {
-        Matcher vMatcher;
-        String version = OpenShiftConfig.version();
-
-        vMatcher = (version != null && !version.isEmpty()) ? validateConfiguredVersion(version) : null;
-        if (vMatcher == null || !vMatcher.matches()) {
-            log.warn(
-                    "Version {} configured in xtf.openshift.version isn't in expected format 'major.minor[.micro]'. Attempting version detection from openshift cluster.",
-                    version);
-            version = detectClusterVersionFromCluster();
+        //get version from config
+        openshiftVersion = OpenShiftConfig.version();
+        versionMatcher = (openshiftVersion != null) ? versionPattern.matcher(openshiftVersion) : null;
+        if (versionMatcher != null && versionMatcher.matches()) {
+            getClientUrlBasedOnOcpVersion();
         }
 
-        openshiftVersion = version;
-        versionMatcher = openshiftVersion != null ? validateConfiguredVersion(openshiftVersion) : null;
-        if (versionMatcher == null || !versionMatcher.matches()) {
-            log.warn("Version {} detected from openshift isn't in expected format 'major.minor[.micro]'.", version);
+        if (getClientUrl() != null && getOpenshiftVersion() != null) {
+            log.info("xtf.openshift.version version detected: {}", getOpenshiftVersion());
+            return;
+        }
+        log.warn("xtf.openshift.version not found, proceeding with cluster detection");
+
+        //fallback - get version from cluster
+        openshiftVersion = detectClusterVersionFromCluster();
+        versionMatcher = (openshiftVersion != null) ? versionPattern.matcher(openshiftVersion) : null;
+        if (versionMatcher != null && versionMatcher.matches()) {
+            getClientUrlBasedOnOcpVersion();
+        }
+        if (getClientUrl() != null && getOpenshiftVersion() != null) {
+            log.info("xtf.openshift.version version detected: {}", getOpenshiftVersion());
+        } else {
+            log.warn("xtf.openshift.version cluster detection failed");
         }
     }
 
@@ -52,45 +71,25 @@ public class ClusterVersionInfo {
     }
 
     /**
+     * @return url to download client tools for OpenShift cluster as detected or configured or null
+     */
+    public String getClientUrl() {
+        return openshiftVersionURL;
+    }
+
+    /**
      * @return major.minor only version of OpenShift cluster as detected or configured or null
      */
     String getMajorMinorOpenshiftVersion() {
         if (openshiftVersion != null) {
-            return versionMatcher.group(1);
+            return versionMatcher.group(2);
         }
         return null;
     }
 
     /**
-     * @return true if version is in major.minor format only, false if not valid url
-     */
-    boolean isMajorMinorOnly() {
-        if (openshiftVersion != null) {
-            return versionMatcher.group(2) == null && versionMatcher.group(3) == null;
-        }
-        return false;
-    }
-
-    /**
-     * @return true if version is in major.minor.micro format, false if not valid url
-     */
-    boolean isMajorMinorMicro() {
-        if (openshiftVersion != null) {
-            return versionMatcher.group(2) != null && versionMatcher.group(3) == null;
-        }
-        return false;
-    }
-
-    boolean isNightly() {
-        if (openshiftVersion != null) {
-            return versionMatcher.group(3) != null;
-        }
-        return false;
-    }
-
-    /**
      * Detects cluster version from cluster
-     * 
+     *
      * @return version of OpenShift cluster or null
      */
     private String detectClusterVersionFromCluster() {
@@ -132,9 +131,147 @@ public class ClusterVersionInfo {
         return openshiftVersion;
     }
 
-    private Matcher validateConfiguredVersion(final String version) {
-        Objects.requireNonNull(version);
+    private String getConfiguredChannel() {
+        final String channel = OpenShiftConfig.binaryUrlChannelPath();
+        // validate
+        if (!Stream.of("stable", "fast", "latest", "candidate").collect(Collectors.toList()).contains(channel)) {
+            throw new IllegalStateException(
+                    "Channel (" + channel + ") configured in 'xtf.openshift.binary.url.channel' property is invalid.");
+        }
+        return channel;
+    }
 
-        return versionPattern.matcher(version);
+    private static boolean isS390x() {
+        return SystemUtils.IS_OS_ZOS || "s390x".equals(SystemUtils.OS_ARCH) || SystemUtils.OS_VERSION.contains("s390x");
+    }
+
+    private static boolean isPpc64le() {
+        return "ppc64le".equals(SystemUtils.OS_ARCH) || SystemUtils.OS_VERSION.contains("ppc64le");
+    }
+
+    private String getSystemTypeForOCP3() {
+        String systemType = "linux";
+        if (SystemUtils.IS_OS_MAC) {
+            systemType = "macosx";
+        } else if (isS390x()) {
+            systemType += "-s390x";
+        } else if (isPpc64le()) {
+            systemType += "-ppc64le";
+        }
+        return systemType;
+    }
+
+    private String getSystemTypeForOCP4() {
+        String systemType = "amd64";
+        if (isS390x()) {
+            systemType = "s390x";
+        } else if (isPpc64le()) {
+            systemType = "ppc64le";
+        }
+        return systemType;
+    }
+
+    private String getOcp4DownloadUrl(final String versionOrChannel, final String location) {
+        final String ocFileName = SystemUtils.IS_OS_MAC ? "openshift-client-mac.tar.gz" : "openshift-client-linux.tar.gz";
+        return String.format("%s/%s/clients/%s/%s/%s", OCP4_CLIENTS_URL, getSystemTypeForOCP4(),
+                location, versionOrChannel, ocFileName);
+    }
+
+    private void getClientUrlBasedOnOcpVersion() {
+        final String openshiftVersion = getOpenshiftVersion();
+        Objects.requireNonNull(openshiftVersion, "OpenShift version not set");
+
+        if (openshiftVersion.startsWith("3")) {
+            // OpenShift 3
+            final String systemTypeForOCP3 = getSystemTypeForOCP3();
+            String downloadUrl = String.format(
+                    "%s/%s/%s/oc.tar.gz", OCP3_CLIENTS_URL, openshiftVersion, systemTypeForOCP3);
+
+            int code = Https.httpsGetCode(downloadUrl);
+            if (code >= 200 && code < 300) {
+                this.openshiftVersion = openshiftVersion;
+                this.openshiftVersionURL = downloadUrl;
+                return;
+            }
+
+            // if the generated download URL is not working (404 or 403 response code) try to concatenate
+            // -1 to the version
+            downloadUrl = String.format(
+                    "%s/%s-1/%s/oc.tar.gz", OCP3_CLIENTS_URL, openshiftVersion, systemTypeForOCP3);
+            code = Https.httpsGetCode(downloadUrl);
+            if (code >= 200 && code < 300) {
+                this.openshiftVersion = openshiftVersion;
+                this.openshiftVersionURL = downloadUrl;
+                return;
+            }
+        } else {
+            // OpenShift 4
+
+            // https://mirror.openshift.com/pub/openshift-v4/clients/oc/$__DEPRECATED_LOCATION__PLEASE_READ__.txt
+            // Please direct x86_64 users and automation to the new oc client locations under:
+            // https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/
+            //
+            // This directory contains subdirectories for:
+            // - The clients for released version of OpenShift v4; e.g.
+            //   - The clients for OpenShift release 4.6.4:
+            // https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.6.4/
+            // - The latest client for a given OpenShift update channel; e.g.
+            //   - The latest in the 4.6 candidate channel:
+            // https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/candidate-4.6/
+            //   - The latest in the 4.5 stable channel:
+            // https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable-4.5/
+            // - The latest client for the channels of the latest GA OpenShift release.
+            //   - The latest client for the most recent GA release's candidate channel:
+            // https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/candidate/
+            //   - The latest client for the most recent GA release's stable channel:
+            // https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/
+            //
+            // If you are looking for the latest stable release's client, please use:
+            // https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/stable/
+
+            // list of fallbacks - channel defaults to stable if not set
+            for (String version : Stream.of(
+                    openshiftVersion,
+                    getMajorMinorOpenshiftVersion(),
+                    getConfiguredChannel() + "-" + getMajorMinorOpenshiftVersion(),
+                    getConfiguredChannel())
+                    .map(Object::toString)
+                    .collect(Collectors.toList())) {
+
+                // list of fallbacks ( ocp, ocp-dev-preview )
+                List<Pair<String, String>> channels = Arrays.asList(Pair.of(version, "ocp"),
+                        Pair.of(version, "ocp-dev-preview"));
+
+                for (Pair<String, String> channel : channels) {
+                    String downloadUrl = getOcp4DownloadUrl(channel.getLeft(), channel.getRight());
+                    int code = Https.httpsGetCode(downloadUrl);
+                    if (code >= 200 && code < 300) {
+                        this.openshiftVersion = openshiftVersion;
+                        this.openshiftVersionURL = downloadUrl;
+                        return;
+                    }
+                }
+            }
+
+            // list of fallbacks - stable
+            List<Pair<String, String>> channels = Arrays.asList(Pair.of("stable", "ocp"), Pair.of("stable", "ocp-dev-preview"));
+
+            for (Pair<String, String> channel : channels) {
+                String downloadUrl = getOcp4DownloadUrl(channel.getLeft(), channel.getRight());
+                int code = Https.httpsGetCode(downloadUrl);
+                if (code >= 200 && code < 300) {
+                    this.openshiftVersion = null;
+                    this.openshiftVersionURL = downloadUrl;
+                    return;
+                }
+            }
+            this.openshiftVersion = null;
+            this.openshiftVersionURL = null;
+        }
+    }
+
+    Boolean isMajorMinorOnly() {
+        Objects.requireNonNull(openshiftVersion);
+        return openshiftVersion.matches("^\\d+\\.\\d+$");
     }
 }
