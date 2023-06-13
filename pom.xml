@@ -74,6 +74,7 @@
         <version.junit5.platform>1.7.0</version.junit5.platform>
         <version.junit5.jupiter>5.7.0</version.junit5.jupiter>
         <version.junit5.jupiter.engine>5.7.0</version.junit5.jupiter.engine>
+        <version.junit5.jupiter.params>5.7.0</version.junit5.jupiter.params>
         <version.junit5.jupiter.system.stubs>2.0.1</version.junit5.jupiter.system.stubs>
         <version.assertj-core>3.17.2</version.assertj-core>
         <version.lombok>1.18.22</version.lombok>
@@ -174,6 +175,12 @@
                 <groupId>org.junit.jupiter</groupId>
                 <artifactId>junit-jupiter-engine</artifactId>
                 <version>${version.junit5.jupiter.engine}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-params</artifactId>
+                <version>${version.junit5.jupiter.params}</version>
             </dependency>
 
             <dependency>
