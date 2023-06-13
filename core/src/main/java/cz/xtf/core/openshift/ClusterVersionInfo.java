@@ -1,6 +1,7 @@
 package cz.xtf.core.openshift;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,8 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ClusterVersionInfo {
     // version must be in format major.minor.micro (4.8.13) or major.minor (4.8)
-    private static final Pattern versionPattern = Pattern
-            .compile("^(\\d+\\.\\d+)(\\.\\d+)?(-\\d+\\.nightly-\\d{4}-\\d{2}-\\d{2}-\\d{6})?$");
+    // consider any version after with 'x.y.z-abc' as nightly/developer build unless abc contains -rc.
+    private static final Pattern versionPattern = Pattern.compile("^(\\d+\\.\\d+)(\\.\\d+)?(-.*)?$");
     private final String openshiftVersion;
     private final Matcher versionMatcher;
 
@@ -49,7 +50,7 @@ public class ClusterVersionInfo {
      * @return major.minor only version of OpenShift cluster as detected or configured or null
      */
     String getMajorMinorOpenshiftVersion() {
-        if (openshiftVersion != null) {
+        if (openshiftVersion != null && versionMatcher.groupCount() >= 1) {
             return versionMatcher.group(1);
         }
         return null;
@@ -59,7 +60,7 @@ public class ClusterVersionInfo {
      * @return true if version is in major.minor format only, false if not valid url
      */
     boolean isMajorMinorOnly() {
-        if (openshiftVersion != null) {
+        if (openshiftVersion != null && versionMatcher.groupCount() >= 1) {
             return versionMatcher.group(2) == null && versionMatcher.group(3) == null;
         }
         return false;
@@ -69,15 +70,34 @@ public class ClusterVersionInfo {
      * @return true if version is in major.minor.micro format, false if not valid url
      */
     boolean isMajorMinorMicro() {
-        if (openshiftVersion != null) {
-            return versionMatcher.group(2) != null && versionMatcher.group(3) == null;
+        if (openshiftVersion != null && versionMatcher.groupCount() >= 2) {
+            return versionMatcher.group(2) != null;
         }
         return false;
     }
 
-    boolean isNightly() {
-        if (openshiftVersion != null) {
-            return versionMatcher.group(3) != null;
+    /**
+     * Check if version is release candidate. Version in {@code x.y.z-rc...} format
+     * where {@code -abc} contains {@-rc.}.
+     *
+     * @return true if version is detected as release condidate
+     */
+    boolean isReleaseCandidate() {
+        if (openshiftVersion != null && versionMatcher.groupCount() >= 3) {
+            return Optional.ofNullable(versionMatcher.group(3)).orElse("").contains("-rc.");
+        }
+        return false;
+    }
+
+    /**
+     * Check if version is developer previes. Version in {@code x.y.z-abc...} format
+     * where {@code -abc} doesn't contain {@-rc.}.
+     *
+     * @return true if version is detected as developer preview
+     */
+    boolean isDeveloperPreview() {
+        if (openshiftVersion != null && versionMatcher.groupCount() >= 3) {
+            return versionMatcher.group(3) != null && !isReleaseCandidate();
         }
         return false;
     }
