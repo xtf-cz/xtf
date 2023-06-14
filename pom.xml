@@ -78,7 +78,7 @@
         <version.assertj-core>3.17.2</version.assertj-core>
         <version.lombok>1.18.22</version.lombok>
         <version.gson>2.8.9</version.gson>
-        <version.guava>31.1-jre</version.guava>
+        <version.guava>32.0.1-jre</version.guava>
 
         <!-- Plugin version properties -->
         <version.maven-source-plugin>3.2.1</version.maven-source-plugin>
