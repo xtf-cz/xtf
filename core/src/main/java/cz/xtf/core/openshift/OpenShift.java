@@ -766,7 +766,7 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
     }
 
     public DeploymentConfig updateDeploymentconfig(DeploymentConfig deploymentConfig) {
-        return deploymentConfigs().withName(deploymentConfig.getMetadata().getName()).replace();
+        return deploymentConfigs().withName(deploymentConfig.getMetadata().getName()).replace(deploymentConfig);
     }
 
     /**
@@ -876,7 +876,7 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
     }
 
     public BuildConfig updateBuildConfig(BuildConfig buildConfig) {
-        return buildConfigs().withName(buildConfig.getMetadata().getName()).replace();
+        return buildConfigs().withName(buildConfig.getMetadata().getName()).replace(buildConfig);
     }
 
     /**
