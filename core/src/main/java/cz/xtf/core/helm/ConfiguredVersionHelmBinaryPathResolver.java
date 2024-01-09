@@ -44,9 +44,11 @@ class ConfiguredVersionHelmBinaryPathResolver implements HelmBinaryPathResolver 
         Objects.requireNonNull(archivePath);
 
         try {
+            // --no-same-owner argument is added for the docker container execution where tar gets wrong ownership information
+            // due to the context of the builder
             List<String> args = Stream
                     .of("tar", "-xf", archivePath.toAbsolutePath().toString(), "-C",
-                            getProjectHelmDir().toAbsolutePath().toString())
+                            getProjectHelmDir().toAbsolutePath().toString(), "--no-same-owner")
                     .collect(Collectors.toList());
             ProcessBuilder pb = new ProcessBuilder(args);
 
