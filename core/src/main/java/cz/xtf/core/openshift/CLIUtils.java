@@ -24,6 +24,7 @@ public class CLIUtils {
         pb.redirectError(ProcessBuilder.Redirect.PIPE);
 
         try {
+            log.debug("executing local command: {}", String.join(" ", args));
             Process p = pb.start();
 
             ExecutorService es = Executors.newFixedThreadPool(2);
@@ -45,7 +46,9 @@ public class CLIUtils {
             int result = p.waitFor();
 
             if (result == 0) {
-                return out.get();
+                String commandOutput = out.get();
+                log.debug(commandOutput);
+                return commandOutput;
             } else {
                 log.error("Failed while executing (code {}): {}", result, String.join(" ", args));
                 log.error(err.get());
