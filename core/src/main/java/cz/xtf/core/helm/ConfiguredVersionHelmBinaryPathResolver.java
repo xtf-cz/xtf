@@ -1,5 +1,7 @@
 package cz.xtf.core.helm;
 
+import static cz.xtf.core.utils.CoreUtils.getSystemArchForOCP4;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -112,12 +114,10 @@ class ConfiguredVersionHelmBinaryPathResolver implements HelmBinaryPathResolver 
     }
 
     private String getHelmClientUrlBasedOnConfiguredHelmVersion(final String helmClientVersion) {
-        String systemType = "linux";
-        if (SystemUtils.IS_OS_MAC) {
-            systemType = "darwin";
-        }
-        return String.format("%s/%s/helm-%s-amd64.tar.gz", OCP_4_HELM_BINARY_DOWNLOAD_URL, helmClientVersion,
-                systemType);
+        final String systemType = SystemUtils.IS_OS_MAC ? "darwin" : "linux";
+        final String sysArch = getSystemArchForOCP4();
+        return String.format("%s/%s/helm-%s-%s.tar.gz", OCP_4_HELM_BINARY_DOWNLOAD_URL, helmClientVersion,
+                systemType, sysArch);
     }
 
     private Path getProjectHelmDir() {
