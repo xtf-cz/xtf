@@ -556,8 +556,18 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
         return getAnyPod(Collections.singletonMap(key, value));
     }
 
+    /**
+     * Returns random pod with specified labels
+     * 
+     * @param labels labels to be used for filtering
+     * @return random pod with specified labels
+     * @throws RuntimeException if no pod is found
+     */
     public Pod getAnyPod(Map<String, String> labels) {
         List<Pod> pods = getLabeledPods(labels);
+        if (pods.isEmpty()) {
+            throw new RuntimeException("No pod found with labels: " + labels);
+        }
         return pods.get(new Random().nextInt(pods.size()));
     }
 
