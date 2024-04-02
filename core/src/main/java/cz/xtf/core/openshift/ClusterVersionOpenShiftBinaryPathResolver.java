@@ -1,5 +1,8 @@
 package cz.xtf.core.openshift;
 
+import static cz.xtf.core.utils.CoreUtils.getSystemArchForOCP4;
+import static cz.xtf.core.utils.CoreUtils.getSystemTypeForOCP3;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -90,7 +93,7 @@ class ClusterVersionOpenShiftBinaryPathResolver implements OpenShiftBinaryPathRe
 
     private String getOcp4DownloadUrl(final ClusterVersionInfo versionInfo, final String versionOrChannel) {
         final String ocFileName = SystemUtils.IS_OS_MAC ? "openshift-client-mac.tar.gz" : "openshift-client-linux.tar.gz";
-        return String.format("%s/%s/clients/%s/%s/%s", OCP4_CLIENTS_URL, getSystemTypeForOCP4(),
+        return String.format("%s/%s/clients/%s/%s/%s", OCP4_CLIENTS_URL, getSystemArchForOCP4(),
                 (versionInfo.isDeveloperPreview() ? "ocp-dev-preview" : "ocp"), versionOrChannel, ocFileName);
     }
 
@@ -102,7 +105,7 @@ class ClusterVersionOpenShiftBinaryPathResolver implements OpenShiftBinaryPathRe
      */
     private String loadOrGuessClientUrlOnCluster() {
         final String locationTemplate = "https://%s/%s/%s/oc.tar";
-        final String systemType = getSystemTypeForOCP4();
+        final String systemArch = getSystemArchForOCP4();
         final String operatingSystem = SystemUtils.IS_OS_MAC ? "mac" : "linux";
 
         try {
@@ -112,7 +115,7 @@ class ClusterVersionOpenShiftBinaryPathResolver implements OpenShiftBinaryPathRe
                     .orElseThrow(() -> new IllegalStateException("We are not able to find download link for OC binary."));
             return String.format(locationTemplate,
                     downloads.getSpec().getHost(),
-                    getSystemTypeForOCP4(),
+                    systemArch,
                     operatingSystem);
         } catch (KubernetesClientException kce) {
             log.warn(
@@ -121,7 +124,7 @@ class ClusterVersionOpenShiftBinaryPathResolver implements OpenShiftBinaryPathRe
             // try to guess URL in case of insufficient permission to read route 'downloads' in 'openshift-console' namespace
             return String.format(locationTemplate,
                     OpenShifts.admin("openshift-console").generateHostname("downloads"),
-                    systemType,
+                    systemArch,
                     operatingSystem);
         }
     }
@@ -186,36 +189,6 @@ class ClusterVersionOpenShiftBinaryPathResolver implements OpenShiftBinaryPathRe
         }
 
         return getProjectOcDir().resolve("oc").toAbsolutePath().toString();
-    }
-
-    private String getSystemTypeForOCP3() {
-        String systemType = "linux";
-        if (SystemUtils.IS_OS_MAC) {
-            systemType = "macosx";
-        } else if (isS390x()) {
-            systemType += "-s390x";
-        } else if (isPpc64le()) {
-            systemType += "-ppc64le";
-        }
-        return systemType;
-    }
-
-    private String getSystemTypeForOCP4() {
-        String systemType = "amd64";
-        if (isS390x()) {
-            systemType = "s390x";
-        } else if (isPpc64le()) {
-            systemType = "ppc64le";
-        }
-        return systemType;
-    }
-
-    private static boolean isS390x() {
-        return SystemUtils.IS_OS_ZOS || "s390x".equals(SystemUtils.OS_ARCH) || SystemUtils.OS_VERSION.contains("s390x");
-    }
-
-    private static boolean isPpc64le() {
-        return "ppc64le".equals(SystemUtils.OS_ARCH) || SystemUtils.OS_VERSION.contains("ppc64le");
     }
 
     private Path getProjectOcDir() {
