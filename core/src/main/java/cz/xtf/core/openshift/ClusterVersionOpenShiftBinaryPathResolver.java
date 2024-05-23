@@ -91,10 +91,13 @@ class ClusterVersionOpenShiftBinaryPathResolver implements OpenShiftBinaryPathRe
         }
     }
 
-    private String getOcp4DownloadUrl(final ClusterVersionInfo versionInfo, final String versionOrChannel) {
+    private String getOcp4DownloadUrl(final ClusterVersionInfo versionInfo, String versionOrChannel) {
         final String ocFileName = SystemUtils.IS_OS_MAC ? "openshift-client-mac.tar.gz" : "openshift-client-linux.tar.gz";
-        return String.format("%s/%s/clients/%s/%s/%s", OCP4_CLIENTS_URL, getSystemArchForOCP4(),
-                (versionInfo.isDeveloperPreview() ? "ocp-dev-preview" : "ocp"), versionOrChannel, ocFileName);
+        if (versionInfo.isDeveloperPreview()) {
+            log.warn("Developer preview version detected, defaulting to the latest stable channel for oc binary download.");
+            versionOrChannel = "stable";
+        }
+        return String.format("%s/%s/clients/ocp/%s/%s", OCP4_CLIENTS_URL, getSystemArchForOCP4(), versionOrChannel, ocFileName);
     }
 
     /**

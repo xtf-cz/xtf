@@ -33,22 +33,28 @@ public class ClusterVersionOpenShiftBinaryPathResolverTest {
         // base client URL
         // version or channel URL
         return Stream.of(
-                Arguments.arguments("4.10", "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/", "stable-4.10"),
-                Arguments.arguments("4.8.14", "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/", "4.8.14"),
-                Arguments.arguments("4.14.0-ec.1",
-                        "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp-dev-preview/", "4.14.0-ec.1"),
-                Arguments.arguments("4.13.0-rc.8",
-                        "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/", "4.13.0-rc.8"));
+                Arguments.arguments("4.10", null, "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/",
+                        "stable-4.10"),
+                Arguments.arguments("4.15", "stable", "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/",
+                        "stable-4.15"),
+                Arguments.arguments("4.16", "candidate", "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/",
+                        "candidate-4.16"),
+                Arguments.arguments("4.8.14", null, "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/",
+                        "4.8.14"),
+                Arguments.arguments("4.14.0-ec.1", null,
+                        "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/", "stable"),
+                Arguments.arguments("4.15.0-rc.0", null,
+                        "https://mirror.openshift.com/pub/openshift-v4/amd64/clients/ocp/", "4.15.0-rc.0"));
     }
 
     @ParameterizedTest
     @MethodSource("provideVersions")
-    public void resolveTest(String version, String baseClientUrl, String versionOrChannel) {
-        final String ocpVersion = version;
-        setOCPVersion(ocpVersion);
+    public void resolveTest(String version, String channel, String baseClientUrl, String versionOrChannel) {
+        setOCPVersionAndChannel(version, channel);
         final String systemType = SystemUtils.IS_OS_MAC ? "mac" : "linux";
+        boolean isDeveloperPrevies = ClusterVersionInfoFactory.INSTANCE.getClusterVersionInfo().isDeveloperPreview();
         testDownloadedVersion(baseClientUrl + versionOrChannel
-                + "/openshift-client-" + systemType + ".tar.gz", versionOrChannel);
+                + "/openshift-client-" + systemType + ".tar.gz", isDeveloperPrevies ? version : versionOrChannel);
     }
 
     @Test
@@ -81,7 +87,14 @@ public class ClusterVersionOpenShiftBinaryPathResolverTest {
     }
 
     private void setOCPVersion(final String ocpVersion) {
+        setOCPVersionAndChannel(ocpVersion, null);
+    }
+
+    private void setOCPVersionAndChannel(final String ocpVersion, final String channel) {
         systemProperties.set(OpenShiftConfig.OPENSHIFT_VERSION, ocpVersion);
+        if (channel != null) {
+            systemProperties.set(OpenShiftConfig.OPENSHIFT_BINARY_URL_CHANNEL, channel);
+        }
         XTFConfig.loadConfig();
         ClusterVersionInfoFactory.INSTANCE.getClusterVersionInfo(true);
     }
