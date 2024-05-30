@@ -29,7 +29,7 @@ public abstract class AbstractOracle extends AbstractSQLDatabase {
     protected static final String PASSWORD = "oracle";
     protected static String DB_NAME;
     protected static final String SYMBOLIC_NAME = "ORACLE";
-    protected static final String DATA_DIR = "/opt/oracle/oradata";
+    protected static final String DATA_DIR = "/var/lib/oracle/data";
 
     public AbstractOracle(String dbName) {
         super(USERNAME, PASSWORD, dbName, SYMBOLIC_NAME, DATA_DIR);
