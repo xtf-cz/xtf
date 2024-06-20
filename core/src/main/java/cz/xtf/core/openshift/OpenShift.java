@@ -330,7 +330,7 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
 
     /**
      * Creates or recreates project specified by projectRequest instance.
-     * 
+     *
      * @param projectRequest project request instance
      * @return ProjectRequest instance
      */
@@ -1294,7 +1294,7 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
             try {
                 newHasMetadataOperation(crdContextProvider.getContext(), GenericKubernetesResource.class,
                         GenericKubernetesResourceList.class)
-                                .inNamespace(getNamespace()).delete();
+                        .inNamespace(getNamespace()).delete();
                 log.debug("DELETE :: " + crdContextProvider.getContext().getName() + " instances");
             } catch (KubernetesClientException kce) {
                 log.debug(crdContextProvider.getContext().getName() + " might not be installed on the cluster.", kce);
