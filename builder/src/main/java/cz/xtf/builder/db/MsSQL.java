@@ -94,11 +94,11 @@ public class MsSQL extends AbstractSQLDatabase {
         return new ProbeSettings(30,
                 String.valueOf(this.getPort()),
                 5,
-                "/opt/mssql-tools/bin/sqlcmd -S localhost -d " + getDbName() + " -U " + getUsername() + " -P " + getPassword()
-                        + " -Q \"Select 1\"",
+                "/opt/mssql-tools18/bin/sqlcmd -S localhost -d " + getDbName() + " -U " + getUsername() + " -P " + getPassword()
+                        + " -C -Q \"Select 1\"",
                 5,
-                "/opt/mssql-tools/bin/sqlcmd -S localhost -d " + getDbName() + " -U " + getUsername() + " -P " + getPassword()
-                        + " -Q \"Select 1\"",
+                "/opt/mssql-tools18/bin/sqlcmd -S localhost -d " + getDbName() + " -U " + getUsername() + " -P " + getPassword()
+                        + " -C -Q \"Select 1\"",
                 10,
                 10);
     }
