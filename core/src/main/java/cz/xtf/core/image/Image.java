@@ -19,27 +19,29 @@ public class Image {
     }
 
     public static Image resolve(String id) {
-        Image image = Image.get(id);
-        if (image != null)
-            return image;
-
+        // first try to find the image with subid to get any more specific image
         String subid = XTFConfig.get("xtf." + id + ".subid");
+        Image image = Image.get(id + "." + subid);
+        if (image != null) {
+            String customReg = XTFConfig.get("xtf." + id + ".reg");
+            String customRegId = XTFConfig.get("xtf." + id + ".regid");
+            String customUser = XTFConfig.get("xtf." + id + ".user");
+            String customTag = XTFConfig.get("xtf." + id + ".tag");
 
-        image = Image.get(id + "." + subid);
-        if (image == null)
-            throw new UnknownImageException("Unable to get image using " + id + " or " + subid);
+            String reg = customRegId != null ? XTFConfig.get("xtf.registry." + customRegId) : customReg;
+            reg = reg != null ? reg : image.getRegistry();
+            String user = customUser != null ? customUser : image.getUser();
+            String tag = customTag != null ? customTag : image.getTag();
 
-        String customReg = XTFConfig.get("xtf." + id + ".reg");
-        String customRegId = XTFConfig.get("xtf." + id + ".regid");
-        String customUser = XTFConfig.get("xtf." + id + ".user");
-        String customTag = XTFConfig.get("xtf." + id + ".tag");
-
-        String reg = customRegId != null ? XTFConfig.get("xtf.registry." + customRegId) : customReg;
-        reg = reg != null ? reg : image.getRegistry();
-        String user = customUser != null ? customUser : image.getUser();
-        String tag = customTag != null ? customTag : image.getTag();
-
-        return new Image(reg, user, image.getRepo(), tag);
+            return new Image(reg, user, image.getRepo(), tag);
+        }
+        // then try with id
+        image = Image.get(id);
+        if (image != null) {
+            return image;
+        }
+        // in case no image is found throw exception
+        throw new UnknownImageException("Unable to get image using " + id + " or " + subid);
     }
 
     public static Image from(String imageUrl) {
