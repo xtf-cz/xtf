@@ -99,4 +99,50 @@ public class ImageTest {
         Assertions.assertThrows(UnknownImageException.class, () -> Image.resolve("blabla"),
                 "Expected UnknownImageException to be thrown for unknown image.");
     }
+
+    @Test
+    public void testImageFromUrlOneToken() {
+        Image image = Image.from("nginx");
+        Assertions.assertTrue(image.getRegistry().isEmpty(), "Registry for image url: 'nginx' must be empty.");
+        Assertions.assertTrue(image.getUser().isEmpty(), "User for image url: 'nginx' must be empty.");
+        Assertions.assertEquals("nginx", image.getRepo(), "Wrong repository name.");
+        Assertions.assertTrue(image.getTag().isEmpty(), "Tag for image url: 'nginx' must be empty.");
+    }
+
+    @Test
+    public void testImageFromUrlTwoTokens() {
+        Image image = Image.from("user/nginx");
+        Assertions.assertTrue(image.getRegistry().isEmpty(), "Registry for image url: 'user/nginx' must be empty.");
+        Assertions.assertEquals("user", image.getUser(), "User for image url: 'user/nginx' is wrong.");
+        Assertions.assertEquals("nginx", image.getRepo(), "Wrong repository name.");
+        Assertions.assertTrue(image.getTag().isEmpty(), "Tag for image url: 'user/nginx' must be empty.");
+    }
+
+    @Test
+    public void testImageFromUrlThreeTokens() {
+        Image image = Image.from("quay.io/jaegertracing/all-in-one:1.56");
+        Assertions.assertEquals("quay.io", image.getRegistry(), "Wrong registry parsed from image url.");
+        Assertions.assertEquals("jaegertracing", image.getUser(), "Wrong user parsed from image url.");
+        Assertions.assertEquals("all-in-one", image.getRepo(), "Wrong repository name.");
+        Assertions.assertEquals("1.56", image.getTag(), "Wrong tag parsed from image url.");
+    }
+
+    @Test
+    public void testImageFromUrlFourTokens() {
+        Image image = Image.from("mcr.microsoft.com/mssql/rhel/server:2022-CU13-rhel-9.1");
+        Assertions.assertEquals("mcr.microsoft.com", image.getRegistry(), "Wrong registry parsed from image url.");
+        Assertions.assertEquals("mssql", image.getUser(), "Wrong user parsed from image url.");
+        Assertions.assertEquals("rhel/server", image.getRepo(), "Wrong repository name.");
+        Assertions.assertEquals("2022-CU13-rhel-9.1", image.getTag(), "Wrong tag parsed from image url.");
+    }
+
+    @Test
+    public void testImageFromUrlFourPlusTokens() {
+        Image image = Image.from("mycompany.registry.com/user/team-b/subteam-c/myservice/subservice/subsubservice:1.2.3");
+        Assertions.assertEquals("mycompany.registry.com", image.getRegistry(), "Wrong registry parsed from image url.");
+        Assertions.assertEquals("user", image.getUser(), "Wrong user parsed from image url.");
+        Assertions.assertEquals("team-b/subteam-c/myservice/subservice/subsubservice", image.getRepo(),
+                "Wrong repository name.");
+        Assertions.assertEquals("1.2.3", image.getTag(), "Wrong tag parsed from image url.");
+    }
 }

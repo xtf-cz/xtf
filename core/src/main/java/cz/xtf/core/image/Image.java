@@ -1,6 +1,7 @@
 package cz.xtf.core.image;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import cz.xtf.core.config.XTFConfig;
@@ -70,7 +71,10 @@ public class Image {
                 repoTag = slashTokens[2];
                 break;
             default:
-                throw new IllegalArgumentException("image '" + imageUrl + "' should have one or two '/' characters");
+                registry = slashTokens[0];
+                user = slashTokens[1];
+                repoTag = String.join("/", Arrays.copyOfRange(slashTokens, 2, slashTokens.length));
+                break;
         }
 
         final String[] tokens = repoTag.split(":");
