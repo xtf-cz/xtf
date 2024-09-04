@@ -51,7 +51,8 @@ public class CLIUtils {
                 return commandOutput;
             } else {
                 log.error("Failed while executing (code {}): {}", result, String.join(" ", args));
-                log.error(err.get());
+                log.error("stdout:\n{}", out.get());
+                log.error("stderr:\n{}", err.get());
             }
         } catch (IOException | InterruptedException | ExecutionException e) {
             log.error("Failed while executing: " + String.join(" ", args), e);
