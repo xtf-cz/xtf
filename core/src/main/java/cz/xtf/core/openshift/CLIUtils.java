@@ -44,6 +44,8 @@ public class CLIUtils {
             });
 
             int result = p.waitFor();
+            // Shutdown the output and error streams
+            es.shutdown();
 
             if (result == 0) {
                 String commandOutput = out.get();
