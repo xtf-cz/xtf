@@ -80,6 +80,7 @@
         <version.lombok>1.18.22</version.lombok>
         <version.gson>2.8.9</version.gson>
         <version.guava>32.0.1-jre</version.guava>
+        <version.org.eclipse.jgit>5.13.3.202401111512-r</version.org.eclipse.jgit>
 
         <!-- Plugin version properties -->
         <version.maven-source-plugin>3.2.1</version.maven-source-plugin>
@@ -225,6 +226,12 @@
                 <groupId>io.fabric8</groupId>
                 <artifactId>openshift-server-mock</artifactId>
                 <version>${version.openshift-client}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.jgit</groupId>
+                <artifactId>org.eclipse.jgit</artifactId>
+                <version>${version.org.eclipse.jgit}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
