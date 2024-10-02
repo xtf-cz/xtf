@@ -125,6 +125,18 @@ public class ImageTest {
         Assertions.assertEquals("jaegertracing", image.getUser(), "Wrong user parsed from image url.");
         Assertions.assertEquals("all-in-one", image.getRepo(), "Wrong repository name.");
         Assertions.assertEquals("1.56", image.getTag(), "Wrong tag parsed from image url.");
+        Assertions.assertEquals("quay.io/jaegertracing/all-in-one:1.56", image.getUrl(),
+                "Wrong url generated from image object.");
+    }
+
+    @Test
+    public void testImageFromUrlThreeTokensNoTag() {
+        Image image = Image.from("quay.io/jaegertracing/all-in-one");
+        Assertions.assertEquals("quay.io", image.getRegistry(), "Wrong registry parsed from image url.");
+        Assertions.assertEquals("jaegertracing", image.getUser(), "Wrong user parsed from image url.");
+        Assertions.assertEquals("all-in-one", image.getRepo(), "Wrong repository name.");
+        Assertions.assertEquals("", image.getTag(), "Wrong tag parsed from image url.");
+        Assertions.assertEquals("quay.io/jaegertracing/all-in-one", image.getUrl(), "Wrong url generated from image object.");
     }
 
     @Test
