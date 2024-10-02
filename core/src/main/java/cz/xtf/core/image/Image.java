@@ -100,7 +100,7 @@ public class Image {
     private final String tag;
 
     public Image(String registry, String user, String repo, String tag) {
-        this.url = String.format("%s/%s/%s:%s", registry, user, repo, tag);
+        this.url = String.format(tag.trim().isEmpty() ? "%s/%s/%s" : "%s/%s/%s:%s", registry, user, repo, tag);
         this.registry = registry;
         this.user = user;
         this.repo = repo;
