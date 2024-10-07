@@ -1,36 +1,40 @@
 package cz.xtf.builder.db;
 
 import cz.xtf.builder.builders.pod.PersistentVolumeClaim;
+import cz.xtf.core.config.XTFConfig;
 import cz.xtf.core.image.Image;
 
 public class MySQL extends AbstractSQLDatabase {
 
+    private static final String DATA_DIR_PROPERTY = "xtf.mysql.datadir";
+    private static final String MYSQL_DATA_DIR = XTFConfig.get(DATA_DIR_PROPERTY, "/var/lib/mysql/data");
+
     public MySQL() {
-        super("MYSQL", "/var/lib/mysql/data");
+        super("MYSQL", MYSQL_DATA_DIR);
     }
 
     public MySQL(boolean withLivenessProbe, boolean withReadinessProbe) {
-        super("MYSQL", "/var/lib/mysql/data", withLivenessProbe, withReadinessProbe);
+        super("MYSQL", MYSQL_DATA_DIR, withLivenessProbe, withReadinessProbe);
     }
 
     public MySQL(boolean withLivenessProbe, boolean withReadinessProbe, boolean withStartupProbe) {
-        super("MYSQL", "/var/lib/mysql/data", withLivenessProbe, withReadinessProbe, withStartupProbe, true);
+        super("MYSQL", MYSQL_DATA_DIR, withLivenessProbe, withReadinessProbe, withStartupProbe, true);
     }
 
     public MySQL(PersistentVolumeClaim pvc) {
-        super("MYSQL", "/var/lib/mysql/data", pvc);
+        super("MYSQL", MYSQL_DATA_DIR, pvc);
     }
 
     public MySQL(PersistentVolumeClaim pvc, boolean withLivenessProbe, boolean withReadinessProbe) {
-        super("MYSQL", "/var/lib/mysql/data", pvc, withLivenessProbe, withReadinessProbe);
+        super("MYSQL", MYSQL_DATA_DIR, pvc, withLivenessProbe, withReadinessProbe);
     }
 
     public MySQL(PersistentVolumeClaim pvc, boolean withLivenessProbe, boolean withReadinessProbe, boolean withStartupProbe) {
-        super("MYSQL", "/var/lib/mysql/data", pvc, withLivenessProbe, withReadinessProbe, withStartupProbe);
+        super("MYSQL", MYSQL_DATA_DIR, pvc, withLivenessProbe, withReadinessProbe, withStartupProbe);
     }
 
     public MySQL(String username, String password, String dbName) {
-        super(username, password, dbName, "MYSQL", "/var/lib/mysql/data");
+        super(username, password, dbName, "MYSQL", MYSQL_DATA_DIR);
     }
 
     @Override
