@@ -13,6 +13,7 @@ import org.junit.platform.commons.support.AnnotationSupport;
 import cz.xtf.core.config.OpenShiftConfig;
 import cz.xtf.core.config.XTFConfig;
 import cz.xtf.core.image.Image;
+import cz.xtf.core.image.UnknownImageException;
 import cz.xtf.core.openshift.OpenShifts;
 import cz.xtf.junit5.annotations.SkipFor;
 import cz.xtf.junit5.annotations.SkipFors;
@@ -46,7 +47,15 @@ public class SkipForCondition implements ExecutionCondition {
                     "Only one of 'name', 'imageMetadataLabelName', 'imageMetadataLabelArchitecture' and 'subId' can be presented in 'SkipFor' annotation.");
         }
 
-        Image image = Image.resolve(skipFor.image());
+        Image image = null;
+        try {
+            image = Image.resolve(skipFor.image());
+        } catch (UnknownImageException uie) {
+            return ConditionEvaluationResult.enabled(
+                    "Cannot get image for '" + skipFor.image()
+                            + "' therefore cannot evaluate skip condition properly. Continue in test.");
+        }
+
         Matcher matcher;
 
         if (!skipFor.name().equals("")) {
