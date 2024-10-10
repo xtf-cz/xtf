@@ -55,35 +55,14 @@ class JGitResolver implements GitResolver {
             return;
         }
 
-        //get current commit hash
-        ObjectId commitId = repository.resolve("HEAD");
-
-        //get all remote references
-        List<Ref> refs = repository.getRefDatabase().getRefs().stream()
-                .filter(reference -> reference.getName().startsWith("refs/remotes/")).collect(Collectors.toList());
-
-        List<String> matches = new ArrayList<>();
-        // Walk through all the refs to see if any point to this commit
-        for (Ref ref : refs) {
-            if (ref.getObjectId().equals(commitId)) {
-                matches.add(ref.getName());
-            }
-        }
+        List<String> matches = getMatchingRemoteRefs(repository);
 
         if (matches.isEmpty()) {
             log.error("No remote references found for the current commit");
             return;
         }
 
-        //In case there are multiple matches, we prefer upstream or origin (in this order)
-        List<String> preferredMatches = matches.stream()
-                .filter(reference -> reference.contains("upstream") || reference.contains("origin"))
-                .sorted(Comparator.reverseOrder()) // 1) upstream 2) origin
-                .collect(Collectors.toList());
-
-        if (matches.size() > 1 && !preferredMatches.isEmpty()) {
-            matches = preferredMatches;
-        }
+        matches = sortMatches(matches);
 
         //branch is string behind the last /
         reference = matches.stream().findFirst().map(ref -> ref.substring(ref.lastIndexOf('/') + 1)).orElse(null);
@@ -97,6 +76,45 @@ class JGitResolver implements GitResolver {
             log.info("xtf.git.repository.url got automatically resolved as {}", url);
         }
 
+    }
+
+    /**
+     * In case there are multiple matches, we prefer upstream or origin (in this order)
+     * If there are multiple refs but none are [upstream|origin] order of matches is not guaranteed
+     */
+    private static List<String> sortMatches(List<String> matches) {
+        List<String> preferredMatches = matches.stream()
+                .filter(reference -> reference.contains("upstream") || reference.contains("origin"))
+                .sorted(Comparator.reverseOrder()) // 1) upstream 2) origin
+                .collect(Collectors.toList());
+
+        if (matches.size() > 1 && !preferredMatches.isEmpty()) {
+            return preferredMatches;
+        } else {
+            return matches;
+        }
+    }
+
+    /**
+     * get remote Refs/branches pointing to HEAD
+     */
+    private static List<String> getMatchingRemoteRefs(Repository repository) throws IOException {
+        //get current commit hash
+        ObjectId commitId = repository.resolve("HEAD");
+
+        List<Ref> allRemoteRefs = repository.getRefDatabase().getRefs().stream()
+                .filter(reference -> reference.getName().startsWith("refs/remotes/")).collect(Collectors.toList());
+
+        List<String> matches = new ArrayList<>();
+
+        // Walk through all the refs to see if any point to this commit
+        for (Ref ref : allRemoteRefs) {
+            if (ref.getObjectId().equals(commitId)) {
+                matches.add(ref.getName());
+            }
+        }
+
+        return matches;
     }
 
     /**
