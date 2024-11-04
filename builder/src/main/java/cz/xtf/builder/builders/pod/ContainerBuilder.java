@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +44,7 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
     private final String name;
 
     private final Map<String, String> envVars = new HashMap<>();
+    private final List<String> args = new LinkedList<>();
     private final Map<String, Entry> referredEnvVars = new HashMap<>();
     private final Set<ContainerPort> ports = new HashSet<>();
     private final Set<VolumeMount> volumeMounts = new HashSet<>();
@@ -101,6 +103,11 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
 
     public ContainerBuilder port(int port, TransportProtocol protocol, String name) {
         ports.add(new ContainerPort(port, protocol, name));
+        return this;
+    }
+
+    public ContainerBuilder args(String value) {
+        args.add(value);
         return this;
     }
 
@@ -197,6 +204,9 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
         builder.withEnv(Stream.concat(definedVars, referredVars).collect(Collectors.toList()));
         builder.withImage(imageName);
         builder.withImagePullPolicy("Always");
+        if (!args.isEmpty()) {
+            builder.withArgs(args);
+        }
 
         if (command != null) {
             builder.withCommand(command);
