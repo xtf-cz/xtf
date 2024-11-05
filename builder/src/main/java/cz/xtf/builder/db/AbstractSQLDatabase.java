@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
 
@@ -11,6 +12,34 @@ import cz.xtf.builder.builders.pod.ContainerBuilder;
 import cz.xtf.builder.builders.pod.PersistentVolumeClaim;
 
 public abstract class AbstractSQLDatabase extends AbstractDatabase implements SQLExecutor {
+
+    public AbstractSQLDatabase(
+            String symbolicName,
+            String dataDir,
+            PersistentVolumeClaim pvc,
+            String username,
+            String password,
+            String dbName,
+            boolean configureEnvironment,
+            boolean withLivenessProbe,
+            boolean withReadinessProbe,
+            boolean withStartupProbe,
+            Supplier<String> deploymentConfigName,
+            Supplier<String> envVarPrefix) {
+        super(
+                symbolicName,
+                dataDir,
+                pvc,
+                username,
+                password,
+                dbName,
+                configureEnvironment,
+                withLivenessProbe,
+                withReadinessProbe,
+                withStartupProbe,
+                deploymentConfigName,
+                envVarPrefix);
+    }
 
     public AbstractSQLDatabase(String symbolicName, String dataDir, boolean withLivenessProbe, boolean withReadinessProbe) {
         super(symbolicName, dataDir, withLivenessProbe, withReadinessProbe);
