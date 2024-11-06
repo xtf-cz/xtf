@@ -81,12 +81,6 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
     }
 
     public AbstractDatabase(String symbolicName, String dataDir, boolean withLivenessProbe, boolean withReadinessProbe,
-            boolean configureEnvironment) {
-        this(symbolicName, dataDir, withLivenessProbe, withReadinessProbe);
-        this.configureEnvironment = configureEnvironment;
-    }
-
-    public AbstractDatabase(String symbolicName, String dataDir, boolean withLivenessProbe, boolean withReadinessProbe,
             boolean withStartupProbe,
             boolean configureEnvironment) {
         this(symbolicName, dataDir);
@@ -142,21 +136,6 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
         this(username, password, dbName, symbolicName, dataDir);
         this.withLivenessProbe = withLivenessProbe;
         this.withReadinessProbe = withReadinessProbe;
-    }
-
-    public AbstractDatabase(String username, String password, String dbName, String symbolicName, String dataDir,
-            boolean withLivenessProbe, boolean withReadinessProbe, boolean configureEnvironment) {
-        this(username, password, dbName, symbolicName, dataDir, withLivenessProbe, withReadinessProbe);
-        this.configureEnvironment = configureEnvironment;
-    }
-
-    public AbstractDatabase(String username, String password, String dbName, String symbolicName, String dataDir,
-            boolean withLivenessProbe, boolean withReadinessProbe, boolean withStartupProbe, boolean configureEnvironment) {
-        this(username, password, dbName, symbolicName, dataDir);
-        this.configureEnvironment = configureEnvironment;
-        this.withLivenessProbe = withLivenessProbe;
-        this.withReadinessProbe = withReadinessProbe;
-        this.withStartupProbe = withStartupProbe;
     }
 
     public abstract String getImageName();

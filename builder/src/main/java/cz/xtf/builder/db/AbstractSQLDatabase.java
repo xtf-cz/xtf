@@ -46,11 +46,6 @@ public abstract class AbstractSQLDatabase extends AbstractDatabase implements SQ
     }
 
     public AbstractSQLDatabase(String symbolicName, String dataDir, boolean withLivenessProbe, boolean withReadinessProbe,
-            boolean configureEnvironment) {
-        super(symbolicName, dataDir, withLivenessProbe, withReadinessProbe, configureEnvironment);
-    }
-
-    public AbstractSQLDatabase(String symbolicName, String dataDir, boolean withLivenessProbe, boolean withReadinessProbe,
             boolean withStartupProbe,
             boolean configureEnvironment) {
         super(symbolicName, dataDir, withLivenessProbe, withReadinessProbe, withStartupProbe, configureEnvironment);
@@ -59,17 +54,6 @@ public abstract class AbstractSQLDatabase extends AbstractDatabase implements SQ
     public AbstractSQLDatabase(String username, String password, String dbName, String symbolicName, String dataDir,
             boolean withLivenessProbe, boolean withReadinessProbe) {
         super(username, password, dbName, symbolicName, dataDir, withLivenessProbe, withReadinessProbe);
-    }
-
-    public AbstractSQLDatabase(String username, String password, String dbName, String symbolicName, String dataDir,
-            boolean withLivenessProbe, boolean withReadinessProbe, boolean configureEnvironment) {
-        super(username, password, dbName, symbolicName, dataDir, withLivenessProbe, withReadinessProbe, configureEnvironment);
-    }
-
-    public AbstractSQLDatabase(String username, String password, String dbName, String symbolicName, String dataDir,
-            boolean withLivenessProbe, boolean withReadinessProbe, boolean withStartupProbe, boolean configureEnvironment) {
-        super(username, password, dbName, symbolicName, dataDir, withLivenessProbe, withReadinessProbe, withStartupProbe,
-                configureEnvironment);
     }
 
     public AbstractSQLDatabase(String symbolicName, String dataDir, PersistentVolumeClaim pvc, boolean withLivenessProbe,
