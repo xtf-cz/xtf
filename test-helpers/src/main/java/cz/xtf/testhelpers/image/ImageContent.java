@@ -26,6 +26,7 @@ public class ImageContent {
     public static final String RED_HAT_RELEASE_KEY_2_RPM = "gpg-pubkey-fd431d51-4ae0493b";
     public static final String RED_HAT_AUXILIARY_KEY_RPM = "gpg-pubkey-2fa658e0-45700c69";
     public static final String RED_HAT_AUXILIARY_KEY_2_RPM = "gpg-pubkey-d4082792-5b32db75";
+    public static final String RED_HAT_AUXILIARY_KEY_3_RPM = "gpg-pubkey-5a6340b3-6229229e";
     public static final String[] DEFAULT_JAVA_UTILITIES = new String[] { "jjs", "keytool", "orbd", "rmid", "rmiregistry",
             "servertool", "tnameserv", "unpack200", "javac", "appletviewer", "extcheck", "idlj", "jar", "jarsigner",
             "javadoc", "javah", "javap", "jcmd", "jconsole", "jdb", "jdeps", "jhat", "jinfo", "jmap", "jps",
