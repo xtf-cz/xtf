@@ -232,7 +232,7 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
 
     /**
      * Convenient method to create pull secret for authenticated image registries.
-     * The secret content must be provided in "dockerconfigjson" formar.
+     * The secret content must be provided in "dockerconfigjson" format.
      *
      * E.g.: {@code {"auths":{"registry.redhat.io":{"auth":"<REDACTED_TOKEN>"}}}}
      *
