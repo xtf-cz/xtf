@@ -5,6 +5,10 @@ import java.util.Map;
 import cz.xtf.builder.builders.pod.PersistentVolumeClaim;
 import cz.xtf.core.image.Image;
 
+/**
+ * @deprecated superseded by {@link RedHatPostgreSQL}
+ */
+@Deprecated
 public class PostgreSQL extends AbstractSQLDatabase {
 
     public PostgreSQL() {
