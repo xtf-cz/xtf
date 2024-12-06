@@ -12,6 +12,34 @@ import cz.xtf.builder.builders.pod.PersistentVolumeClaim;
 
 public abstract class AbstractSQLDatabase extends AbstractDatabase implements SQLExecutor {
 
+    public AbstractSQLDatabase(
+            String symbolicName,
+            String dataDir,
+            PersistentVolumeClaim pvc,
+            String username,
+            String password,
+            String dbName,
+            boolean configureEnvironment,
+            boolean withLivenessProbe,
+            boolean withReadinessProbe,
+            boolean withStartupProbe,
+            String deploymentConfigName,
+            String envVarPrefix) {
+        super(
+                symbolicName,
+                dataDir,
+                pvc,
+                username,
+                password,
+                dbName,
+                configureEnvironment,
+                withLivenessProbe,
+                withReadinessProbe,
+                withStartupProbe,
+                deploymentConfigName,
+                envVarPrefix);
+    }
+
     public AbstractSQLDatabase(String symbolicName, String dataDir, boolean withLivenessProbe, boolean withReadinessProbe) {
         super(symbolicName, dataDir, withLivenessProbe, withReadinessProbe);
     }

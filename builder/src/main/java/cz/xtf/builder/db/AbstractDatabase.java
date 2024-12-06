@@ -1,6 +1,8 @@
 package cz.xtf.builder.db;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import cz.xtf.builder.builders.ApplicationBuilder;
@@ -11,6 +13,9 @@ import cz.xtf.builder.builders.pod.ContainerBuilder;
 import cz.xtf.builder.builders.pod.PersistentVolumeClaim;
 
 public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
+    private static final String DEFAULT_USERNAME = "testuser";
+    private static final String DEFAULT_PASSWORD = "testpwd";
+    private static final String DEFAULT_DATABASE_NAME = "testdb";
     protected final String username;
     protected final String password;
     protected final String dbName;
@@ -26,12 +31,49 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
     protected boolean withReadinessProbe;
     protected boolean withStartupProbe;
 
+    private String deploymentConfigName;
+    private String envVarPrefix;
+
+    public void setDeploymentConfigName(String deploymentConfigName) {
+        this.deploymentConfigName = deploymentConfigName;
+    }
+
+    public void setEnvVarPrefix(String envVarPrefix) {
+        this.envVarPrefix = envVarPrefix;
+    }
+
+    public AbstractDatabase(
+            String symbolicName,
+            String dataDir,
+            PersistentVolumeClaim pvc,
+            String username,
+            String password,
+            String dbName,
+            boolean configureEnvironment,
+            boolean withLivenessProbe,
+            boolean withReadinessProbe,
+            boolean withStartupProbe,
+            String deploymentConfigName,
+            String envVarPrefix) {
+        super(symbolicName, dataDir, pvc);
+        this.symbolicName = symbolicName;
+        this.username = (username == null || username.isEmpty()) ? DEFAULT_USERNAME : username;
+        this.password = (password == null || password.isEmpty()) ? DEFAULT_PASSWORD : password;
+        this.dbName = (dbName == null || dbName.isEmpty()) ? DEFAULT_DATABASE_NAME : dbName;
+        this.withLivenessProbe = withLivenessProbe;
+        this.withReadinessProbe = withReadinessProbe;
+        this.withStartupProbe = withStartupProbe;
+        this.configureEnvironment = configureEnvironment;
+        this.deploymentConfigName = deploymentConfigName;
+        this.envVarPrefix = envVarPrefix;
+    }
+
     public AbstractDatabase(String symbolicName, String dataDir) {
-        this("testuser", "testpwd", "testdb", symbolicName, dataDir);
+        this(DEFAULT_USERNAME, DEFAULT_PASSWORD, DEFAULT_DATABASE_NAME, symbolicName, dataDir);
     }
 
     public AbstractDatabase(String symbolicName, String dataDir, boolean withLivenessProbe, boolean withReadinessProbe) {
-        this("testuser", "testpwd", "testdb", symbolicName, dataDir);
+        this(DEFAULT_USERNAME, DEFAULT_PASSWORD, DEFAULT_DATABASE_NAME, symbolicName, dataDir);
 
         this.withLivenessProbe = withLivenessProbe;
         this.withReadinessProbe = withReadinessProbe;
@@ -54,12 +96,13 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
     }
 
     public AbstractDatabase(String symbolicName, String dataDir, PersistentVolumeClaim pvc) {
-        this("testuser", "testpwd", "testdb", symbolicName, dataDir, pvc);
+        this(DEFAULT_USERNAME, DEFAULT_PASSWORD, DEFAULT_DATABASE_NAME, symbolicName, dataDir, pvc);
     }
 
     public AbstractDatabase(String symbolicName, String dataDir, PersistentVolumeClaim pvc, boolean withLivenessProbe,
             boolean withReadinessProbe) {
-        this("testuser", "testpwd", "testdb", symbolicName, dataDir, pvc, withLivenessProbe, withReadinessProbe);
+        this(DEFAULT_USERNAME, DEFAULT_PASSWORD, DEFAULT_DATABASE_NAME, symbolicName, dataDir, pvc, withLivenessProbe,
+                withReadinessProbe);
     }
 
     public AbstractDatabase(String username, String password, String dbName, String symbolicName, String dataDir,
@@ -73,7 +116,7 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
 
     public AbstractDatabase(String symbolicName, String dataDir, PersistentVolumeClaim pvc, boolean withLivenessProbe,
             boolean withReadinessProbe, boolean withStartupProbe) {
-        this("testuser", "testpwd", "testdb", symbolicName, dataDir, pvc);
+        this(DEFAULT_USERNAME, DEFAULT_PASSWORD, DEFAULT_DATABASE_NAME, symbolicName, dataDir, pvc);
 
         this.withLivenessProbe = withLivenessProbe;
         this.withReadinessProbe = withReadinessProbe;
@@ -148,7 +191,18 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
         return vars;
     }
 
+    public List<String> getImageArgs() {
+        return Collections.emptyList();
+    }
+
+    public String getServiceAccount() {
+        return null;
+    }
+
     public String getDeploymentConfigName() {
+        if (deploymentConfigName != null) {
+            return deploymentConfigName;
+        }
         if (openShiftName == null) {
             openShiftName = dbName.toLowerCase() + "-" + getSymbolicName().toLowerCase();
         }
@@ -156,6 +210,9 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
     }
 
     public String getEnvVarPrefix() {
+        if (envVarPrefix != null) {
+            return envVarPrefix;
+        }
         return dbName.toUpperCase() + "_" + getSymbolicName().toUpperCase();
     }
 
@@ -183,10 +240,18 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
 
     public DeploymentConfigBuilder configureDeployment(ApplicationBuilder appBuilder, boolean synchronous) {
         final DeploymentConfigBuilder builder = appBuilder.deploymentConfig(getDeploymentConfigName());
-        builder.podTemplate().container().fromImage(getImageName()).envVars(getImageVariables()).port(getPort());
+        ContainerBuilder containerBuilder = builder.podTemplate().container().fromImage(getImageName())
+                .envVars(getImageVariables())
+                .port(getPort());
+        if (getImageArgs() != null) {
+            getImageArgs().forEach(containerBuilder::args);
+        }
         if (synchronous) {
             builder.onConfigurationChange();
             builder.synchronousDeployment();
+        }
+        if (getServiceAccount() != null) {
+            builder.podTemplate().addServiceAccount(getServiceAccount());
         }
 
         configureContainer(builder.podTemplate().container());
