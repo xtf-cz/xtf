@@ -5,7 +5,7 @@
 	<parent>
 		<artifactId>xtf-parent</artifactId>
 		<groupId>cz.xtf</groupId>
-		<version>0.36</version>
+		<version>0.37-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>builder</artifactId>
