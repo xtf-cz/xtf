@@ -55,7 +55,9 @@ public class BuildManager {
     }
 
     public ManagedBuildReference deploy(ManagedBuild managedBuild) {
-        if (BuildManagerConfig.forceRebuild()) {
+        if (BuildManagerConfig.skipRebuild()) {
+            log.info("Skip rebuilding is enabled... Skipping rebuild of '{}'.", managedBuild.getId());
+        } else if (BuildManagerConfig.forceRebuild()) {
             log.info("Force rebuilding is enabled... Building '{}' ...", managedBuild.getId());
             managedBuild.delete(openShift);
             managedBuild.build(openShift);
