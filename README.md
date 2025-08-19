@@ -27,7 +27,7 @@ i.e. adjust your XTF repository `pom.xml` configuration by adding (if not there 
 <repository>
   <id>jboss-snapshots-repository</id>
   <name>JBoss Snapshots Repository</name>
-  <url>https://repository.jboss.org/nexus/content/repositories/snapshots</url>
+  <url>https://repository.jboss.org/nexus/repository/snapshots/</url>
   <snapshots>
      <enabled>true</enabled>
   </snapshots>

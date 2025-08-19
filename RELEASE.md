@@ -41,7 +41,7 @@ complete then click the "Release" button which makes the new XTF tag publicly av
 ### Automatic deploy to XTF Snapshots repository when pushing branch
 The XTF project is using GitHub _actions_ to deploy XTF snapshots to the JBoss Snapshots repository: 
 
-https://repository.jboss.org/nexus/content/repositories/snapshots
+https://repository.jboss.org/nexus/repository/snapshots/
 
 This works automatically when a branch is pushed to the "upstream" repo.
 
