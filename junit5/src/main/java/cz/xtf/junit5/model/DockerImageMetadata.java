@@ -28,6 +28,7 @@ import io.fabric8.openshift.api.model.TagEventCondition;
  * them and provides a cache to optimize retrievals.
  */
 public class DockerImageMetadata {
+    private static final String METADATA_ID = "Id";
     private static final String METADATA_CONFIG = "Config";
     private static final String METADATA_CONFIG_LABELS = "Labels";
     private static final String METADATA_CONFIG_ENV = "Env";
@@ -125,6 +126,15 @@ public class DockerImageMetadata {
 
     private Map<String, Object> getConfig() {
         return (Map<String, Object>) metadata.get(METADATA_CONFIG);
+    }
+
+    /**
+     * Returns image id
+     *
+     * @return Id
+     */
+    public String getId() {
+        return (String) metadata.get(METADATA_ID);
     }
 
     /**
