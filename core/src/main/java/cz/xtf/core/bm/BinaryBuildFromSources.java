@@ -11,6 +11,7 @@ import java.io.PipedOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
@@ -110,9 +111,13 @@ abstract public class BinaryBuildFromSources extends BinaryBuild {
                 log.trace("adding file to tar: {}", tarPath);
                 ArchiveEntry entry = o.createArchiveEntry(f, tarPath);
 
-                // we force the modTime in the tar, so that the resulting tars are binary equal if their contents are
+                // we force the time fields in the tar, so that the resulting tars are binary equal if their contents are
                 TarArchiveEntry tarArchiveEntry = (TarArchiveEntry) entry;
                 tarArchiveEntry.setModTime(Date.from(Instant.EPOCH));
+                tarArchiveEntry.setCreationTime(FileTime.from(Instant.EPOCH));
+                tarArchiveEntry.setLastAccessTime(FileTime.from(Instant.EPOCH));
+                tarArchiveEntry.setLastModifiedTime(FileTime.from(Instant.EPOCH));
+                tarArchiveEntry.setStatusChangeTime(FileTime.from(Instant.EPOCH));
                 PosixFileAttributes attrs = Files.getFileAttributeView(Paths.get(f.toURI()), PosixFileAttributeView.class)
                         .readAttributes();
                 tarArchiveEntry.setMode(toOctalFileMode(attrs.permissions()));
