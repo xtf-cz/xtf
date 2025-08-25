@@ -168,6 +168,11 @@ public class ContainerBuilder implements EnvironmentConfiguration, ResourceLimit
         return this;
     }
 
+    public ContainerBuilder addStartupProbe(StartupProbe startupProbe) {
+        this.startupProbe = startupProbe;
+        return this;
+    }
+
     public ContainerBuilder addCommand(String... cmd) {
         this.command = cmd;
         return this;
