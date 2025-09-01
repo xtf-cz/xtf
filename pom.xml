@@ -42,8 +42,8 @@
 
     <distributionManagement>
         <repository>
-            <id>jboss-releases-repository</id>
-            <name>JBoss Releases Repository</name>
+            <id>jbossqe-eap-releases-repository</id>
+            <name>JBoss QE EAP Releases Repository</name>
             <url>https://repository.jboss.org/nexus/repository/jbossqe-eap/</url>
         </repository>
         <snapshotRepository>
