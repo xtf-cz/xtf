@@ -1,6 +1,5 @@
 package cz.xtf.builder.db;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -33,17 +32,13 @@ public class SQLExecutorImpl implements SQLExecutor {
     @Override
     public void executeSQLFile(String resourceName) {
         executeSQL(db -> {
-            try {
-                IOUtils.readLines(SQLExecutorImpl.class.getResourceAsStream(resourceName)).forEach(x -> {
-                    try {
-                        db.createStatement().execute(x);
-                    } catch (SQLException e) {
-                        throw new IllegalArgumentException(e);
-                    }
-                });
-            } catch (final IOException e) {
-                throw new IllegalStateException(e);
-            }
+            IOUtils.readLines(SQLExecutorImpl.class.getResourceAsStream(resourceName)).forEach(x -> {
+                try {
+                    db.createStatement().execute(x);
+                } catch (SQLException e) {
+                    throw new IllegalArgumentException(e);
+                }
+            });
         });
     }
 

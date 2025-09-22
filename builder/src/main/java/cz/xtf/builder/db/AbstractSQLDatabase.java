@@ -1,6 +1,5 @@
 package cz.xtf.builder.db;
 
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.function.Consumer;
@@ -109,17 +108,13 @@ public abstract class AbstractSQLDatabase extends AbstractDatabase implements SQ
 
     public void executeSQLFile(String resourceName) {
         executeSQL(db -> {
-            try {
-                IOUtils.readLines(AbstractSQLDatabase.class.getResourceAsStream(resourceName)).forEach(x -> {
-                    try {
-                        db.createStatement().execute(x);
-                    } catch (SQLException e) {
-                        throw new IllegalArgumentException(e);
-                    }
-                });
-            } catch (final IOException e) {
-                throw new IllegalStateException(e);
-            }
+            IOUtils.readLines(AbstractSQLDatabase.class.getResourceAsStream(resourceName)).forEach(x -> {
+                try {
+                    db.createStatement().execute(x);
+                } catch (SQLException e) {
+                    throw new IllegalArgumentException(e);
+                }
+            });
         });
     }
 
