@@ -1,9 +1,11 @@
 package cz.xtf.builder.builders;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -25,7 +27,8 @@ import io.fabric8.kubernetes.api.model.PodSpecBuilder;
 public class PodBuilder extends AbstractBuilder<Pod, PodBuilder> {
     private final DeploymentConfigBuilder deploymentBuilder;
     private final Set<Volume> volumes = new HashSet<>();
-    private final Set<ContainerBuilder> containerBuilders = new HashSet<>();
+    private final List<ContainerBuilder> containerBuilders = new ArrayList<>();
+    private final List<ContainerBuilder> initContainerBuilders = new ArrayList<>();
     private final Map<String, String> nodeSelectorLabels = new HashMap<>();
 
     private int gracefulShutdown = -1;
@@ -42,16 +45,34 @@ public class PodBuilder extends AbstractBuilder<Pod, PodBuilder> {
         addLabel("name", name);
     }
 
+    /**
+     * @deprecated use container(String name) instead
+     */
+    @Deprecated
     public ContainerBuilder container() {
         return container(getName());
     }
 
+    /**
+     * Creates or retrieves a container with the specified name.
+     */
     public ContainerBuilder container(String name) {
-        return getContainerBuilder(name);
+        return getOrCreateContainerBuilder(name);
+    }
+
+    /**
+     * Creates or retrieves an init container with the specified name.
+     */
+    public ContainerBuilder initContainer(String name) {
+        return getOrCreateInitContainerBuilder(name);
     }
 
     public Collection<ContainerBuilder> getContainers() {
-        return Collections.unmodifiableSet(containerBuilders);
+        return Collections.unmodifiableList(containerBuilders);
+    }
+
+    public Collection<ContainerBuilder> getInitContainers() {
+        return Collections.unmodifiableList(initContainerBuilders);
     }
 
     public PodBuilder gracefulShutdown(int seconds) {
@@ -119,6 +140,8 @@ public class PodBuilder extends AbstractBuilder<Pod, PodBuilder> {
         PodSpecBuilder specBuilder = new PodSpecBuilder();
 
         specBuilder.withContainers(containerBuilders.stream().map(ContainerBuilder::build).collect(Collectors.toList()));
+        specBuilder
+                .withInitContainers(initContainerBuilders.stream().map(ContainerBuilder::build).collect(Collectors.toList()));
         specBuilder.withDnsPolicy("ClusterFirst");
 
         if (!nodeSelectorLabels.isEmpty()) {
@@ -161,17 +184,33 @@ public class PodBuilder extends AbstractBuilder<Pod, PodBuilder> {
         return this;
     }
 
-    private ContainerBuilder getContainerBuilder(String name) {
-        ContainerBuilder result;
-        Optional<ContainerBuilder> opt = containerBuilders.stream().filter(bldr -> bldr.getName().equals(name)).findFirst();
-        if (opt.isPresent()) {
-            result = opt.get();
-        } else {
-            result = new ContainerBuilder(this, name);
-            containerBuilders.add(result);
-        }
+    private ContainerBuilder getOrCreateContainerBuilder(String name) {
+        return findOrCreateContainerBuilder(name, containerBuilders);
+    }
 
-        return result;
+    private ContainerBuilder getOrCreateInitContainerBuilder(String name) {
+        return findOrCreateContainerBuilder(name, initContainerBuilders);
+    }
+
+    /**
+     * Helper method to find an existing container builder by name or create a new one.
+     *
+     * @param name the name of the container builder to find or create
+     * @param containerList the list of container builders to search in
+     * @return the found or newly created container builder
+     */
+    private ContainerBuilder findOrCreateContainerBuilder(String name, List<ContainerBuilder> containerList) {
+        Optional<ContainerBuilder> opt = containerList.stream()
+                .filter(bldr -> bldr.getName().equals(name))
+                .findFirst();
+
+        if (opt.isPresent()) {
+            return opt.get();
+        } else {
+            ContainerBuilder result = new ContainerBuilder(this, name);
+            containerList.add(result);
+            return result;
+        }
     }
 
     private static ApplicationBuilder extractApplicationBuilder(DeploymentConfigBuilder dcBuilder) {
