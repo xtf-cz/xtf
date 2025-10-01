@@ -243,9 +243,18 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
         ContainerBuilder containerBuilder = builder.podTemplate().container().fromImage(getImageName())
                 .envVars(getImageVariables())
                 .port(getPort());
+        if (requiresPrivileged()) {
+            containerBuilder.privileged();
+        }
+
         if (getImageArgs() != null) {
             getImageArgs().forEach(containerBuilder::args);
         }
+
+        if (requiresInitContainer()) {
+            configureInitContainer(builder.podTemplate().initContainer("init-" + getDeploymentConfigName()));
+        }
+
         if (synchronous) {
             builder.onConfigurationChange();
             builder.synchronousDeployment();
@@ -269,6 +278,28 @@ public abstract class AbstractDatabase extends DefaultStatefulAuxiliary {
         configureService(appBuilder);
 
         return builder;
+    }
+
+    /**
+     * Determines whether this database requires an init container.
+     */
+    boolean requiresInitContainer() {
+        return false;
+    }
+
+    /**
+     * Determines whether this database requires privileged container execution.
+     */
+    boolean requiresPrivileged() {
+        return false;
+    }
+
+    /**
+     * Configures the init container for this database if required.
+     * This method is called only if {@link #requiresInitContainer()} returns true.
+     */
+    void configureInitContainer(ContainerBuilder initContainer) {
+        // Empty. To be overridden by subclasses if needed
     }
 
     public void configureEnvironment(EnvironmentConfiguration envConfig) {
