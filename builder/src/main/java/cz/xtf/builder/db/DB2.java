@@ -52,19 +52,22 @@ public class DB2 extends AbstractSQLDatabase {
     }
 
     protected ProbeSettings getProbeSettings() {
-        return new ProbeSettings(120,
-                String.valueOf(getPort()),
-                30,
-                String.format("su - %s -c 'db2 -x \"connect to %s\" && db2 -x \"select 1 from sysibm.sysdummy1\"'",
-                        getUsername(), getDbName()),
-                5,
-                10,
-                10,
-                120,
-                String.format("su - %s -c 'db2 -x connect to %s'",
-                        getUsername(), getDbName()),
-                10,
-                10);
+        return ProbeSettings.builder()
+                .livenessInitialDelaySeconds(120)
+                .livenessTcpProbe(String.valueOf(getPort()))
+                .readinessInitialDelaySeconds(30)
+                .readinessProbeCommand(
+                        String.format("su - %s -c 'db2 -x \"connect to %s\" && db2 -x \"select 1 from sysibm.sysdummy1\"'",
+                                getUsername(), getDbName()))
+                .readinessTimeoutSeconds(5)
+                .readinessPeriodSeconds(10)
+                .readinessFailureThreshold(10)
+                .startupInitialDelaySeconds(120)
+                .startupProbeCommand(String.format("su - %s -c 'db2 -x connect to %s'",
+                        getUsername(), getDbName()))
+                .startupFailureThreshold(10)
+                .startupPeriodSeconds(10)
+                .build();
     }
 
     @Override

@@ -110,20 +110,22 @@ public class OfficialPostgreSQL extends AbstractSQLDatabase {
     }
 
     protected ProbeSettings getProbeSettings() {
-        return new ProbeSettings(300,
-                String.valueOf(getPort()),
-                5,
-                String.format(
+        return ProbeSettings.builder()
+                .livenessInitialDelaySeconds(300)
+                .livenessTcpProbe(String.valueOf(getPort()))
+                .readinessInitialDelaySeconds(5)
+                .readinessProbeCommand(String.format(
                         "psql -h 127.0.0.1 -U $%s -q -d $%s -c 'SELECT 1'",
                         postgresqlUserEnvVar,
-                        postgresqlDatabaseEnvVar),
-                5,
-                String.format(
+                        postgresqlDatabaseEnvVar))
+                .startupInitialDelaySeconds(5)
+                .startupProbeCommand(String.format(
                         "psql -h 127.0.0.1 -U $%s -q -d $%s -c 'SELECT 1'",
                         postgresqlUserEnvVar,
-                        postgresqlDatabaseEnvVar),
-                10,
-                10);
+                        postgresqlDatabaseEnvVar))
+                .startupFailureThreshold(10)
+                .startupPeriodSeconds(10)
+                .build();
     }
 
     @Override
