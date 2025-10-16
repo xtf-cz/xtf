@@ -78,14 +78,16 @@ public abstract class AbstractOracle extends AbstractSQLDatabase {
 
     @Override
     protected ProbeSettings getProbeSettings() {
-        return new ProbeSettings(30,
-                String.valueOf(this.getPort()),
-                5,
-                "/opt/oracle/checkDBStatus.sh",
-                5,
-                "/opt/oracle/checkDBStatus.sh",
-                10,
-                10);
+        return ProbeSettings.builder()
+                .livenessInitialDelaySeconds(30)
+                .livenessTcpProbe(String.valueOf(this.getPort()))
+                .readinessInitialDelaySeconds(5)
+                .readinessProbeCommand("/opt/oracle/checkDBStatus.sh")
+                .startupInitialDelaySeconds(5)
+                .startupProbeCommand("/opt/oracle/checkDBStatus.sh")
+                .startupFailureThreshold(10)
+                .startupPeriodSeconds(10)
+                .build();
     }
 
     @Override

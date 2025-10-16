@@ -91,16 +91,20 @@ public class MsSQL extends AbstractSQLDatabase {
 
     @Override
     protected ProbeSettings getProbeSettings() {
-        return new ProbeSettings(30,
-                String.valueOf(this.getPort()),
-                5,
-                "/opt/mssql-tools18/bin/sqlcmd -S localhost -d " + getDbName() + " -U " + getUsername() + " -P " + getPassword()
-                        + " -C -Q \"Select 1\"",
-                5,
-                "/opt/mssql-tools18/bin/sqlcmd -S localhost -d " + getDbName() + " -U " + getUsername() + " -P " + getPassword()
-                        + " -C -Q \"Select 1\"",
-                10,
-                10);
+        return ProbeSettings.builder()
+                .livenessInitialDelaySeconds(30)
+                .livenessTcpProbe(String.valueOf(this.getPort()))
+                .readinessInitialDelaySeconds(5)
+                .readinessProbeCommand("/opt/mssql-tools18/bin/sqlcmd -S localhost -d " + getDbName() + " -U " + getUsername()
+                        + " -P " + getPassword()
+                        + " -C -Q \"Select 1\"")
+                .startupInitialDelaySeconds(5)
+                .startupProbeCommand("/opt/mssql-tools18/bin/sqlcmd -S localhost -d " + getDbName() + " -U " + getUsername()
+                        + " -P " + getPassword()
+                        + " -C -Q \"Select 1\"")
+                .startupFailureThreshold(10)
+                .startupPeriodSeconds(10)
+                .build();
     }
 
     @Override

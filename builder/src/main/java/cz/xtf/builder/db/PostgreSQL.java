@@ -59,14 +59,16 @@ public class PostgreSQL extends AbstractSQLDatabase {
     }
 
     protected ProbeSettings getProbeSettings() {
-        return new ProbeSettings(300,
-                String.valueOf(getPort()),
-                5,
-                "psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'",
-                5,
-                "psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'",
-                10,
-                10);
+        return ProbeSettings.builder()
+                .livenessInitialDelaySeconds(300)
+                .livenessTcpProbe(String.valueOf(getPort()))
+                .readinessInitialDelaySeconds(5)
+                .readinessProbeCommand("psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'")
+                .startupInitialDelaySeconds(5)
+                .startupProbeCommand("psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c 'SELECT 1'")
+                .startupFailureThreshold(10)
+                .startupPeriodSeconds(10)
+                .build();
     }
 
     @Override

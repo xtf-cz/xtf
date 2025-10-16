@@ -49,14 +49,18 @@ public class MySQL extends AbstractSQLDatabase {
 
     @Override
     protected ProbeSettings getProbeSettings() {
-        return new ProbeSettings(30,
-                String.valueOf(getPort()),
-                5,
-                "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'",
-                5,
-                "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'",
-                10,
-                10);
+        return ProbeSettings.builder()
+                .livenessInitialDelaySeconds(30)
+                .livenessTcpProbe(String.valueOf(getPort()))
+                .readinessInitialDelaySeconds(5)
+                .readinessProbeCommand(
+                        "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'")
+                .startupInitialDelaySeconds(5)
+                .startupProbeCommand(
+                        "MYSQL_PWD=\"$MYSQL_PASSWORD\" mysql -h 127.0.0.1 -u $MYSQL_USER -D $MYSQL_DATABASE -e 'SELECT 1'")
+                .startupFailureThreshold(10)
+                .startupPeriodSeconds(10)
+                .build();
     }
 
     @Override

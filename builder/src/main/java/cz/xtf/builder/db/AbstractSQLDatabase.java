@@ -138,6 +138,9 @@ public abstract class AbstractSQLDatabase extends AbstractDatabase implements SQ
         if (withReadinessProbe) {
             containerBuilder.addReadinessProbe()
                     .setInitialDelaySeconds(settings.getReadinessInitialDelaySeconds())
+                    .setTimeoutSeconds(settings.getReadinessTimeoutSeconds())
+                    .setFrequencyCheck(settings.getReadinessPeriodSeconds())
+                    .setFailureThreshold(settings.getReadinessFailureThreshold())
                     .createExecProbe("/bin/sh", "-i", "-c",
                             settings.getReadinessProbeCommand());
         }
