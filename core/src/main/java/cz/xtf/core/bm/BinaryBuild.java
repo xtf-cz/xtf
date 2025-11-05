@@ -158,7 +158,8 @@ public abstract class BinaryBuild implements ManagedBuild {
             } else {
                 Build activeBuild = openShift.getBuild(id + "-" + activeBc.getStatus().getLastVersion());
                 if (activeBuild == null || activeBuild.getStatus() == null
-                        || "Failed".equals(activeBuild.getStatus().getPhase())) {
+                        || "Failed".equals(activeBuild.getStatus().getPhase())
+                        || "Error".equals(activeBuild.getStatus().getPhase())) {
                     log.debug("Build failed");
                     needsUpdate = true;
                 }
