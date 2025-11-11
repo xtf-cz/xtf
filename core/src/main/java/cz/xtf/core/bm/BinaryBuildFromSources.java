@@ -61,6 +61,11 @@ abstract public class BinaryBuildFromSources extends BinaryBuild {
         super(builderImage, path, envProperties, id);
     }
 
+    public BinaryBuildFromSources(String builderImage, Path path, Map<String, String> envProperties, String id,
+            String memoryRequest, String memoryLimit) {
+        super(builderImage, path, envProperties, id, memoryRequest, memoryLimit);
+    }
+
     @Override
     public void build(OpenShift openShift) {
         openShift.imageStreams().create(is);
