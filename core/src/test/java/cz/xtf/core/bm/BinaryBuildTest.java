@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import cz.xtf.core.config.BuildManagerConfig;
+import cz.xtf.core.config.XTFConfig;
 import cz.xtf.core.openshift.OpenShift;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.openshift.api.model.Build;
@@ -151,6 +153,150 @@ public class BinaryBuildTest {
         // Then: Should return true because build doesn't exist
         Assertions.assertTrue(needsUpdate,
                 "Missing Build should trigger needsUpdate=true");
+    }
+
+    @Test
+    public void testBuildConfig_WhenMemoryLimitsSet_ShouldContainResourceRequirements() throws IOException {
+        // Given: System properties configured for memory request and limit
+        String memoryRequest = "512Mi";
+        String memoryLimit = "2Gi";
+        System.setProperty(BuildManagerConfig.MEMORY_REQUEST, memoryRequest);
+        System.setProperty(BuildManagerConfig.MEMORY_LIMIT, memoryLimit);
+        XTFConfig.loadConfig();
+
+        try {
+            Path tempFileWithLimits = Files.createTempFile("test-with-limits", ".war");
+            Files.write(tempFileWithLimits, "test content".getBytes());
+
+            BinaryBuildFromFile buildWithLimits = new BinaryBuildFromFile(
+                    TEST_BUILDER_IMAGE,
+                    tempFileWithLimits,
+                    null,
+                    TEST_BUILD_ID + "-with-limits");
+
+            // When: Getting the BuildConfig
+            BuildConfig buildConfig = buildWithLimits.bc;
+
+            // Then: BuildConfig should contain resource requirements
+            Assertions.assertNotNull(buildConfig.getSpec().getResources(),
+                    "BuildConfig should have resources set when memory limits are configured");
+
+            Assertions.assertNotNull(buildConfig.getSpec().getResources().getRequests(),
+                    "BuildConfig should have resource requests");
+            Assertions.assertEquals(memoryRequest,
+                    buildConfig.getSpec().getResources().getRequests().get("memory").toString(),
+                    "Memory request should match configured value");
+
+            Assertions.assertNotNull(buildConfig.getSpec().getResources().getLimits(),
+                    "BuildConfig should have resource limits");
+            Assertions.assertEquals(memoryLimit,
+                    buildConfig.getSpec().getResources().getLimits().get("memory").toString(),
+                    "Memory limit should match configured value");
+
+            // Cleanup
+            Files.delete(tempFileWithLimits);
+        } finally {
+            System.clearProperty(BuildManagerConfig.MEMORY_REQUEST);
+            System.clearProperty(BuildManagerConfig.MEMORY_LIMIT);
+            XTFConfig.loadConfig();
+        }
+    }
+
+    @Test
+    public void testBuildConfig_WhenOnlyMemoryRequestSet_ShouldContainOnlyRequest() throws IOException {
+        // Given: System property configured for memory request only
+        String memoryRequest = "256Mi";
+        System.setProperty(BuildManagerConfig.MEMORY_REQUEST, memoryRequest);
+        XTFConfig.loadConfig();
+
+        try {
+            Path tempFileWithRequest = Files.createTempFile("test-with-request", ".war");
+            Files.write(tempFileWithRequest, "test content".getBytes());
+
+            BinaryBuildFromFile buildWithRequest = new BinaryBuildFromFile(
+                    TEST_BUILDER_IMAGE,
+                    tempFileWithRequest,
+                    null,
+                    TEST_BUILD_ID + "-with-request");
+
+            // When: Getting the BuildConfig
+            BuildConfig buildConfig = buildWithRequest.bc;
+
+            // Then: BuildConfig should contain only resource requests
+            Assertions.assertNotNull(buildConfig.getSpec().getResources(),
+                    "BuildConfig should have resources set when memory request is configured");
+
+            Assertions.assertNotNull(buildConfig.getSpec().getResources().getRequests(),
+                    "BuildConfig should have resource requests");
+            Assertions.assertEquals(memoryRequest,
+                    buildConfig.getSpec().getResources().getRequests().get("memory").toString(),
+                    "Memory request should match configured value");
+
+            Assertions.assertTrue(buildConfig.getSpec().getResources().getLimits() == null
+                    || buildConfig.getSpec().getResources().getLimits().isEmpty(),
+                    "BuildConfig should not have limits when only request is set");
+
+            // Cleanup
+            Files.delete(tempFileWithRequest);
+        } finally {
+            System.clearProperty(BuildManagerConfig.MEMORY_REQUEST);
+            XTFConfig.loadConfig();
+        }
+    }
+
+    @Test
+    public void testBuildConfig_WhenOnlyMemoryLimitSet_ShouldContainOnlyLimit() throws IOException {
+        // Given: System property configured for memory limit only
+        String memoryLimit = "1Gi";
+
+        System.setProperty(BuildManagerConfig.MEMORY_LIMIT, memoryLimit);
+        XTFConfig.loadConfig();
+
+        try {
+            Path tempFileWithLimit = Files.createTempFile("test-with-limit", ".war");
+            Files.write(tempFileWithLimit, "test content".getBytes());
+
+            BinaryBuildFromFile buildWithLimit = new BinaryBuildFromFile(
+                    TEST_BUILDER_IMAGE,
+                    tempFileWithLimit,
+                    null,
+                    TEST_BUILD_ID + "-with-limit");
+
+            // When: Getting the BuildConfig
+            BuildConfig buildConfig = buildWithLimit.bc;
+
+            // Then: BuildConfig should contain only resource limits
+            Assertions.assertNotNull(buildConfig.getSpec().getResources(),
+                    "BuildConfig should have resources set when memory limit is configured");
+
+            Assertions.assertTrue(buildConfig.getSpec().getResources().getRequests() == null
+                    || buildConfig.getSpec().getResources().getRequests().isEmpty(),
+                    "BuildConfig should not have requests when only limit is set");
+
+            Assertions.assertNotNull(buildConfig.getSpec().getResources().getLimits(),
+                    "BuildConfig should have resource limits");
+            Assertions.assertEquals(memoryLimit,
+                    buildConfig.getSpec().getResources().getLimits().get("memory").toString(),
+                    "Memory limit should match configured value");
+
+            // Cleanup
+            Files.delete(tempFileWithLimit);
+        } finally {
+            System.clearProperty(BuildManagerConfig.MEMORY_LIMIT);
+            XTFConfig.loadConfig();
+        }
+    }
+
+    @Test
+    public void testBuildConfig_WhenMemoryLimitsNotSet_ShouldNotContainResources() {
+        // Given: BinaryBuild without memory configuration (current setup in @BeforeEach)
+
+        // When: Getting the BuildConfig
+        BuildConfig buildConfig = binaryBuild.bc;
+
+        // Then: BuildConfig should not contain resource requirements
+        Assertions.assertNull(buildConfig.getSpec().getResources(),
+                "BuildConfig should not have resources when memory limits are not configured");
     }
 
     // Helper methods to create test resources

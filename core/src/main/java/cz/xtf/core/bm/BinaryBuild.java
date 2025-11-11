@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import cz.xtf.core.config.BuildManagerConfig;
 import cz.xtf.core.config.WaitingConfig;
 import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.waiting.SimpleWaiter;
@@ -16,6 +17,8 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.openshift.api.model.Build;
 import io.fabric8.openshift.api.model.BuildConfig;
 import io.fabric8.openshift.api.model.BuildConfigBuilder;
@@ -36,6 +39,8 @@ public abstract class BinaryBuild implements ManagedBuild {
 
     private final String builderImage;
     private final Map<String, String> envProperties;
+    private final String memoryRequest;
+    private final String memoryLimit;
 
     protected final ImageStream is;
     protected final BuildConfig bc;
@@ -43,10 +48,17 @@ public abstract class BinaryBuild implements ManagedBuild {
     protected String contentHash = null;
 
     public BinaryBuild(String builderImage, Path path, Map<String, String> envProperties, String id) {
+        this(builderImage, path, envProperties, id, BuildManagerConfig.memoryRequest(), BuildManagerConfig.memoryLimit());
+    }
+
+    public BinaryBuild(String builderImage, Path path, Map<String, String> envProperties, String id, String memoryRequest,
+            String memoryLimit) {
         this.builderImage = builderImage;
         this.path = path;
         this.envProperties = envProperties;
         this.id = id;
+        this.memoryRequest = memoryRequest;
+        this.memoryLimit = memoryLimit;
 
         this.is = this.createIsDefinition();
         this.bc = this.createBcDefinition();
@@ -196,6 +208,18 @@ public abstract class BinaryBuild implements ManagedBuild {
                 .withNewSource().withType("Binary").endSource();
 
         configureBuildStrategy(bcBuilder, builderImage, envVarList);
+
+        // Add resource requirements if specified
+        if (memoryRequest != null || memoryLimit != null) {
+            ResourceRequirementsBuilder rrb = new ResourceRequirementsBuilder();
+            if (memoryRequest != null) {
+                rrb.withRequests(Collections.singletonMap("memory", new Quantity(memoryRequest)));
+            }
+            if (memoryLimit != null) {
+                rrb.withLimits(Collections.singletonMap("memory", new Quantity(memoryLimit)));
+            }
+            bcBuilder.withResources(rrb.build());
+        }
 
         return new BuildConfigBuilder().withMetadata(metadata).withSpec(bcBuilder.build()).build();
     }
