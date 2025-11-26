@@ -16,11 +16,25 @@ class HelmBinaryManager {
     }
 
     public HelmBinary adminBinary() {
-        return getBinary(OpenShiftConfig.adminToken(), OpenShiftConfig.namespace());
+        String adminToken = validateToken(
+                OpenShiftConfig.adminToken(),
+                OpenShiftConfig.OPENSHIFT_ADMIN_TOKEN);
+        return getBinary(adminToken, OpenShiftConfig.namespace());
     }
 
     public HelmBinary masterBinary() {
-        return getBinary(OpenShiftConfig.masterToken(), OpenShiftConfig.namespace());
+        String masterToken = validateToken(
+                OpenShiftConfig.masterToken(),
+                OpenShiftConfig.OPENSHIFT_MASTER_TOKEN);
+        return getBinary(masterToken, OpenShiftConfig.namespace());
+    }
+
+    private String validateToken(String token, String propertyName) {
+        if (token == null || token.isEmpty()) {
+            throw new IllegalStateException(
+                    "Token is not configured. Please set '" + propertyName + "' in your properties file.");
+        }
+        return token;
     }
 
     private static HelmBinary getBinary(String token, String namespace) {
