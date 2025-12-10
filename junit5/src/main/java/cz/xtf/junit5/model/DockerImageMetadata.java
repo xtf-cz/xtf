@@ -18,6 +18,7 @@ import cz.xtf.core.openshift.OpenShift;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.Waiter;
 import cz.xtf.core.waiting.failfast.FailFastCheck;
+import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.ImageStreamTag;
 import io.fabric8.openshift.api.model.NamedTagEventList;
@@ -107,14 +108,26 @@ public class DockerImageMetadata {
     }
 
     private static DockerImageMetadata getMetadataFromTag(ImageStreamTag imageStreamTag) {
-        return areMetadataForImageReady(imageStreamTag)
-                ? new DockerImageMetadata((Map<String, Object>) imageStreamTag.getImage().getDockerImageMetadata().getValue())
-                : null;
+        if (!areMetadataForImageReady(imageStreamTag)) {
+            return null;
+        }
+
+        Object dockerImageMetadata = imageStreamTag.getImage().getDockerImageMetadata();
+
+        if (!(dockerImageMetadata instanceof GenericKubernetesResource)) {
+            throw new IllegalStateException(String.format(
+                    "Fabric8 API compatibility issue: Expected GenericKubernetesResource from " +
+                            "Image.getDockerImageMetadata() but got %s. This likely indicates a Fabric8 " +
+                            "OpenShift Client version incompatibility.",
+                    dockerImageMetadata != null ? dockerImageMetadata.getClass().getName() : "null"));
+        }
+
+        return new DockerImageMetadata(
+                ((GenericKubernetesResource) dockerImageMetadata).getAdditionalProperties());
     }
 
     private static boolean areMetadataForImageReady(ImageStreamTag tag) {
-        return tag != null && tag.getImage() != null && tag.getImage().getDockerImageMetadata() != null
-                && tag.getImage().getDockerImageMetadata().getValue() != null;
+        return tag != null && tag.getImage() != null && tag.getImage().getDockerImageMetadata() != null;
     }
 
     private static String randomString() {
