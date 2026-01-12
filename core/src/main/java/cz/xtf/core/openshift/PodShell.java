@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import cz.xtf.core.waiting.SimpleWaiter;
 import cz.xtf.core.waiting.WaiterException;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Status;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,6 +67,39 @@ public class PodShell {
         return new PodShellOutput(baosOutput.toString().trim(), baosError.toString().trim());
     }
 
+    public PodShellOutput executeWithRetry(int retryCount, int retryDelay, String... commands) {
+        for (int attempt = 1; attempt <= retryCount; attempt++) {
+            try {
+                PodShellOutput pso = this.execute(commands);
+                if (!pso.getOutputAsList().isEmpty()) {
+                    return pso;
+                }
+            } catch (WaiterException e) {
+                log.warn("Attempt {}/{} failed for command execution on pod {}: {}",
+                        attempt, retryCount, podName, e.getMessage());
+                if (attempt < retryCount) {
+                    try {
+                        Thread.sleep(retryDelay);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException("Thread has been interrupted!");
+                    }
+                }
+            }
+        }
+        throw new WaiterException("All attempts to execute command on pod " + podName + " have failed.");
+    }
+
+    /**
+     * Executes command(s) on the pod with retry mechanism in case of failure.
+     * Up to 3 attempts are made with a 5-second delay between each attempt.
+     */
+    public PodShellOutput executeWithRetry(String... commands) {
+        final int POD_SHELL_RETRY_COUNT = 3;
+        final int POD_SHELL_RETRY_DELAY_MS = 5000;
+        return executeWithRetry(POD_SHELL_RETRY_COUNT, POD_SHELL_RETRY_DELAY_MS, commands);
+    }
+
     public class StateExecListener implements ExecListener {
         private final AtomicBoolean executionDone = new AtomicBoolean(false);
 
@@ -76,11 +110,17 @@ public class PodShell {
 
         @Override
         public void onFailure(Throwable throwable, Response response) {
-            // DO NOTHING
+            log.error("Execution failed in pod '{}': {}", podName, throwable.getMessage());
+            executionDone.set(true);
         }
 
         @Override
         public void onClose(int i, String s) {
+            executionDone.set(true);
+        }
+
+        @Override
+        public void onExit(int code, Status status) {
             executionDone.set(true);
         }
 
