@@ -63,7 +63,7 @@
         <version.httpclient>4.5.13</version.httpclient>
         <version.openshift-client>7.4.0</version.openshift-client>
         <version.commons-io>2.15.1</version.commons-io>
-        <version.commons-lang3>3.11</version.commons-lang3>
+        <version.commons-lang3>3.18.0</version.commons-lang3>
         <version.commons-compress>1.26.0</version.commons-compress>
         <version.commons-codec>1.15</version.commons-codec>
         <version.slf4j-api>1.7.30</version.slf4j-api>
