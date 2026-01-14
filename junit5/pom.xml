@@ -5,7 +5,7 @@
     <parent>
         <artifactId>xtf-parent</artifactId>
         <groupId>cz.xtf</groupId>
-        <version>1.0</version>
+        <version>1.1-SNAPSHOT</version>
     </parent>
 
     <artifactId>junit5</artifactId>
