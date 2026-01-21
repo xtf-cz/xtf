@@ -59,7 +59,7 @@ replacing `_` with `.` and adding `xtf.` before the result.
 Example: `OPENSHIFT_MASTER_URL` is mapped to `xtf.openshift.master.url`.
 
 #### OpenShift
-[OpenShift](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/openshift/OpenShift.java) class is 
+[OpenShift](https://github.com/xtf-cz/xtf/blob/main/core/src/main/java/cz/xtf/core/openshift/OpenShift.java) class is 
 the entry point for communicating with OpenShift. It extends `OpenShiftNamespaceClient` from Fabric8 client as it is 
 meant to be used within one namespace, where tests are executed.
 
@@ -70,7 +70,7 @@ specific `Waiters`.
 
 ##### Configuration:
 Take a look at the
-[OpenShiftConfig](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/config/OpenShiftConfig.java) 
+[OpenShiftConfig](https://github.com/xtf-cz/xtf/blob/main/core/src/main/java/cz/xtf/core/config/OpenShiftConfig.java) 
 class to see possible configurations. Enabling some of them will allow you to instantiate as 
 `OpenShift openShift = OpenShifts.master()`.
 
@@ -94,14 +94,14 @@ Multiple registries
 
 
 #### Waiters
-[Waiter](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/Waiter.java) is a concept for 
+[Waiter](https://github.com/xtf-cz/xtf/blob/main/core/src/main/java/cz/xtf/core/waiting/Waiter.java) is a concept for 
 conditional waiting. It retrieves an object or state in the specified `interval` and checks for the specified success 
 and failure conditions. When one of them is met, the waiter will quit. If neither is met within the `timeout`, then 
 an exception is thrown.
 
 XTF provides two different implementations, 
-([SimpleWaiter](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/SimpleWaiter.java) and 
-[SupplierWaiter](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/SupplierWaiter.java)) 
+([SimpleWaiter](https://github.com/xtf-cz/xtf/blob/main/core/src/main/java/cz/xtf/core/waiting/SimpleWaiter.java) and 
+[SupplierWaiter](https://github.com/xtf-cz/xtf/blob/main/core/src/main/java/cz/xtf/core/waiting/SupplierWaiter.java)) 
 and several preconfigured instances. All the default parameters of preconfigured `Waiter`s are overrideable.
 
 `OpenShifts.master().waiters().isDcReady("my-deployment").waitFor();`
@@ -109,7 +109,7 @@ and several preconfigured instances. All the default parameters of preconfigured
 `Https.doesUrlReturnsOK("http://example.com").timeOut(TimeUnit.MINUTES, 10).waitFor();`
 
 #### BuildManager
-[BuildManager](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/bm/BuildManager.java) caches 
+[BuildManager](https://github.com/xtf-cz/xtf/blob/main/core/src/main/java/cz/xtf/core/bm/BuildManager.java) caches 
 test builds in one namespace so that they can be reused. After the first time a specified `ManagedBuild` succeeds,  
 only the reference is returned, but the build will be already present.
 
@@ -214,9 +214,9 @@ you to access your Pods.
 The SLS OpenShift platform implementation relies upon the following fabric8 Kubernetes Client API features:
 
 - Watching Kubernetes events (see
-  [PodWatchEquivalent.java](https://github.com/fabric8io/kubernetes-client/blob/master/kubernetes-examples/src/main/java/io/fabric8/kubernetes/examples/kubectl/equivalents/PodWatchEquivalent.java))
+  [PodWatchEquivalent.java](https://github.com/fabric8io/kubernetes-client/blob/main/kubernetes-examples/src/main/java/io/fabric8/kubernetes/examples/kubectl/equivalents/PodWatchEquivalent.java))
 - Watching Pod logs (see
-  [PodLogExample.java](https://github.com/fabric8io/kubernetes-client/blob/master/kubernetes-examples/src/main/java/io/fabric8/kubernetes/examples/PodLogExample.java))
+  [PodLogExample.java](https://github.com/fabric8io/kubernetes-client/blob/main/kubernetes-examples/src/main/java/io/fabric8/kubernetes/examples/PodLogExample.java))
 
 The expected behavior is to stream the output of all the containers that are started or terminated in the selected 
 namespaces.
@@ -292,7 +292,7 @@ mvn clean install -Dxtf.log.streaming.config="target=TestClassA,target=TestClass
 
 ### JUnit5
 JUnit5 module provides a number of extensions and listeners designed to easy up OpenShift images test management. 
-See [JUnit5](https://github.com/xtf-cz/xtf/blob/master/core/src/main/java/cz/xtf/core/waiting/SimpleWaiter.java) for 
+See [JUnit5](https://github.com/xtf-cz/xtf/blob/main/junit5/README.md) for
 more information.
 
 ### Helm
