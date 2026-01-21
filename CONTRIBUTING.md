@@ -16,12 +16,12 @@ The steps are
         git clone git@github.com:USERNAME/xtf.git
         cd xtf
         git remote add upstream git@github.com:xtf-cz/xtf.git
-        git branch master
-        git checkout master
-        git pull --rebase upstream master
+        git branch main
+        git checkout main
+        git pull --rebase upstream main
 
-   The steps until here only need to be executed once, with the exception being the last command: rebasing against upstream master branch.
-   You need to rebase every time the upstream master is updated.
+   The steps until here only need to be executed once, with the exception being the last command: rebasing against upstream main branch.
+   You need to rebase every time the upstream main is updated.
 
 4. Create a feature branch
 
@@ -53,10 +53,10 @@ The steps are
 
         git reset --soft HEAD~3
         git commit -m 'Clear commit message'
-8. [Rebase](https://git-scm.com/book/en/v2/Git-Branching-Rebasing) against XTF's master branch.
+8. [Rebase](https://git-scm.com/book/en/v2/Git-Branching-Rebasing) against XTF's main branch.
     This might cause rebase errors, which you need to [solve](https://help.github.com/articles/resolving-merge-conflicts-after-a-git-rebase/)
 
-        git pull --rebase upstream master
+        git pull --rebase upstream main
 
 9. Push your commits to your fork
 
@@ -78,7 +78,7 @@ The steps are
 
 # Automatic deploy to Maven repository
 
-XTF is automatically built and deployed to maven repository when a feature branch is pushed into the upstream XTF repository. See `distributionManagement` [pom.xml](https://github.com/xtf-cz/xtf/blob/master/pom.xm)
+XTF is automatically built and deployed to maven repository when a feature branch is pushed into the upstream XTF repository. See `distributionManagement` [pom.xml](https://github.com/xtf-cz/xtf/blob/main/pom.xml)
 
 In case you want to deploy into Maven repository anytime you push branch into your fork. You will need to configure github secrets
 for maven repositories in your fork. Contact XTF admins for the details. 

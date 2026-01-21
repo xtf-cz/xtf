@@ -3,10 +3,10 @@ name: XTF CI - Pull Request check
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
 
@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set up JDK 11
+      - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
@@ -29,10 +29,8 @@ jobs:
           architecture: x64
           cache: 'maven'
       - name: Check well-formatted code
-        # impsort-maven-plugin requires JDK 11 and profile is active only on JDK11
-        if: ${{ matrix.java == 11 }}
         run: mvn -B formatter:validate impsort:check
       - name: Maven Package
-        run: mvn install -B -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+        run: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
       - name: Maven Verify
         run: mvn -B clean verify
