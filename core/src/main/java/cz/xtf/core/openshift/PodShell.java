@@ -68,26 +68,38 @@ public class PodShell {
     }
 
     public PodShellOutput executeWithRetry(int retryCount, int retryDelay, String... commands) {
+        PodShellOutput lastSuccessfulResult = null;
+
         for (int attempt = 1; attempt <= retryCount; attempt++) {
             try {
                 PodShellOutput pso = this.execute(commands);
-                if (!pso.getOutputAsList().isEmpty()) {
+                lastSuccessfulResult = pso;
+
+                // Return as soon as there is either stdout OR stderr present
+                if ((pso.getOutput() != null && !pso.getOutput().isEmpty())
+                        || (pso.getError() != null && !pso.getError().isEmpty())) {
                     return pso;
                 }
             } catch (WaiterException e) {
                 log.warn("Attempt {}/{} failed for command execution on pod {}: {}",
                         attempt, retryCount, podName, e.getMessage());
-                if (attempt < retryCount) {
-                    try {
-                        Thread.sleep(retryDelay);
-                    } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        throw new RuntimeException("Thread has been interrupted!");
-                    }
+                if (attempt >= retryCount) {
+                    throw e;
+                }
+            }
+
+            if (attempt < retryCount) {
+                try {
+                    Thread.sleep(retryDelay);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Thread has been interrupted!");
                 }
             }
         }
-        throw new WaiterException("All attempts to execute command on pod " + podName + " have failed.");
+
+        // At this point at least one attempt returned normally, so lastSuccessfulResult is non-null.
+        return lastSuccessfulResult;
     }
 
     /**
@@ -110,8 +122,8 @@ public class PodShell {
 
         @Override
         public void onFailure(Throwable throwable, Response response) {
-            log.error("Execution failed in pod '{}': {}", podName, throwable.getMessage());
-            executionDone.set(true);
+            // DO NOTHING
+            // executionDone.set(true); // on pod startup this would result in fail-fast
         }
 
         @Override
