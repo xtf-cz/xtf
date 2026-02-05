@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -1370,9 +1371,19 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
         return storeLog(log, dirPath, fileName);
     }
 
+    public void storePodLog(Pod pod, PrintStream printStream) {
+        String log = getPodLog(pod);
+        storeLog(log, printStream);
+    }
+
     public Path storeBuildLog(Build build, Path dirPath, String fileName) throws IOException {
         String log = getBuildLog(build);
         return storeLog(log, dirPath, fileName);
+    }
+
+    public void storeBuildLog(Build build, PrintStream printStream) {
+        String log = getBuildLog(build);
+        storeLog(log, printStream);
     }
 
     private Path storeLog(String log, Path dirPath, String fileName) throws IOException {
@@ -1383,6 +1394,10 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
         Files.write(filePath, log.getBytes());
 
         return filePath;
+    }
+
+    private void storeLog(String log, PrintStream printStream) {
+        printStream.write(log.getBytes(), 0, log.length());
     }
 
     // Waiting
