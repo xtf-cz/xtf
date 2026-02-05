@@ -14,7 +14,7 @@ import cz.xtf.core.openshift.OpenShifts;
  * If it returns true, the waiter should throw an exception.
  * <p>
  * Example of use:
- * 
+ *
  * <pre>
  * FailFastBuilder
  *         .ofTestAndBuildNamespace()

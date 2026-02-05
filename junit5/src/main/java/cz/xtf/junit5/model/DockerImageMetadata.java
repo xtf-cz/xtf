@@ -93,7 +93,7 @@ public class DockerImageMetadata {
         Waiter metadataWaiter = new SimpleWaiter(
                 () -> DockerImageMetadata.areMetadataForImageReady(openShift.getImageStreamTag(tempName, image.getMajorTag())),
                 "Giving OpenShift instance time to download image metadata.")
-                        .failFast(new ImageStreamFailFastCheck(openShift, tempName, image));
+                .failFast(new ImageStreamFailFastCheck(openShift, tempName, image));
         boolean metadataOK = metadataWaiter.waitFor();
 
         // delete unique image stream and return metadata
