@@ -832,7 +832,11 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
     }
 
     public Build getLatestBuild(String buildConfigName) {
-        long lastVersion = buildConfigs().withName(buildConfigName).get().getStatus().getLastVersion();
+        BuildConfig bc = buildConfigs().withName(buildConfigName).get();
+        if (bc == null) {
+            return null;
+        }
+        long lastVersion = bc.getStatus().getLastVersion();
         return getBuild(buildConfigName + "-" + lastVersion);
     }
 
