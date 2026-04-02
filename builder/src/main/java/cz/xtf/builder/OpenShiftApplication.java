@@ -11,7 +11,6 @@ import cz.xtf.core.openshift.OpenShiftWaiters;
 import cz.xtf.core.openshift.OpenShifts;
 import cz.xtf.core.waiting.failfast.FailFastCheck;
 import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.Endpoints;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
@@ -37,7 +36,6 @@ public class OpenShiftApplication {
     private List<PersistentVolumeClaim> persistentVolumeClaims = new LinkedList<>();
     private List<DeploymentConfig> deploymentConfigs = new LinkedList<>();
     private List<Service> services = new LinkedList<>();
-    private List<Endpoints> endpoints = new LinkedList<>();
     private List<Route> routes = new LinkedList<>();
     private List<ConfigMap> configMaps = new LinkedList<>();
     private List<HorizontalPodAutoscaler> autoScalers = new LinkedList<>();
@@ -120,7 +118,6 @@ public class OpenShiftApplication {
                 .filter(x -> !x.getMetadata().getLabels().containsKey(DeploymentConfigBuilder.SYNCHRONOUS_LABEL))
                 .map(openShift::createDeploymentConfig).collect(Collectors.toList());
         deploymentConfigs.addAll(syncDeployments);
-        endpoints = endpoints.stream().map(openShift::createEndpoint).collect(Collectors.toList());
         routes = routes.stream().map(openShift::createRoute).collect(Collectors.toList());
         configMaps = configMaps.stream().map(openShift::createConfigMap).collect(Collectors.toList());
         autoScalers = autoScalers.stream().map(openShift::createHorizontalPodAutoscaler).collect(Collectors.toList());

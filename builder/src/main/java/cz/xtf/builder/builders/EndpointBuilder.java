@@ -12,6 +12,13 @@ import io.fabric8.kubernetes.api.model.Endpoints;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * @deprecated since v1.1.  This class is scheduled for removal in v2.0
+ *                          Endpoints were deprecated in Kubernetes v1.33.
+ * <p>
+ * Use {@link io.fabric8.kubernetes.api.model.discovery.v1.EndpointSlice}
+ * @see <a href=https://kubernetes.io/docs/reference/access-authn-authz/rbac/#write-access-for-endpoints>Write access for endpoints</a>
+ */
 public class EndpointBuilder extends AbstractBuilder<Endpoints, EndpointBuilder> {
     private final List<String> endpointIPs = new ArrayList<>();
     private final List<Port> ports = new ArrayList<>();
