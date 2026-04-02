@@ -558,7 +558,7 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
 
     /**
      * Returns random pod with specified labels
-     * 
+     *
      * @param labels labels to be used for filtering
      * @return random pod with specified labels
      * @throws RuntimeException if no pod is found
@@ -673,6 +673,14 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
     }
 
     // Endpoints
+    /**
+     * Needs a role with write permissions see
+     * <a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/#write-access-for-endpoints">Endpoint write
+     * access</a>
+     *
+     * @param endpoint
+     * @return Endpoints created
+     */
     public Endpoints createEndpoint(Endpoints endpoint) {
         return endpoints().resource(endpoint).create();
     }
@@ -685,6 +693,14 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
         return endpoints().list().getItems();
     }
 
+    /**
+     * Needs a role with write permissions see
+     * <a href="https://kubernetes.io/docs/reference/access-authn-authz/rbac/#write-access-for-endpoints">Endpoint write
+     * access</a>
+     *
+     * @param endpoint
+     * @return True if Endpoint was deleted
+     */
     public boolean deleteEndpoint(Endpoints endpoint) {
         return !endpoints().resource(endpoint).delete().isEmpty();
     }
@@ -1314,7 +1330,6 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
         replicationControllers().withLabelNotIn(KEEP_LABEL, "", "true").delete();
         buildConfigs().withLabelNotIn(KEEP_LABEL, "", "true").delete();
         imageStreams().withLabelNotIn(KEEP_LABEL, "", "true").delete();
-        endpoints().withLabelNotIn(KEEP_LABEL, "", "true").delete();
         services().withLabelNotIn(KEEP_LABEL, "", "true").delete();
         builds().withLabelNotIn(KEEP_LABEL, "", "true").delete();
         routes().withLabelNotIn(KEEP_LABEL, "", "true").delete();
@@ -1350,7 +1365,6 @@ public class OpenShift extends NamespacedOpenShiftClientAdapter {
         removables.addAll(replicationControllers().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
         removables.addAll(buildConfigs().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
         removables.addAll(imageStreams().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
-        removables.addAll(endpoints().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
         removables.addAll(services().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
         removables.addAll(builds().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
         removables.addAll(routes().withLabelNotIn(OpenShift.KEEP_LABEL, "", "true").list().getItems());
