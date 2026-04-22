@@ -38,7 +38,7 @@ public class ServiceLogColoredPrintStream extends PrintStream {
      * If we have e.g.: "AAAA\nBBBB", we would have 3 tokens: "AAAA","\n","BBBB";
      * Note that a buffer not containing any new line is considered a single token e.g. buffer "AAAA" is considered as
      * the single token "AAAA"
-     * 
+     *
      * @param buf the data.
      * @param off the start offset in the data.
      * @param len the number of bytes to write.
@@ -75,7 +75,7 @@ public class ServiceLogColoredPrintStream extends PrintStream {
      * Prints the line header which usually consists of the name of the container the log comes from, preceded by the
      * name of the pod and the name of the namespace where the container is running, with properly colored background
      * and foreground
-     * 
+     *
      * @throws IOException in case something goes wrong while writing to the underlying stream
      */
     private void printLineHeader() throws IOException {
@@ -92,7 +92,7 @@ public class ServiceLogColoredPrintStream extends PrintStream {
 
     /**
      * Prints a token of the log line with properly colored background and foreground
-     * 
+     *
      * @param buf the data.
      * @param off the start offset in the data.
      * @param len the number of bytes to write.
@@ -117,7 +117,7 @@ public class ServiceLogColoredPrintStream extends PrintStream {
 
     /**
      * Prints the data with properly colored background and foreground; takes care of adding a line header to each line
-     * 
+     *
      * @param buf the data.
      * @param off the start offset in the data.
      * @param len the number of bytes to write.

@@ -6,7 +6,7 @@ package cz.xtf.core.helm;
 interface HelmBinaryPathResolver {
     /**
      * Resolves Helm client binary path
-     * 
+     *
      * @return Helm client binary path
      */
     String resolve();

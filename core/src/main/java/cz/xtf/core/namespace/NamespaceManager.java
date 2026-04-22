@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 public class NamespaceManager {
     /**
      * By default (xtf.openshift.namespace.per.testcase=false) all entries in map point to value returned by
-     * 
+     *
      * @see OpenShiftConfig#namespace(). If xtf.openshift.namespace.per.testcase=true then each entry points to namespace
      *      assigned to each test case by {@see NamespaceManager#getNamespaceForTestClass}
      *
@@ -116,7 +116,7 @@ public class NamespaceManager {
      * Deletes namespace as returned by @see #getNamespace
      *
      * @param waitForDeletion whether to wait for deletion (timeout 2 min)
-     * 
+     *
      * @return true if successful, false otherwise
      */
     public static boolean deleteProject(boolean waitForDeletion) {
@@ -178,7 +178,7 @@ public class NamespaceManager {
             // route suffix is: .apps.eapqe-024-dryf.eapqe.psi.redhat.com
             if ((OpenShiftConfig.namespace() + "-"
                     + testDescriptor.getParent().get().getDisplayName().toLowerCase())
-                            .length() > OpenShiftConfig.getNamespaceLengthLimitForUniqueNamespacePerTest()) {
+                    .length() > OpenShiftConfig.getNamespaceLengthLimitForUniqueNamespacePerTest()) {
 
                 return OpenShiftConfig.namespace() + "-"
                         + StringUtils.truncate(DigestUtils.sha256Hex(testDescriptor.getParent().get().getDisplayName()

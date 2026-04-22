@@ -86,7 +86,7 @@ public class EventFailFastCheckBuilder {
 
     /**
      * If at least one event exist (after filtration), final function returns true.
-     * 
+     *
      * @return this
      */
     public FailFastBuilder atLeastOneExists() {
