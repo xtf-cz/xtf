@@ -1,10 +1,10 @@
 package cz.xtf.junit5.extensions.helpers;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -25,9 +25,10 @@ import io.fabric8.openshift.api.model.ImageStream;
 import io.fabric8.openshift.api.model.Route;
 
 public class ResourcesPrinterHelper<X> implements AutoCloseable {
-    private final Path file;
+    private Path file = null;
     private final Function<X, LinkedHashMap<String, String>> resourceToCols;
     private final List<String[]> rows;
+    private OutputStreamWriter outputStream = null;
     private int[] maxLengths;
     private String[] headers = null;
 
@@ -37,8 +38,18 @@ public class ResourcesPrinterHelper<X> implements AutoCloseable {
         rows = new ArrayList<>();
     }
 
+    private ResourcesPrinterHelper(OutputStreamWriter outputStream, Function<X, LinkedHashMap<String, String>> resourceToCols) {
+        this.outputStream = outputStream;
+        this.resourceToCols = resourceToCols;
+        rows = new ArrayList<>();
+    }
+
     public static ResourcesPrinterHelper<Event> forEvents(Path filePath) {
         return new ResourcesPrinterHelper<>(filePath, ResourcesPrinterHelper::getEventCols);
+    }
+
+    public static ResourcesPrinterHelper<Event> forEvents(OutputStreamWriter outputStream) {
+        return new ResourcesPrinterHelper<>(outputStream, ResourcesPrinterHelper::getEventCols);
     }
 
     public static ResourcesPrinterHelper<Pod> forPods(Path filePath) {
@@ -222,9 +233,14 @@ public class ResourcesPrinterHelper<X> implements AutoCloseable {
     }
 
     public void flush() throws IOException {
-        file.getParent().toFile().mkdirs();
+        //mutually exclusive options file OR outputStream
+        OutputStreamWriter streamWriter = outputStream;
+        if (file != null) {
+            file.getParent().toFile().mkdirs();
+            streamWriter = new OutputStreamWriter(Files.newOutputStream(file.toFile().toPath()), StandardCharsets.UTF_8);
+        }
 
-        try (final Writer writer = new OutputStreamWriter(new FileOutputStream(file.toFile()), StandardCharsets.UTF_8)) {
+        try (final Writer writer = streamWriter) {
             if (!rows.isEmpty()) {
                 StringBuilder formatBuilder = new StringBuilder();
                 for (int maxLength : maxLengths) {
