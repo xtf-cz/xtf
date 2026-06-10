@@ -1,5 +1,6 @@
 package cz.xtf.builder.builders.pod;
 
+import io.fabric8.kubernetes.api.model.HostPathVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 
 public class HostPathVolume extends Volume {
@@ -16,8 +17,8 @@ public class HostPathVolume extends Volume {
 
     @Override
     protected void addVolumeParameters(VolumeBuilder builder) {
-        builder.withNewHostPath()
+        builder.withHostPath(new HostPathVolumeSourceBuilder()
                 .withPath(getSourceHostDirPath())
-                .endHostPath();
+                .build());
     }
 }

@@ -1,5 +1,6 @@
 package cz.xtf.builder.builders.pod;
 
+import io.fabric8.kubernetes.api.model.NFSVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 
 public class NFSVolume extends Volume {
@@ -22,9 +23,9 @@ public class NFSVolume extends Volume {
 
     @Override
     protected void addVolumeParameters(VolumeBuilder builder) {
-        builder.withNewNfs()
+        builder.withNfs(new NFSVolumeSourceBuilder()
                 .withServer(getServer())
                 .withPath(getServerPath())
-                .endNfs();
+                .build());
     }
 }
