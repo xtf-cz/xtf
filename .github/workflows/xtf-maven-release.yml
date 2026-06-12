@@ -31,7 +31,7 @@ jobs:
         with:
           servers: '[{ "id": "jbossqe-eap-releases-repository", "username": "${env.JBOSS_REPO_USER}", "password": "${env.JBOSS_REPO_PASSWORD}" },{ "id": "jboss-snapshots-repository", "username": "${env.JBOSS_REPO_USER}", "password": "${env.JBOSS_REPO_PASSWORD}" }]'
       - name: Import GPG Key
-        uses: crazy-max/ghaction-import-gpg@v1
+        uses: crazy-max/ghaction-import-gpg@v7
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
