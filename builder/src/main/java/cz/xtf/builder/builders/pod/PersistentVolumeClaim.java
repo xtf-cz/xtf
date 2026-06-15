@@ -1,5 +1,6 @@
 package cz.xtf.builder.builders.pod;
 
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 
 public class PersistentVolumeClaim extends Volume {
@@ -17,9 +18,10 @@ public class PersistentVolumeClaim extends Volume {
 
     @Override
     protected void addVolumeParameters(VolumeBuilder builder) {
-        builder.withNewPersistentVolumeClaim()
-                .withClaimName(getClaimName())
-                .endPersistentVolumeClaim();
+        builder.withPersistentVolumeClaim(
+                new PersistentVolumeClaimVolumeSourceBuilder()
+                        .withClaimName(getClaimName())
+                        .build());
     }
 
 }

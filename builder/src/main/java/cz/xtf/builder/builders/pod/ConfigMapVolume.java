@@ -1,7 +1,7 @@
 package cz.xtf.builder.builders.pod;
 
+import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
-import io.fabric8.kubernetes.api.model.VolumeFluent;
 
 public class ConfigMapVolume extends Volume {
     private final String configMapName;
@@ -24,16 +24,16 @@ public class ConfigMapVolume extends Volume {
 
     @Override
     protected void addVolumeParameters(VolumeBuilder builder) {
-        VolumeFluent<VolumeBuilder>.ConfigMapNested<VolumeBuilder> cfm = builder.withNewConfigMap();
-        cfm.withName(configMapName);
+        final ConfigMapVolumeSourceBuilder cmb = new ConfigMapVolumeSourceBuilder()
+                .withName(configMapName);
         if (defaultMode != null) {
             int defaultModeIntVal = 0;
             for (byte b : defaultMode.getBytes()) {
                 int num = Character.getNumericValue(b);
                 defaultModeIntVal = num | defaultModeIntVal << 3;
             }
-            cfm.withDefaultMode(defaultModeIntVal);
+            cmb.withDefaultMode(defaultModeIntVal);
         }
-        cfm.endConfigMap();
+        builder.withConfigMap(cmb.build());
     }
 }

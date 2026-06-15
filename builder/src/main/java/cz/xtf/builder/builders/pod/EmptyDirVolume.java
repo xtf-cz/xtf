@@ -1,5 +1,6 @@
 package cz.xtf.builder.builders.pod;
 
+import io.fabric8.kubernetes.api.model.EmptyDirVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 
 public class EmptyDirVolume extends Volume {
@@ -10,6 +11,6 @@ public class EmptyDirVolume extends Volume {
 
     @Override
     protected void addVolumeParameters(VolumeBuilder builder) {
-        builder.withNewEmptyDir().endEmptyDir();
+        builder.withEmptyDir(new EmptyDirVolumeSourceBuilder().build());
     }
 }
