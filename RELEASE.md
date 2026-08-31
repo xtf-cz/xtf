@@ -15,26 +15,54 @@ releasing a XTF version, either official or a `SNAPSHOT` for custom testing.
   https://github.com/orgs/xtf-cz/teams/admins)
 
 ## Production release
+
+### Prerequisites
 1. Clone the upstream XTF repo, not a personal fork
-2. The Maven Release plugin is pre-configured, a release repository is defined in the distribution management section, 
-and GitHub repository is defined in the SCM section to push tags:
+2. Ensure the following secrets/credentials are configured in GitHub for the upstream XTF repo:
+   - GPG key for signing artifacts (GPG_PRIVATE_KEY and GPG_PASSPHRASE secrets in GitHub)
+   - JBoss repository access (JBOSS_REPO_USER and JBOSS_REPO_PASSWORD secrets in GitHub)
 
-```mvn release:clean release:prepare```
+### Creating a new tag and release
 
-in a nutshell it will create the release tag, version and move to next devel version. This is an interactive process 
-and requires a few details to be provided, see the following example:
+#### Step 1: Prepare the release using Maven Release Plugin
+
+Run the Maven release preparation command:
+```bash
+mvn release:clean release:prepare
 ```
-What is the release version for "XTF"? (cz.xtf:utilities) 0.5: 0.5
-What is SCM release tag or label for "XTF"? (cz.xtf:utilities) utilities-0.5: : 0.5
-What is the new development version for "XTF"? (cz.xtf:utilities) 0.6-SNAPSHOT: 0.6-SNAPSHOT
+
+This interactive process will:
+- Create a release tag
+- Update the SNAPSHOT version in the `main` branch to the new version
+- Push changes to GitHub
+
+Example of the interactive prompts:
+```
+What is the release version for "XTF"? (cz.xtf:xtf-parent) 1.2-SNAPSHOT: : 1.2
+What is SCM release tag or label for "XTF"? (cz.xtf:xtf-parent) xtf-parent-1.2: : 1.2
+What is the new development version for "XTF"? (cz.xtf:xtf-parent) 1.3-SNAPSHOT: : 1.3-SNAPSHOT
 ```
 
-the finally tagged version is then pushed to GitHub repository. 
-GitHub Actions are configured to perform `mvn deploy` for new tags and push to maven repository.
-After a few minutes, the new version should appear in the
-[JBoss Staging Maven](https://repository.jboss.org/nexus/index.html#stagingRepositories) repository. Log in into staging repository
-and select the line with the uploaded new XTF tag. Click on the "Close" button and wait until all activities are completed. Once those are
-complete then click the "Release" button which makes the new XTF tag publicly available.
+#### Step 2: Automatic deployment via GitHub Actions
+Once the tag is pushed to GitHub, the workflow `.github/workflows/xtf-maven-release.yml` automatically:
+1. Builds the project with `mvn install`
+2. Runs verification with `mvn clean verify`
+3. Sets up Maven credentials for JBoss repositories
+4. Imports GPG key for artifact signing
+5. Deploys to Maven repository with `mvn deploy -Prelease`
+
+The `release` profile (activated with `-Prelease`) includes:
+- GPG signing of artifacts (`maven-gpg-plugin`)
+- Generation of Javadoc JARs (`maven-javadoc-plugin`)
+- Generation of source JARs (`maven-source-plugin`)
+
+#### Step 3: Repository management
+Tagged releases are deployed to: https://repository.jboss.org/nexus/content/groups/developer/cz/xtf/ and 
+automatically synced to Maven Central repository.
+
+#### Step 4: Verify the release
+Check that the new version appears in the https://repository.jboss.org/nexus/content/groups/developer/cz/xtf/ repository 
+and that the GitHub tag was created successfully.
 
 ## Snapshot release
 
@@ -48,21 +76,19 @@ This works automatically when a branch is pushed to the "upstream" repo.
 If you want this to work when pushing to your personal fork then you need to configure a number of GitHub _secrets_, 
 i.e.:
 ```text
-JBOSS_REPO_PASSWORD=<jboss.org username>
-JBOSS_REPO_USER=<jboss.org password>
+JBOSS_REPO_USER=<jboss.org username>
+JBOSS_REPO_PASSWORD=<jboss.org password>
+GPG_PASSPHRASE=<gpg password>
+GPG_PRIVATE_KEY=<gpg key>
 ```
 
-In order to set up those secrets, go to your XTF fork, click "Settings" in the top panel -> click "Secrets" in the 
-left menu -> click "New repository secret" in the top right corner and add both the above secrets (JBOSS_REPO_USER, 
-JBOSS_REPO_PASSWORD) so it will look like what in: https://github.com/xtf-cz/xtf/settings/secrets/actions
-
-Note that you don't need to set the GPG_PASSPHRASE and GPG_PRIVATE_KEY secrets if you do not plan to release a new 
-version of XTF.
+To set up these secrets, go to your XTF fork, click "Settings" in the top panel -> click "Secrets" in the 
+left menu -> click "New repository secret" in the top right corner and add all the above secrets (JBOSS_REPO_USER, 
+JBOSS_REPO_PASSWORD, GPG_PASSPHRASE, GPG_PRIVATE_KEY) as shown in: https://github.com/xtf-cz/xtf/settings/secrets/actions
 
 ### Manual deploy to the JBoss Snapshots repository
-In case you want to deploy your XTF bits to jboss-snapshots-repository you will need to provide the required 
-authentication credentials, hence you might want to update your Maven `settings.xml` file with your Red Hat account
-credentials, e.g.:
+If you want to deploy your XTF artifacts to the jboss-snapshots-repository, you will need to provide the required 
+authentication credentials. Update your Maven `settings.xml` file with your Red Hat account credentials, for example:
 
 ```xml
 <settings>  
@@ -84,15 +110,19 @@ and then run:
 mvn clean deploy
 ```
 
+**Note**
+When using the mvn command above to deploy a new snapshot version, you don't need GPG_PASSPHRASE and GPG_PRIVATE_KEY as 
+the `-Prelease` profile is not used and thus there is no GPG signing of the artifacts.
+
 **Important** 
 Consider changing the XTF version when deploying your custom snapshot, since anyone could redeploy it by providing 
-their different artifact with the same GAV and this is not desirable.
+a different artifact with the same GAV coordinates, which is not desirable.
 
-You could use the following command to change the default _SNAPSHOT_ version (e.g.: `0.22-SNAPSHOT`) to your custom 
+You could use the following command to change the default _SNAPSHOT_ version (e.g.: `1.1-SNAPSHOT`) to your custom 
 version:
 
 ```shell
-grep -lr 0.22-SNAPSHOT * | xargs sed -i s,0.22-SNAPSHOT,0.22-pretest-SNAPSHOT,g
+mvn versions:set -DnewVersion=1.1-super-feature-SNAPSHOT
 ```
 
-This will replace the version in each of the project _pom.xml_ files, i.e. `0.22-pretest-SNAPSHOT`
+This will replace the version in each of the project _pom.xml_ files, e.g., `1.1-super-feature-SNAPSHOT`
