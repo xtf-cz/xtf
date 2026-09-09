@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
 public @interface ServiceLogsStreaming {
     /**
      * Returns the log level filter which is set for services annotated with {@link ServiceLogsStreaming}
-     * 
+     *
      * @return A String identifying the log level filter which is set for services annotated with
      *         {@link ServiceLogsStreaming}
      */
@@ -24,7 +24,7 @@ public @interface ServiceLogsStreaming {
     /**
      * Defines the base path where log files produced by services annotated with {@link ServiceLogsStreaming} should be
      * streamed
-     * 
+     *
      * @return A String representing the base path log files produced by annotated services should be streamed.
      */
     String output() default ServiceLogsSettings.UNASSIGNED;
