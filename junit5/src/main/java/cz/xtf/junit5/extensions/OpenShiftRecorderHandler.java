@@ -1,6 +1,10 @@
 package cz.xtf.junit5.extensions;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.lang.reflect.Constructor;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -59,12 +63,25 @@ public class OpenShiftRecorderHandler implements TestWatcher, TestExecutionExcep
 
     @Override
     public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+        Throwable newThrowable = throwable;
+        final ByteArrayOutputStream messageStream = new ByteArrayOutputStream();
         try {
             openShiftRecorderService.recordState(context);
+
+            if (JUnitConfig.appendLogsToReportOnFailure()) {
+                try (PrintStream ps = new PrintStream(messageStream, true, StandardCharsets.UTF_8.name())) {
+                    openShiftRecorderService.recordState(context, ps);
+                }
+                if (messageStream.size() != 0) {
+                    Constructor<? extends Throwable> constructor = throwable.getClass().getConstructor(String.class,
+                            Throwable.class);
+                    newThrowable = constructor.newInstance(throwable.getMessage() + messageStream, throwable.getCause());
+                }
+            }
         } catch (Throwable t) {
             log.error("Throwable: ", t);
         } finally {
-            throw throwable;
+            throw newThrowable;
         }
     }
 

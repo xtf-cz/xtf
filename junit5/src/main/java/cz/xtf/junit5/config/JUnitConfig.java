@@ -16,6 +16,7 @@ public class JUnitConfig {
     private static final String RECORD_DIR = "xtf.record.dir";
     private static final String RECORD_ALWAYS = "xtf.record.always";
     private static final String RECORD_BEFORE = "xtf.record.before";
+    private static final String REPORT_LOGS_ON_FAILURE = "xtf.record.append.logs.into.junit.report.on.failure";
 
     public static String recordDir() {
         return XTFConfig.get(RECORD_DIR);
@@ -58,5 +59,10 @@ public class JUnitConfig {
 
     public static boolean prebuilderSynchronized() {
         return Boolean.parseBoolean(XTFConfig.get(PREBUILDER_SYNCHRONIZED, "false"));
+    }
+
+    public static boolean appendLogsToReportOnFailure() {
+        return XTFConfig.get(REPORT_LOGS_ON_FAILURE) != null
+                && (XTFConfig.get(REPORT_LOGS_ON_FAILURE).equals("") || XTFConfig.get(REPORT_LOGS_ON_FAILURE).equals("true"));
     }
 }
