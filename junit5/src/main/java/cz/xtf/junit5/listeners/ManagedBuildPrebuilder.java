@@ -60,9 +60,9 @@ public class ManagedBuildPrebuilder implements TestExecutionListener {
         Waiter runningBuildsBelowCapacity = new SimpleWaiter(() -> buildManagerOpenShift.getBuilds().stream()
                 .filter(build -> build.getStatus() != null && "Running".equals(build.getStatus().getPhase()))
                 .count() < BuildManagerConfig.maxRunningBuilds())
-                        .timeout(TimeUnit.MILLISECONDS, WaitingConfig.timeout())
-                        .reason("Waiting for a free capacity for running builds in " + BuildManagerConfig.namespace()
-                                + " namespace.");
+                .timeout(TimeUnit.MILLISECONDS, WaitingConfig.timeout())
+                .reason("Waiting for a free capacity for running builds in " + BuildManagerConfig.namespace()
+                        + " namespace.");
 
         for (final BuildDefinition buildDefinition : buildsToBeBuilt) {
             // lazy creation, so that we don't attempt to create a buildmanager namespace when no builds defined (e.g. OSO tests)

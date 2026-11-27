@@ -34,7 +34,7 @@ public class OpenShiftBinary {
     /**
      * Apply configuration file in the specified namespace.
      * Delegates to `oc apply --filename='sourcepath' --namespace='namespace'`
-     * 
+     *
      * @param sourcePath path to configration file
      * @param namespace namespace
      */
@@ -44,7 +44,7 @@ public class OpenShiftBinary {
 
     /**
      * Apply configuration file. Delegates to `oc apply --filename='sourcepath`
-     * 
+     *
      * @param sourcePath path to configration file
      */
     public void apply(String sourcePath) {
@@ -53,7 +53,7 @@ public class OpenShiftBinary {
 
     /**
      * Apply configuration files in the order they appear in the list
-     * 
+     *
      * @param sourcePaths list of paths to configuration files
      */
     public void apply(List<String> sourcePaths) {
@@ -64,7 +64,7 @@ public class OpenShiftBinary {
 
     /**
      * Apply configuration files in the order they appear in the list, using supplied namespace.
-     * 
+     *
      * @param namespace namespace in which the configuration files should be applied
      * @param sourcePaths list of paths to configuration files
      */

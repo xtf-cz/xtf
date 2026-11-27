@@ -54,7 +54,7 @@ class PodLogsWatcher implements Watcher<Pod> {
 
     /**
      * Handles newly running containers
-     * 
+     *
      * @param pod the Pod where to look for newly running containers
      */
     private void handleNewRunningContainers(Pod pod) {
@@ -128,7 +128,7 @@ class PodLogsWatcher implements Watcher<Pod> {
 
     /**
      * Handles newly terminated containers
-     * 
+     *
      * @param pod the Pod where to look for newly terminated containers
      */
     private void handleNewTerminatedContainers(Pod pod) {
@@ -189,7 +189,7 @@ class PodLogsWatcher implements Watcher<Pod> {
 
     /**
      * Gets <i>just</i> new containers statuses by filtering the existing ones out.
-     * 
+     *
      * @param before A list of {@link ContainerStatus} instances belonging to already existing containers
      * @param now A list of {@link ContainerStatus} instances belonging to new containers
      * @return A list of {@link ContainerStatus} instances representing the difference between those belonging to
