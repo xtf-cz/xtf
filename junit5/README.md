@@ -35,6 +35,7 @@ Extensions enable better test management.
 
 #### @OpenShiftRecorder
 Record OpenShift state when a test throws an exception or use `xtf.record.always` to record on success. Specify app names (which will be turned into regexes) to filter resources by name. When not specified, everything in test and build namespace will be recorded (regex - `.*`). Use `xtf.record.dir` to set the directory.
+In case of test failure you can append pod logs and events into JUnit failure report by setting `xtf.record.append.logs.into.junit.report.on.failure` property.
 
 #### @CleanBeforeAll/@CleanBeforeEach
 Cleans namespace specified by `xtf.openshift.namespace` property. Either before all tests or each test execution.
